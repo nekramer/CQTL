@@ -1,3 +1,4 @@
 ﻿Batch,File_Prefix,Genotyping_Directory
-COA_01_GDA8,COA_01_GDA8_GenomeStudio,/pine/scr/n/e/nekramer/PIPE_test
-COA2_01,COA2_01_GenomeStudio,/pine/scr/n/e/nekramer/PIPE_test
+Batch1,Prefix1,/path/to/batch1
+Batch2,Prefix2,/path/to/batch2
+Batch3,Prefix3,/path/to/batch3

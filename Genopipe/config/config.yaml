@@ -1,17 +1,20 @@
-
+# GENOPIPE
 ## Path to genotyping data samplesheet
 geno: 'geno.csv'
 
+## Thresholds for variant inclusion in PLINK
+miss_call: 0.1 # PLINK --geno: Missing rate per SNP; A value of 0.1 will include only SNPs with a 90% genotyping rate (10% missing).
+maf: 0.01 # PLINK --maf: Minor allele frequency; A value of 0.01 will only include SNPs with a minor allele frequencey >= 0.01.
+hwe: .000001 # PLINK --hwe: Hardy-Weinberg equilibrium; Exclude markers that fail the Hardy-Weinberg test at a specified significance.
+
 ## Genome-specific reference parameters
-# Path to population reference data (in PLINK binary format, all autosomes merged)
-ref: '/proj/phanstiel_lab/SHARE/genomes/1000G/GRCh37/1000G_phase3_chrALL_biallelic'
-# Path to panel file of above population reference data
-panel: '/proj/phanstiel_lab/SHARE/genomes/1000G/GRCh37/1000G_phase3.panel'
-# Path to reference sequence fasta
-sequence: '/proj/phanstiel_lab/SHARE/genomes/hg19/Sequence/hg19.fa'
+ref: '/proj/phanstiel_lab/SHARE/genomes/1000G/GRCh37/1000G_phase3_chrALL_biallelic' # Path to population reference data in PLINK binary format (.bed, .bim, .fam files), all autosomes merged.
+panel: '/proj/phanstiel_lab/SHARE/genomes/1000G/GRCh37/1000G_phase3.panel' # Path to panel file of above population reference data. Must have the columns `sample`, `pop`, `super_pop`, and `gender`.
+sequence: '/proj/phanstiel_lab/SHARE/genomes/hg19/Sequence/hg19.fa' # Path to reference sequence fasta file.
 
-## Name of data 'population'
-pop_name: 'chQTL'
+## Additional options
+pop_name: 'CQTL' # Name of data 'population' to use as the label in ancestry PCA plot.
 
+# GENOPIPEIMPUTATION
 ## Path to imputed genotyping data samplesheet
 vcf: 'vcf.csv'
