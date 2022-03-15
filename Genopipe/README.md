@@ -32,7 +32,11 @@ Installing GenomeStudio:
 1. Clone repo into working directory:
 
     ```bash
-    git clone https://github.com/nekramer/CQTL/tree/main/Genopipe
+    git clone --no-checkout https://github.com/nekramer/CQTL.git Genopipe
+    cd Genopipe
+    git sparse-checkout init --cone
+    git sparse-checkout set Genopipe
+    git checkout
     ```
 
 2. Edit the comma-separated `geno.csv` with the batch name, PLINK map/ped file prefix, and the path to these files under the `Genotyping_Directory`
