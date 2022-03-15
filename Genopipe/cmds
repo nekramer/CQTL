@@ -1,0 +1,2 @@
+snakemake -j 1 -s snakefiles/genoProc
+snakemake -j 1 -s snakefiles/genoProc --unlock

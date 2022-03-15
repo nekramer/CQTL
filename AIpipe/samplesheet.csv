@@ -1,0 +1,2 @@
+﻿Proj,Donor,Condition,Time,Tech_Rep,Seq_Rep,Read1,Read2,Sequencing_Directory
+chQTL,AM7180,CTL,18,1,1,chQTL-AM7180-00_CCGCGGTT-AGCGCTAG_HG7V3DSXY_L002_001.R1.fastq.gz,chQTL-AM7180-00_CCGCGGTT-AGCGCTAG_HG7V3DSXY_L002_001.R2.fastq.gz,/proj/phanstiel_lab/Data/raw/chQTL/Project_PHA_14470_B01_EXS_RNA.2020-12-01/Sample_chQTL-AM7180-00/fastq/

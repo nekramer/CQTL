@@ -1,0 +1,15 @@
+## Path to RNA-seq sample samplesheet
+samplesheet: 'samplesheet.csv'
+
+## Path to imputed genotyping
+vcf: '/pine/scr/n/e/nekramer/PIPE_test/Genopipe/output/vcf/ALL_qc.vcf.gz'
+
+## Genome-specific reference parameters
+genomeDir: '/proj/seq/data/STAR_genomes/hg19'
+chromSizes: '/proj/phanstiel_lab/SHARE/genomes/hg19/chromInfo.hg19.txt'
+sequence: '/proj/phanstiel_lab/SHARE/genomes/hg19/Sequence/hg19.fa.gz'
+chromNames: 'chromNames.txt'
+
+
+#genomeDir: '/proj/seq/data/STAR_genomes/GRCh38_p10_GENCODE'
+#genomeDir: '/proj/seq/data/STAR_genomes_v273/GRCh37_p13_GENCODE'

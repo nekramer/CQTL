@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+import os
+
+## Load config file
+configfile: "config/config.yaml"
+
+## Get file path of post-imputed, qc'd gzipped vcf file
+vcf = config["vcf"]
+
+## Determine a prefix for the vcf file
+vcf_prefix = os.path.basename(os.path.splitext(os.path.splitext(vcf)[0])[0])
+
+## Define actions on success
+onsuccess:
+
+    ## Success message
+    print("VCFs processed successfully for Allelic Imbalance!")
+
+rule all:
+    input:
+        'output/vcf/nodups_biallelicALL.vcf.gz.tbi'
+      
+rule renameChroms:
+    input:
+        vcf
+    output:
+        'output/vcf/' + vcf_prefix + '_rename.vcf'
+    log:
+        err = "output/vcf/logs/renameChroms.err"
+    params:
+        chromNames = config['chromNames']
+    shell:
+        """
+        module load samtools
+        bcftools annotate --rename-chrs {params.chromNames} -o {output} {input} 2> {log.err}
+        """
+
+rule zipVCF1:
+    input:
+        rules.renameChroms.output
+    output:
+        temp('output/vcf/' + vcf_prefix + '_rename.vcf.gz')
+    log:
+        err = "output/vcf/logs/zipVCF1.err"
+    shell:
+        """
+        module load samtools
+        bgzip {input} 2> {log.err}
+        """  
+
+rule indexVCF1:
+    input:
+        rules.zipVCF1.output
+    output:
+        temp('output/vcf/' + vcf_prefix + '_rename.vcf.gz.tbi')
+    log:
+        out = "output/vcf/logs/indexVCF1.out",
+        err = "output/vcf/logs/indexVCF1.err"
+    shell:
+        """
+        module load gatk/4.1.7.0
+        gatk IndexFeatureFile -I {input} 2> {log.err} 1> {log.out}
+        """    
+
+rule updateConfig:
+    input:
+        v = rules.zipVCF1.output,
+        i = rules.indexVCF1.output
+    output:
+        temp('output/vcf/' + vcf_prefix + '_newcontig.vcf.gz')
+    log:
+        out = "output/vcf/logs/updateConfig.out",
+        err = "output/vcf/logs/updateConfig.err"
+    params:
+        sequence = config['sequence']
+    shell:
+        """
+        module load gatk/4.1.7.0
+        gatk UpdateVCFSequenceDictionary -V {input.v} --source-dictionary {params.sequence} --output {output} --replace=true 2> {log.err} 1> {log.out}
+        """
+
+rule selectVariants:
+    input:
+        rules.updateConfig.output
+    output:
+        temp('output/vcf/' + vcf_prefix + '_biallelic.vcf.gz')
+    log:
+        out = "output/vcf/logs/selectVariants.out",
+        err = "output/vcf/logs/selectVariants.err"
+    params:
+        sequence = config['sequence']
+    shell:
+        """
+        module load gatk/4.1.7.0
+        gatk SelectVariants --variant {input} -R {params.sequence} --select-type-to-include SNP -O {output} --restrict-alleles-to BIALLELIC 2> {log.err} 1> {log.out}
+        """
+
+rule removeDuplicates:
+    input:
+        rules.selectVariants.output
+    output:
+        'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf'
+    log:
+        err = "output/vcf/logs/removeDuplicates.err"
+    shell:
+        """
+        module load samtools
+        bcftools norm -d any -o {output} {input} 2> {log.err}
+        """
+
+rule zipVCF2:
+    input:
+        rules.removeDuplicates.output
+    output:
+        'output/vcf/' + vcf_prefix + '_nodups_biallelicALL.vcf.gz'
+    log:
+        err = "output/vcf/logs/zipVCF2.err"
+    shell:
+        """
+        module load samtools
+        bgzip {input} 2> {log.err}
+        """  
+
+rule indexVCF2:
+    input:
+        rules.zipVCF2.output
+    output:
+        'output/vcf/' + vcf_prefix + '_nodups_biallelicALL.vcf.gz.tbi'
+    log:
+        out = "output/vcf/logs/indexVCF2.out",
+        err = "output/vcf/logs/idnexVCF2.err"
+    shell:
+        """
+        module load gatk/4.1.7.0
+        gatk IndexFeatureFile -I {input} 2> {log.err} 1> {log.out}
+        """    

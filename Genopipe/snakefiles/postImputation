@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+
+import pandas as pd
+import os
+
+## Load config file
+configfile: "config/config.yaml"
+
+## Read in samplesheet
+genos = pd.read_csv(config["geno"], sep = ",")
+
+## Convert samplesheet columns to strings
+genos = genos.astype(str)
+
+## Read in samplesheet with imputed vcfs
+vcfs = pd.read_csv(config["vcf"],sep=",")
+
+## Convert samplesheet columns to strings
+vcfs = vcfs.astype(str)
+
+## Grab vcf paths for all chromosomes
+vcfs = vcfs['vcf_path']
+
+mergeName = '_'.join(genos['Batch'])
+
+## Define actions on success
+onsuccess:
+
+    ## Success message
+    print("Imputed VCFs qc'd succesfully! Use these vcfs in the Allelic Imbalance pipeline or QTL Mapping pipeline.")
+
+rule all:
+    input: 
+        'output/vcf/' + mergeName + '_ALL_qc.vcf.gz'
+
+rule concatVCF:
+    input: 
+        vcfs
+    output:
+        temp('output/vcf/' + mergeName + '_ALL.vcf.gz')
+    params:
+        prefix = mergeName
+    log:
+        err1 = "output/vcf/logs/concatVCF.err"
+    shell:
+        """
+        mkdir -p output/vcf/logs
+        module load samtools
+        bcftools concat -o {params.prefix}_ALL.vcf {input} 2> {log.err1}
+        bgzip {params.prefix}_ALL.vcf
+        """      
+
+rule qcVCF:
+    input:
+        'output/vcf/' + mergeName + '_ALL.vcf.gz'
+    output:
+        'output/vcf/' + mergeName + '_ALL_qc.vcf.gz'
+    params:
+        prefix = mergeName
+    log:
+        out = "output/vcf/logs/qc.out"
+    shell:
+        """
+        mkdir -p output/vcf/logs
+        module load plink
+        plink --vcf {input} --geno 0.05 --hwe 0.00000001 --maf 0.01 --recode vcf --out {params.prefix}_ALL_qc 1> {log.out}
+
+        module load samtools
+        bgzip {params.prefix}_ALL_qc.vcf
+        """
