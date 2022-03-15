@@ -38,6 +38,7 @@ rule all:
     input:
         [expand("output/imputation/{prefix}_chr{chr}.recode.vcf.gz", prefix = mergeName, chr = c) for c in range(1, 23)],
         "output/reports/" + mergeName + ".sexcheck",
+        "output/reports/" + mergeName + ".genome",
         "output/ancestry/ancestry.pdf"
 
 rule convertBinary:
@@ -120,13 +121,16 @@ rule qc:
         fam=temp("output/merge/" + mergeName + "_qc.fam")
     params:
         prefix = "output/merge/" + mergeName,
-        outpre = mergeName
+        outpre = mergeName,
+        geno = config['miss_call'],
+        hwe = config['hwe'],
+        maf = config['maf']
     log:
         out = "output/merge/logs/" + mergeName + "_qc.out"
     shell:
         """
         mkdir -p output/merge/logs
-        plink --bfile {params.prefix} --geno 0.05 --hwe 0.00000001 --maf 0.01 --make-bed --out output/merge/{params.outpre}_qc 1> {log.out}
+        plink --bfile {params.prefix} --geno {params.geno} --hwe {params.hwe} --maf {params.maf} --make-bed --out output/merge/{params.outpre}_qc 1> {log.out}
         mv output/merge/{params.outpre}_qc.log output/merge/logs/{params.outpre}_qc.err
         """
 
@@ -287,6 +291,21 @@ rule pruneData:
         mkdir -p output/ancestry/logs
         plink --bfile {params.prefix} --extract {input.ldList} --autosome --make-bed --out output/ancestry/{params.outpre}_ldautosome 1> {log.out}
         mv output/ancestry/{params.outpre}_ldautosome.log output/ancestry/logs/{params.outpre}_ldautosome.err
+        """
+
+rule pairwiseIBD:
+    input: 
+        rules.pruneData.output
+    output:
+        "output/reports/" + mergeName + ".genome"
+    params:
+        prefix = "output/ancestry/" + mergeName + "_ldautosome",
+        outpre = mergeName
+    shell:
+        """
+        mkdir -p output/reports
+        plink --bfile {params.prefix} --genome --out output/reports/{params.outpre}
+        rm output/reports/{params.outpre}.log
         """
 
 rule pruneReference:

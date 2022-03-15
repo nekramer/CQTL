@@ -46,8 +46,8 @@ rule concatVCF:
         """
         mkdir -p output/vcf/logs
         module load samtools
-        bcftools concat -o {params.prefix}_ALL.vcf {input} 2> {log.err1}
-        bgzip {params.prefix}_ALL.vcf
+        bcftools concat -o output/vcf/{params.prefix}_ALL.vcf {input} 2> {log.err1}
+        bgzip output/vcf/{params.prefix}_ALL.vcf
         """      
 
 rule qcVCF:
@@ -56,15 +56,20 @@ rule qcVCF:
     output:
         'output/vcf/' + mergeName + '_ALL_qc.vcf.gz'
     params:
-        prefix = mergeName
+        prefix = mergeName,
+        geno = config['miss_call'],
+        hwe = config['hwe'],
+        maf = config['maf']
     log:
-        out = "output/vcf/logs/qc.out"
+        out = "output/vcf/logs/" + mergeName + "_ALL_qc.out"
     shell:
         """
         mkdir -p output/vcf/logs
         module load plink
-        plink --vcf {input} --geno 0.05 --hwe 0.00000001 --maf 0.01 --recode vcf --out {params.prefix}_ALL_qc 1> {log.out}
+        plink --vcf {input} --const-fid 0 --geno {params.geno} --hwe {params.hwe} --maf {params.maf} --recode vcf --out output/vcf/{params.prefix}_ALL_qc 1> {log.out}
+        mv output/vcf/{params.prefix}_ALL_qc.log output/vcf/logs/{params.prefix}_ALL_qc.err
+        rm output/vcf/{params.prefix}_ALL_qc.nosex
 
         module load samtools
-        bgzip {params.prefix}_ALL_qc.vcf
+        bgzip output/vcf/{params.prefix}_ALL_qc.vcf
         """
