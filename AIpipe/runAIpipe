@@ -1,10 +1,11 @@
 #!/bin/bash
 #SBATCH -J AIpipe
-#SBATCH -t 24:00:00
+#SBATCH -t 10-00:00:00
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 1
 #SBATCH -p general
+#SBATCH --mem=2gb
 #SBATCH -o "%x-%j.out"
 
 ## Load python
