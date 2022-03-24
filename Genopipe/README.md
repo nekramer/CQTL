@@ -81,6 +81,6 @@ After running these steps the pipeline will produce the following key files:
     sbatch runGenopipeImputation
     ```
 After running this workflow the pipeline will produce one qc'd, gzipped vcf file:
-    - `output/vcf/{group}_ALL_qc.vcf.gz`
+- `output/vcf/{group}_ALL_qc.vcf.gz`
 
 
