@@ -106,6 +106,7 @@ rule trim:
         """
         module load trim_galore/0.6.2
         module load python/3.6.6
+        module load pigz
         mkdir -p output/{wildcards.group}/trim
         trim_galore -o output/{wildcards.group}/trim --cores {threads} --path_to_cutadapt /nas/longleaf/apps/cutadapt/2.9/venv/bin/cutadapt --paired {input.R1} {input.R2} 2> {log.err}
         """

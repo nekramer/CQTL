@@ -1,0 +1,13 @@
+rule index:
+    input:
+        "output/{group}/align/{group}.Aligned.sortedByCoord.out.bam"
+    output:
+        "output/{group}/align/{group}.Aligned.sortedByCoord.out.bam.bai"
+    threads: 8
+    log:
+        err = "output/{group}/logs/{group}_index.err"
+    shell:
+        """
+        module load samtools
+        samtools index -@ {threads} {input} {output} 2> {log.err}
+        """

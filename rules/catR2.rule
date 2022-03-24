@@ -1,0 +1,13 @@
+rule catR2:
+    input:
+        lambda wildcards: read2.get(wildcards.group)
+    output:
+        "output/{group}/fastq/{group}_R2.fastq.gz"
+    threads: 1
+    log:
+        err = "output/{group}/logs/{group}_catR2.err"
+    shell:
+        """
+        mkdir -p output/{wildcards.group}/fastq
+        cat {input} > {output} 2> {log.err}
+        """

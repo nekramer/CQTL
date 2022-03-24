@@ -1,0 +1,18 @@
+rule trim:
+    input:
+        R1 = lambda wildcards: ['output/{group}/fastq/{group}_R1.fastq.gz'.format(group=wildcards.group)],
+        R2 = lambda wildcards: ['output/{group}/fastq/{group}_R2.fastq.gz'.format(group=wildcards.group)]
+    output:
+        trim1 = "output/{group}/trim/{group}_R1_val_1.fq.gz",
+        trim2 = "output/{group}/trim/{group}_R2_val_2.fq.gz"
+    threads: 4
+    log:
+        err = "output/{group}/logs/{group}_trim.err"
+    shell:
+        """
+        module load trim_galore/0.6.2
+        module load python/3.6.6
+        module load pigz
+        mkdir -p output/{wildcards.group}/trim
+        trim_galore -o output/{wildcards.group}/trim --cores {threads} --path_to_cutadapt /nas/longleaf/apps/cutadapt/2.9/venv/bin/cutadapt --paired {input.R1} {input.R2} 1> {log.err}
+        """
