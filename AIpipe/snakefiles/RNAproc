@@ -28,7 +28,7 @@ read2 = samples.groupby(['id'])['Read2'].apply(list).to_dict()
 onsuccess:
 
     ## Success message
-    print("Allelic imbalance read processing finished successfully!")
+    print("Allelic imbalance RNA processing finished successfully!")
 
     ## Remove trim 
     #shutil.rmtree(os.path.join('output', key, 'trim'))
@@ -52,6 +52,7 @@ rule catR1:
         lambda wildcards: read1.get(wildcards.group)
     output:
         "output/{group}/fastq/{group}_R1.fastq.gz"
+    threads: 1
     log:
         err = "output/{group}/logs/{group}_catR1.err"
     shell:
@@ -65,6 +66,7 @@ rule catR2:
         lambda wildcards: read2.get(wildcards.group)
     output:
         "output/{group}/fastq/{group}_R2.fastq.gz"
+    threads: 1
     log:
         err = "output/{group}/logs/{group}_catR2.err"
     shell:
@@ -97,23 +99,25 @@ rule trim:
     output:
         trim1 = temp("output/{group}/trim/{group}_R1_val_1.fq.gz"),
         trim2 = temp("output/{group}/trim/{group}_R2_val_2.fq.gz")
+    threads: 4
     log:
         err = "output/{group}/logs/{group}_trim.err"
     shell:
         """
-        module load trim_galore/0.4.3
+        module load trim_galore/0.6.2
         mkdir -p output/{wildcards.group}/trim
-        trim_galore -o output/{wildcards.group}/trim --paired {input.R1} {input.R2} 2> {log.err}
+        trim_galore -o output/{wildcards.group}/trim --cores {threads} --paired {input.R1} {input.R2} 2> {log.err}
         """
 
 rule align:
     input:
         R1 = rules.trim.output.trim1,
         R2 = rules.trim.output.trim2,
-        vcf = VCFproc("output/vcf/nodups_biallelicALL.vcf.gz"),
-        i = VCFproc("output/vcf/nodups_biallelicALL.vcf.gz.tbi")
+        vcf = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz'),
+        i = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi')
     output:
         "output/{group}/align/{group}.Aligned.sortedByCoord.out.bam"
+    threads: 8
     log:
         out = "output/{group}/logs/{group}_align.out"
     params:
@@ -144,12 +148,13 @@ rule index:
         rules.align.output
     output:
         "output/{group}/align/{group}.Aligned.sortedByCoord.out.bam.bai"
+    threads: 8
     log:
         err = "output/{group}/logs/{group}_index.err"
     shell:
         """
         module load samtools
-        samtools index {input} {output} 2> {log.err}
+        samtools index -@ {threads} {input} {output} 2> {log.err}
         """
 
 rule assignGroups:
@@ -158,6 +163,7 @@ rule assignGroups:
         I = rules.index.output
     output:
         "output/{group}/grouped/{group}.grouped.sort.bam"
+    threads: 1
     log:
         err = "output/{group}/logs/{group}_assignGroups.err"
     shell:
@@ -171,10 +177,11 @@ rule assignGroups:
 rule countReads:
     input:
         bam = rules.assignGroups.output,
-        vcf = VCFproc("output/vcf/nodups_biallelicALL.vcf.gz"),
-        i = VCFproc("output/vcf/nodups_biallelicALL.vcf.gz.tbi")
+        vcf = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz'),
+        i = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi')
     output:
         "output/{group}/alleleCounts/{group}_alleleCounts.csv"
+    threads: 1
     log:
         err = "output/{group}/logs/{group}_countReads.err"
     params:
