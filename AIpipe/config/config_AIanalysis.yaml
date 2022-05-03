@@ -1,0 +1,17 @@
+
+## Path to RNA-seq sample samplesheet
+samplesheet: 'samplesheet.csv'
+donors: 'donors.txt'
+
+## Path to vcf processed with VCFproc in first workflow
+vcf: '/pine/scr/n/e/nekramer/PIPE_test/AIpipe/output/vcf/COA_01_GDA8_COA2_01_ALL_qc_nodups_biallelic.vcf.gz'
+vcf_prefix: 'COA_01_GDA8_COA2_01'
+
+## Minimum number of total read counts from both alleles to consider a heterozygote from RNA
+minTotalAlleleCounts: 10
+## Minimum number of read counts from either allele to consider a heterozygote from RNA
+minAlleleCounts: 2
+## Threshold of number of heterozygotes a variant must have to remain in the analysis
+minHets: 5
+## Weight value for homozygotes in weight matrix for differential analysis
+weightVal: 1e-6

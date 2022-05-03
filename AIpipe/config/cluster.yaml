@@ -28,5 +28,11 @@ assignGroups:
   memPerCpu: 16G
 countReads:
   name: "countReads.{wildcards}"
-  memPerCpu: 16G
+  memPerCpu: 32G
 
+
+
+overlapVariants:
+  memPerCpu: 12G
+buildWeightsMatrix:
+  memPerCpu: 16G

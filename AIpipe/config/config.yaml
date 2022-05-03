@@ -1,17 +1,25 @@
+# AIPIPE
 ## Path to RNA-seq sample samplesheet
 samplesheet: 'samplesheet.csv'
 
-## Path to imputed genotyping
-vcf: '/pine/scr/n/e/nekramer/PIPE_test/Genopipe/output/vcf/ALL_qc.vcf.gz'
+## Path to imputed genotyping vcf
+vcf: '/pine/scr/n/e/nekramer/PIPE_test/Genopipe/output/vcf/COA_01_GDA8_COA2_01_ALL_qc.vcf.gz'
 
 ## Genome-specific reference parameters
+chromNames: 'chromNames.txt' # 2-column text file. 1st column: format of chromosome names in vcf file, 2nd column: required format of chromosome names for compatibility with contigs
+
+# GRCh38
+genomeDir: '/proj/seq/data/STAR_genomes/GRCh38_p10_GENCODE' # Path to folder of STAR genome.
+chromSizes: '/proj/seq/data/STAR_genomes/GRCh38_p10_GENCODE/chrNameLength.txt' # Path to file of chromosome names and lengths.
+sequence: '/proj/phanstiel_lab/SHARE/genomes/GENCODE.GRCh38.p10/Sequence/GRCh38.p10.genome.fa.gz' # Path to reference sequence gzipped fasta file. The associated sequence dictionary must be in the same directory as this file.
+
+
 # hg38
-genomeDir: '/proj/seq/data/STAR_genomes/GRCh38_p10_GENCODE'
-chromSizes: '/proj/phanstiel_lab/SHARE/genomes/hg38/hg38.chrom.sizes'
-sequence: '/proj/phanstiel_lab/SHARE/genomes/hg38/Sequence/hg38.fa.gz'
-chromNames: 'chromNames.txt'
+#chromSizes: '/proj/phanstiel_lab/SHARE/genomes/hg38/hg38.chrom.sizes'
+#sequence: '/proj/phanstiel_lab/SHARE/genomes/hg38/Sequence/hg38.fa.gz'
 
 # hg19
 #genomeDir: '/proj/seq/data/STAR_genomes/hg19'
 #chromSizes: '/proj/phanstiel_lab/SHARE/genomes/hg19/chromInfo.hg19.txt'
 #sequence: '/proj/phanstiel_lab/SHARE/genomes/hg19/Sequence/hg19.fa.gz'
+
