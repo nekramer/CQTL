@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pandas as pd
-import os
+import os, re
 
 ## Load config file
 configfile: "config/config_AIanalysis.yaml"
@@ -23,18 +23,13 @@ samples['id'] = samples[['Proj', 'Donor', 'Condition', 'Time', 'Tech_Rep']].agg(
 read1 = samples.groupby(['id'])['Read1'].apply(list).to_dict()
 read2 = samples.groupby(['id'])['Read2'].apply(list).to_dict()
 
-## Get vcf file path of VCFproc processed vcf from config file
+## Get vcf file path and prefix of VCFproc processed vcf from config file
 vcf = config['vcf']
-vcf_prefix = config['vcf_prefix']
+vcf_file = os.path.basename(vcf)
+vcf_prefix = vcf_file[:re.search("_nodups_biallelic.vcf.gz", vcf_file).span()[0]]
 
 onsuccess:
     print("Allelic imbalance analysis workflow finished successfully!")
-
-onerror:
-    print("An error occurred in the allelic imbalance analysis workflow. Deleting weightMatrix. Try updating the `weightVal` parameter and rerun.")
-    # Removing current weightMatrix
-    #os.remove('output/AI/weightMatrix.txt')
-
 
 rule all:
     input:
@@ -114,7 +109,7 @@ rule concatAlleleCounts:
     input:
         [expand("output/{group}/alleleCounts/{group}_commonCounts.csv", group = key) for key in read1]
     output:
-        'output/AI/alleleCountsMatrix.txt',
+        temp('output/AI/alleleCountsMatrix.txt'),
         'output/AI/colData.txt'
     params:
         donors = ",".join(samples['Donor'].unique().tolist()),
@@ -132,7 +127,7 @@ rule getRNAHets:
     input:
         'output/AI/alleleCountsMatrix.txt'
     output:
-        'output/AI/RNAhets.csv'
+        temp('output/AI/RNAhets.csv')
     params:
         donors = ",".join(samples['Donor'].unique().tolist()),
         minTotalAlleleCounts = config['minTotalAlleleCounts'],
@@ -149,7 +144,7 @@ rule getGenoHets:
         vcf = rules.VCFoverlapVariants.output,
         index = rules.VCFoverlapVariantsIndex.output
     output:
-        'output/AI/genohets.csv'
+        temp('output/AI/genohets.csv')
     params:
         donorConversions = config['donors']
     log:
@@ -175,7 +170,7 @@ rule checkConcordance:
         rna = rules.getRNAHets.output,
         geno = rules.getGenoHets.output
     output:
-        'output/AI/removeVariants.csv'
+        temp('output/AI/removeVariants.csv')
     log:
         out = "output/AI/logs/checkConcordance.out"
     params: 
@@ -195,7 +190,7 @@ rule filterVariants:
         rna = rules.getRNAHets.output
     output:
         'output/AI/alleleCountsMatrix_filtered.txt',
-        'output/AI/RNAhets_filtered.txt'
+        temp('output/AI/RNAhets_filtered.txt')
     log:
         out = 'output/AI/logs/filterVariants.out'
     shell:

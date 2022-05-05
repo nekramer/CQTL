@@ -5,7 +5,6 @@ donors: 'donors.txt'
 
 ## Path to vcf processed with VCFproc in first workflow
 vcf: '/pine/scr/n/e/nekramer/PIPE_test/AIpipe/output/vcf/COA_01_GDA8_COA2_01_ALL_qc_nodups_biallelic.vcf.gz'
-vcf_prefix: 'COA_01_GDA8_COA2_01'
 
 ## Minimum number of total read counts from both alleles to consider a heterozygote from RNA
 minTotalAlleleCounts: 10

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os
+import os, re
 
 ## Load config file
 configfile: "config/config.yaml"
@@ -8,7 +8,8 @@ configfile: "config/config.yaml"
 vcf = config["vcf"]
 
 ## Determine a prefix for the vcf file
-vcf_prefix = os.path.basename(os.path.splitext(os.path.splitext(vcf)[0])[0])
+vcf_file = os.path.basename(vcf)
+vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
 ## Define actions on success
 onsuccess:
