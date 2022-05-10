@@ -54,13 +54,15 @@ column. The names in the `Batch` columns will be used to create a group name for
     hwe: .000001 # PLINK --hwe: Hardy-Weinberg equilibrium; Exclude markers that fail the Hardy-Weinberg test at a specified significance.
 
     ## Genome-specific reference parameters
-    ref: '/proj/phanstiel_lab/SHARE/genomes/1000G/GRCh37/1000G_phase3_chrALL_biallelic' # Path to population reference data in PLINK binary format (.bed, .bim, .fam files), all autosomes merged.
-    panel: '/proj/phanstiel_lab/SHARE/genomes/1000G/GRCh37/1000G_phase3.panel' # Path to panel file of above population reference data. Must have the columns `sample`, `pop`, `super_pop`, and `gender`.
-    sequence: '/proj/phanstiel_lab/SHARE/genomes/hg19/Sequence/hg19.fa' # Path to reference sequence fasta file.
+    ref: '/proj/phanstiel_lab/References/genomes/1000G/GRCh37/1000G_phase3_chrALL_biallelic' # Path to population reference data in PLINK binary format (.bed, .bim,       .fam files), all autosomes merged.
+    panel: '/proj/phanstiel_lab/References/genomes/1000G/GRCh37/1000G_phase3.panel' # Path to panel file of above population reference data. Must have the columns         `sample`, `pop`, `super_pop`, and `gender`.
+    sequence: '/proj/phanstiel_lab/References/genomes/hg19/Sequence/hg19.fa' # Path to reference sequence fasta file.
 
     ## Additional options
     pop_name: 'CQTL' # Name of data 'population' to use as the label in ancestry PCA plot.
     ```
+To check the genome build of raw genotyping data obtained via a GenomeStudio project, check the `GenomeBuild` column of the .csv file
+found under the Manifest directory.
 
 4. Submit the first workflow with `sbatch`:
 
