@@ -31,4 +31,4 @@ esac
 deactivate
 
 ## Success message
-echo -e "\033[0;32mDirectory unlocked, ready to rerun with sbatch runGenopipe sbatch runGenopipeImputation"
+echo -e "\033[0;32mDirectory unlocked, ready to rerun with sbatch runGenopipe or sbatch runGenopipeImputation"
