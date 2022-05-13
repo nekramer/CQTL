@@ -13,7 +13,7 @@ genotyping data.
     ```bash
     git clone --no-checkout https://github.com/nekramer/CQTL.git AIpipe
     cd AIpipe
-    git sparse-checkout init --clone
+    git sparse-checkout init --cone
     git sparse-checkout set AIpipe
     git checkout
     ```

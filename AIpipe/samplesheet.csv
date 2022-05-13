@@ -1,2 +1,11 @@
 ﻿Proj,Donor,Condition,Time,Tech_Rep,Seq_Rep,Read1,Read2,Sequencing_Directory
-chQTL,AM7180,CTL,18,1,1,chQTL-AM7180-00_CCGCGGTT-AGCGCTAG_HG7V3DSXY_L002_001.R1.fastq.gz,chQTL-AM7180-00_CCGCGGTT-AGCGCTAG_HG7V3DSXY_L002_001.R2.fastq.gz,/proj/phanstiel_lab/Data/raw/chQTL/Project_PHA_14470_B01_EXS_RNA.2020-12-01/Sample_chQTL-AM7180-00/fastq/
+PROJ,DONOR1,CTL,18,1,1,donor1_CTL.R1.fastq.gz,donor1_CTL.R2.fastq.gz,/path/to/fastq/directory/
+PROJ,DONOR1,FNF,18,1,1,donor1_FNF.R1.fastq.gz,donor1_FNF.R2.fastq.gz,/path/to/fastq/directory/
+PROJ,DONOR2,CTL,18,1,1,donor2_CTL.R1.fastq.gz,donor2_CTL.R2.fastq.gz,/path/to/fastq/directory/
+PROJ,DONOR2,FNF,18,1,1,donor2_FNF.R1.fastq.gz,donor2_FNF.R2.fastq.gz,/path/to/fastq/directory/
+PROJ,DONOR3,CTL,18,1,1,donor3_CTL.R1.fastq.gz,donor3_CTL.R2.fastq.gz,/path/to/fastq/directory/
+PROJ,DONOR3,FNF,18,1,1,donor3_FNF.R1.fastq.gz,donor3_FNF.R2.fastq.gz,/path/to/fastq/directory/
+PROJ,DONOR4,CTL,18,1,1,donor4_CTL.R1.fastq.gz,donor4_CTL.R2.fastq.gz,/path/to/fastq/directory/
+PROJ,DONOR4,FNF,18,1,1,donor4_FNF.R1.fastq.gz,donor4_FNF.R2.fastq.gz,/path/to/fastq/directory/
+PROJ,DONOR5,CTL,18,1,1,donor5_CTL.R1.fastq.gz,donor5_CTL.R2.fastq.gz,/path/to/fastq/directory/
+PROJ,DONOR5,FNF,18,1,1,donor5_FNF.R1.fastq.gz,donor5_FNF.R2.fastq.gz,/path/to/fastq/directory/
