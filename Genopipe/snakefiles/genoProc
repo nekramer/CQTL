@@ -55,16 +55,35 @@ rule convertBinary:
             ## Move .log file to .err file in logs folder
             shutil.move("output/binary/" + row.Batch +  ".log", "output/binary/logs/" + row.Batch + "_binary.err")
 
-rule mergeData:
+rule removeSamples:
     input:
         rules.convertBinary.output
+    output:
+        temp(expand("output/binary/{name}_filter{ext}", name = genos['Batch'], ext = [".bed",".bim",".fam"])),
+        removeFile=temp("remove.plink")
+    params:
+        remove = config['remove']
+    run:
+        # Generate file for removal of variants from plink
+        subprocess.call(['python3', 'scripts/removeSamples.py', params.remove])
+
+        # Attempt to remove from all files
+        for row in genos.itertuples():
+            cmd = "plink --bfile output/binary/" + row.Batch + " --remove remove.plink --make-bed --out output/binary/" + row.Batch + "_filter 1> output/binary/logs/" + row.Batch + "_filter.out"
+            p = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            ## Move .log file to .err file in logs folder
+            shutil.move("output/binary/" + row.Batch +  "_filter.log", "output/binary/logs/" + row.Batch + "_filter.err")
+
+rule mergeData:
+    input:
+        rules.removeSamples.output
     output:
         temp("mergeList.txt"),
         bed=temp("output/merge/" + mergeName + ".bed"),
         bim=temp("output/merge/" + mergeName + ".bim"),
         fam=temp("output/merge/" + mergeName + ".fam")
     params:
-        file = genos.loc[0, "Batch"], 
+        file = genos.loc[0, "Batch"] + "_filter", 
         prefix = mergeName
     log:
         out = "output/merge/logs/" + mergeName + ".out"
@@ -74,7 +93,7 @@ rule mergeData:
         ## Create a mergeList
         mergeList = open('mergeList.txt', 'w')
         for row in genos[1:].itertuples():
-            mergeList.write("%s\n" % ("output/binary/" + row.Batch))
+            mergeList.write("%s\n" % ("output/binary/" + row.Batch + "_filter"))
         mergeList.close()
 
         ## Try merging first time
@@ -92,12 +111,12 @@ rule mergeData:
             for row in genos.itertuples():
                 ## Remove previous files
                 if i != 1:
-                    for f in glob.glob("output/binary/" + row.Batch + "_" + str(i-1) + ".*"):
+                    for f in glob.glob("output/binary/" + row.Batch + "_filter_" + str(i-1) + ".*"):
                         os.remove(f)
-                plink_subset = "plink --bfile output/binary/" + row.Batch + " --exclude mergeFails.txt --make-bed --out output/binary/" + row.Batch + "_" + str(i) + " 1> output/binary/logs/resubset.out"
+                plink_subset = "plink --bfile output/binary/" + row.Batch + "_filter --exclude mergeFails.txt --make-bed --out output/binary/" + row.Batch + "_filter_" + str(i) + " 1> output/binary/logs/resubset.out"
                 p2 = subprocess.run(plink_subset, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
                 if row.Index > 0:
-                    mergeList.write("%s\n" % ("output/binary/" + row.Batch + "_" + str(i)))
+                    mergeList.write("%s\n" % ("output/binary/" + row.Batch + "_filter_" + str(i)))
             mergeList.close()
 
             ## Try merging again with new files and update merge process
@@ -130,6 +149,7 @@ rule qc:
     shell:
         """
         mkdir -p output/merge/logs
+        # Run plink command
         plink --bfile {params.prefix} --geno {params.geno} --hwe {params.hwe} --maf {params.maf} --make-bed --out output/merge/{params.outpre}_qc 1> {log.out}
         mv output/merge/{params.outpre}_qc.log output/merge/logs/{params.outpre}_qc.err
         """

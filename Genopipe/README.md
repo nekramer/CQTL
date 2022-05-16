@@ -52,6 +52,8 @@ column. The names in the `Batch` columns will be used to create a group name for
     miss_call: 0.1 # PLINK --geno: Missing rate per SNP; A value of 0.1 will include only SNPs with a 90% genotyping rate (10% missing).
     maf: 0.01 # PLINK --maf: Minor allele frequency; A value of 0.01 will only include SNPs with a minor allele frequencey >= 0.01.
     hwe: .000001 # PLINK --hwe: Hardy-Weinberg equilibrium; Exclude markers that fail the Hardy-Weinberg test at a specified significance.
+    remove: 'remove.txt' # Text file listing which, if any, samples to remove from data and which 
+    batch they should be removed from.
 
     ## Genome-specific reference parameters
     ref: '/proj/phanstiel_lab/References/genomes/1000G/GRCh37/1000G_phase3_chrALL_biallelic' # Path to population reference data in PLINK binary format (.bed, .bim,       .fam files), all autosomes merged.
