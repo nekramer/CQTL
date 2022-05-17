@@ -86,4 +86,13 @@ After running these steps the pipeline will produce the following key files:
 After running this workflow the pipeline will produce one qc'd, gzipped vcf file:
 - `output/vcf/{group}_ALL_qc.vcf.gz`
 
+## Troubleshooting
 
+If an error occurs by misspecification of resources, a job's resources can be adjusted
+by editing `config/cluster.yaml`. To relaunch a workflow, unlock the directory with:
+    ```bash
+    module load python/3.6.6
+    snakemake -j 1 -s snakefiles/genoProc --unlock #or
+    snakemake -j 1 -s snakefiles/postImputation --unlock
+    ```
+and relaunch with `sbatch`.
