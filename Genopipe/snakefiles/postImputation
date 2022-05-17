@@ -31,7 +31,9 @@ onsuccess:
 
 rule all:
     input: 
-        'output/vcf/' + mergeName + '_ALL_qc.vcf.gz'
+        'output/vcf/' + mergeName + '_ALL_qc.vcf.gz',
+        'output/reports/' + mergeName + '_ALL_qc_VCFreport.txt'
+
 
 rule concatVCF:
     input: 
@@ -60,16 +62,30 @@ rule qcVCF:
         geno = config['miss_call'],
         hwe = config['hwe'],
         maf = config['maf']
+    threads: 4
     log:
         out = "output/vcf/logs/" + mergeName + "_ALL_qc.out"
     shell:
         """
         mkdir -p output/vcf/logs
         module load plink
-        plink --vcf {input} --const-fid 0 --geno {params.geno} --hwe {params.hwe} --maf {params.maf} --recode vcf --out output/vcf/{params.prefix}_ALL_qc 1> {log.out}
+        plink --vcf {input} --threads {threads} --const-fid 0 --geno {params.geno} --hwe {params.hwe} --maf {params.maf} --recode vcf --out output/vcf/{params.prefix}_ALL_qc 1> {log.out}
         mv output/vcf/{params.prefix}_ALL_qc.log output/vcf/logs/{params.prefix}_ALL_qc.err
         rm output/vcf/{params.prefix}_ALL_qc.nosex
 
         module load samtools
         bgzip output/vcf/{params.prefix}_ALL_qc.vcf
+        """
+
+rule vcfStats:
+    input:
+        rules.qcVCF.output
+    output:
+        'output/reports/' + mergeName + '_ALL_qc_VCFreport.txt'
+    params:
+        prefix = mergeName
+    shell:
+        """
+        module load samtools
+        bcftools stats output/vcf/{params.prefix}_ALL_qc.vcf.gz > {output}
         """
