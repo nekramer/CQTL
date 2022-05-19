@@ -39,8 +39,8 @@ Installing GenomeStudio:
     git checkout
     ```
 
-2. Edit the comma-separated `geno.csv` with the batch name, PLINK map/ped file prefix, and the path to these files under the `Genotyping_Directory`
-column. The names in the `Batch` columns will be used to create a group name for output files.
+2. Edit the comma-separated `geno.csv` with the project name, batch name, PLINK map/ped file prefix, and the path to these files under the `Genotyping_Directory`
+column. The names in the `Proj` and `Batch` columns will be used to create a group name for output files.
 
 3. Edit `config/config.yaml` for parameters specific to your analysis. The parameters are described below:
 

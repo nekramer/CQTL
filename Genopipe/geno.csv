@@ -1,4 +1,4 @@
-﻿Batch,File_Prefix,Genotyping_Directory
-Batch1,Prefix1,/path/to/batch1
-Batch2,Prefix2,/path/to/batch2
-Batch3,Prefix3,/path/to/batch3
+﻿Proj,Batch,File_Prefix,Genotyping_Directory
+PROJ,Batch1,Prefix1,/path/to/batch1
+PROJ,Batch2,Prefix2,/path/to/batch2
+PROJ,Batch3,Prefix3,/path/to/batch3

@@ -15,7 +15,7 @@ genos = genos.astype(str)
 ## Concatenate Genotyping_Directory to File Prefix for full path
 genos['Name'] = genos[['Genotyping_Directory', 'File_Prefix']].apply(lambda row: os.path.join(*row), axis=1)
 
-mergeName = '_'.join(genos['Batch'])
+mergeName = '_'.join(genos.Proj.unique()) + '_' + '_'.join(genos['Batch'])
 
 ## Define actions on success
 onsuccess:
@@ -489,7 +489,7 @@ rule plotAncestry:
     input:
         rules.runEigenstrat.output
     output:
-        "output/ancestry/ancestry.pdf"
+        "output/ancestry/" + mergeName + "_ancestry.pdf"
     params:
         panel = config['panel'],
         pca = "output/ancestry/" + mergeName + "_ref_merge.pca.evec",

@@ -21,7 +21,7 @@ vcfs = vcfs.astype(str)
 ## Grab vcf paths for all chromosomes
 vcfs = vcfs['vcf_path']
 
-mergeName = '_'.join(genos['Batch'])
+mergeName = '_'.join(genos.Proj.unique()) + '_' + '_'.join(genos['Batch'])'])
 
 ## Define actions on success
 onsuccess:
