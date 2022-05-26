@@ -25,7 +25,8 @@ read2 = samples.groupby(['id'])['Read2'].apply(list).to_dict()
 
 ## Get vcf file path of post-imputed, qc'd gzipped vcf file
 vcf = config["vcf"]
-vcf_prefix = os.path.basename(os.path.splitext(os.path.splitext(vcf)[0])[0])
+vcf_file = os.path.basename(vcf)
+vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
 ## Define actions on success
 onsuccess:
