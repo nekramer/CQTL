@@ -59,7 +59,7 @@ After running these steps the pipeline will produce the following key files:
     minHets: 5 # Threshold of number of heterozygotes a variant must have to remain in the analysis.
     weightVal: 1e-6 # Weight value for variant homozygotes in weight matrix for differential analysis.
     ```
-The path to the processed VCF file from the first workflow will be added to the config file in the first workflow.    
+The path to the processed VCF file from the first workflow will be added to this config file.    
     
 6. Submit the second workflow to combine and filter variant allele counts from donors and perform differential analysis of Allelic Imbalance:
 
