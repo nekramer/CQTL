@@ -52,12 +52,6 @@ After running these steps the pipeline will produce the following key files:
     ```yaml
     ## Path to RNA-seq sample samplesheet 
     samplesheet: 'samplesheet.csv'
-    
-    ## Text file of donor names as listed in the VCF file and as listed in the RNA-seq samplesheet
-    donors: 'donors.txt' # 2-column text file. 1st column: vcf donor names, 2nd column: corresponding RNA-seq samplesheet donor names. 
-
-    ## Path to VCF processed with VCFproc in first workflow.
-    vcf: '/path/to/output/vcf/{vcf_prefix}_nodups_biallelic.vcf.gz'
 
     ## AI analysis allele count, heterozygote, and weight value thresholds
     minTotalAlleleCounts: 10 # Minimum number of total read counts from both alleles of a variant to consider a donor as a heterozygote from RNA.
@@ -65,6 +59,8 @@ After running these steps the pipeline will produce the following key files:
     minHets: 5 # Threshold of number of heterozygotes a variant must have to remain in the analysis.
     weightVal: 1e-6 # Weight value for variant homozygotes in weight matrix for differential analysis.
     ```
+The path to the processed VCF file from the first workflow will be added to the config file in the first workflow.    
+    
 6. Submit the second workflow to combine and filter variant allele counts from donors and perform differential analysis of Allelic Imbalance:
 
     ```bash

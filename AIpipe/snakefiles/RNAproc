@@ -17,7 +17,7 @@ samples['Read1'] = samples[['Sequencing_Directory', 'Read1']].apply(lambda row: 
 samples['Read2'] = samples[['Sequencing_Directory', 'Read2']].apply(lambda row: os.path.join(*row), axis=1)
 
 ## Group Seq_Reps
-samples['id'] = samples[['Proj', 'Donor', 'Condition', 'Time', 'Tech_Rep']].agg('_'.join, axis=1)
+samples['id'] = samples[['Proj', 'Donor']].agg('_'.join, axis=1) + '_R_' + samples[['Condition', 'Time', 'Tech_Rep']].agg('_'.join, axis=1)
 
 ## Extract grouped read1 and read2s
 read1 = samples.groupby(['id'])['Read1'].apply(list).to_dict()
@@ -35,7 +35,9 @@ onsuccess:
     print("Allelic imbalance RNA processing finished successfully!")
 
     ## Remove trim directory
-    shutil.rmtree(os.path.join('output', key, 'trim') for key in read1)
+    for key in read1:
+        shutil.rmtree(os.path.join('output', key, 'trim'))
+    os.remove('editDonors.done')
 
 ## Run VCFproc first
 subworkflow VCFproc:
@@ -49,7 +51,8 @@ subworkflow VCFproc:
 ## Define rules
 rule all:
     input:
-        [expand("output/{group}/alleleCounts/{group}_alleleCounts.csv", group = key) for key in read1]
+        [expand("output/{group}/alleleCounts/{group}_alleleCounts.csv", group = key) for key in read1],
+        'editDonors.done'
 
 rule catR1:
     input:
@@ -207,4 +210,20 @@ rule countReads:
         module load gatk/4.1.7.0
         module load python/3.6.6
         gatk ASEReadCounter --input {input.bam} --variant {input.vcf} --output {output} --output-format RTABLE --min-base-quality 20 --disable-read-filter NotDuplicateReadFilter --reference {params.sequence} 2> {log.err}
+        """
+
+rule editDonors:
+    input:
+        vcf = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz')
+    output:
+        touch('editDonors.done')
+    params:
+        donors = ",".join(samples['Donor'].unique().tolist())
+    shell:
+        """
+        module load samtools
+        module load python/3.9.6
+        bcftools query -l {input.vcf} > donors.txt
+
+        python3 scripts/matchDonors.py donors.txt {params.donors}
         """

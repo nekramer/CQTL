@@ -17,7 +17,7 @@ samples['Read1'] = samples[['Sequencing_Directory', 'Read1']].apply(lambda row: 
 samples['Read2'] = samples[['Sequencing_Directory', 'Read2']].apply(lambda row: os.path.join(*row), axis=1)
 
 ## Group Seq_Reps
-samples['id'] = samples[['Proj', 'Donor', 'Condition', 'Time', 'Tech_Rep']].agg('_'.join, axis=1)
+samples['id'] = samples[['Proj', 'Donor']].agg('_'.join, axis=1) + '_R_' + samples[['Condition', 'Time', 'Tech_Rep']].agg('_'.join, axis=1)
 
 ## Extract grouped read1 and read2s
 read1 = samples.groupby(['id'])['Read1'].apply(list).to_dict()
@@ -53,13 +53,13 @@ rule overlapVariants:
 
 rule VCFoverlapSamples:
     input:
-        'output/vcf/' + vcf_prefix + '_ALL_qc_nodups_biallelic.vcf.gz',
+        'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
     output:
         temp('output/vcf/AIsamples.txt'),
-        'output/vcf/' + vcf_prefix + '_ALL_qc_nodups_biallelic_samples.vcf.gz'
+        'output/vcf/' + vcf_prefix + '_nodups_biallelic_samples.vcf.gz'
     params:
         donors = ",".join(samples['Donor'].unique().tolist()),
-        donorConversions = config['donors'],
+        donorConversions = 'donors.txt',
         prefix = vcf_prefix
     threads: 4
     log:
@@ -70,19 +70,19 @@ rule VCFoverlapSamples:
         Rscript scripts/convertDonors.r {params.donors} {params.donorConversions}
 
         module load samtools
-        bcftools view -S output/vcf/AIsamples.txt --threads {threads} -o output/vcf/{params.prefix}_ALL_qc_nodups_biallelic_samples.vcf {input} 2> {log.err}
+        bcftools view -S output/vcf/AIsamples.txt --threads {threads} -o output/vcf/{params.prefix}_nodups_biallelic_samples.vcf {input} 2> {log.err}
         
-        bgzip output/vcf/{params.prefix}_ALL_qc_nodups_biallelic_samples.vcf
+        bgzip output/vcf/{params.prefix}_nodups_biallelic_samples.vcf
         """
 
 rule VCFoverlapVariants:
     input:
-        vcf = 'output/vcf/' + vcf_prefix + '_ALL_qc_nodups_biallelic_samples.vcf.gz',
+        vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic_samples.vcf.gz',
         snps = "output/vcf/commonSnps.txt"
     output:
-        "output/vcf/" + vcf_prefix + "_ALL_qc_nodups_biallelic_AI.recode.vcf.gz"
+        "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz"
     params:
-        prefix = "output/vcf/" + vcf_prefix + "_ALL_qc_nodups_biallelic_AI"
+        prefix = "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI"
     shell:
         """
         module load vcftools
@@ -95,7 +95,7 @@ rule VCFoverlapVariantsIndex:
     input:
         rules.VCFoverlapVariants.output
     output:
-        "output/vcf/" + vcf_prefix + "_ALL_qc_nodups_biallelic_AI.recode.vcf.gz.tbi"
+        "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz.tbi"
     log:
         out = "output/vcf/logs/overlapVariantsIndex.out",
         err = "output/vcf/logs/overlapVariantsIndex.err"
@@ -146,7 +146,7 @@ rule getGenoHets:
     output:
         temp('output/AI/genohets.csv')
     params:
-        donorConversions = config['donors']
+        donorConversions = 'donors.txt'
     log:
         out = "output/AI/logs/genoHets.out"
     shell:

@@ -17,10 +17,15 @@ onsuccess:
     ## Success message
     print("VCFs processed successfully for Allelic Imbalance!")
 
+    ## Remove dummy output file
+    os.remove("edit.done")
+
+
 rule all:
     input:
         'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
-        'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi'
+        'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi',
+        'edit.done'
       
 rule chromContig:
     input:
@@ -170,4 +175,17 @@ rule indexVCF2:
         """
         module load gatk/4.1.7.0
         gatk IndexFeatureFile -I {input} 2> {log.err} 1> {log.out}
+        """
+
+rule addVCFPath:
+    input:
+        name = rules.zipVCF2.output,
+        config = 'config/config_AIanalysis.yaml'
+    output:
+        touch('edit.done')
+    shell:
+        """
+        echo {input.name}
+        echo {input.config}
+        sed -i 's#vcf:#& "'{input.name}'"#' {input.config}
         """
