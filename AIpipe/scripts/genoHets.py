@@ -31,7 +31,7 @@ for variant in geno.fetch():
         hetInfo.append([variant.id, donor, het])
 
 # Concat hetInfo into one pandas dataframe
-hetInfo = pd.DataFrame(hetInfo, columns = ["variant", "donor", "het"])
+hetInfo = pd.DataFrame(hetInfo, columns = ["variant", "donor", "genohet"])
 
 # Write to file
 hetInfo.to_csv("output/AI/genohets.csv", index = False)

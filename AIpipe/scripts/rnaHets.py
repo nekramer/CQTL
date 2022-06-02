@@ -78,7 +78,7 @@ for donor in donors:
      
 
 # Concat hetInfo into one pandas dataframe
-hetInfo = pd.DataFrame(hetInfo, columns = ["variant", "donor", "het", "maxAlt", "anyzero"])
+hetInfo = pd.DataFrame(hetInfo, columns = ["variant", "donor", "rnahet", "maxAlt", "anyzero"])
 
 # Write to file
 hetInfo.to_csv("output/AI/RNAhets.csv", index = False)

@@ -67,7 +67,7 @@ for (i in 1:max(length(donors_condition1_dfNames), length(donors_condition2_dfNa
         cond1_data <- get(donors_condition1_dfNames[i])
         cond1_data <- cond1_data[,c("refCount", "altCount")]
         donor <- unlist(str_split(donors_condition1_dfNames[i], "_"))[2]
-        cond1_biorep <- unlist(str_split(donors_condition1_dfNames[i], "_"))[5]
+        cond1_biorep <- unlist(str_split(donors_condition1_dfNames[i], "_"))[6]
         colnames(cond1_data) <- c(paste(donor, conditions[1], cond1_biorep, "ref", sep = "_"), paste(donor, conditions[1], cond1_biorep, "alt", sep = "_"))
         alleleCounts <- cbind(alleleCounts, cond1_data)
         colData <- rbind(colData, c(donor, conditions[1], cond1_biorep, "ref"),
@@ -79,7 +79,7 @@ for (i in 1:max(length(donors_condition1_dfNames), length(donors_condition2_dfNa
         cond2_data <- get(donors_condition2_dfNames[i])
         cond2_data <- cond2_data[,c("refCount", "altCount")]
         donor <- unlist(str_split(donors_condition2_dfNames[i], "_"))[2]
-        cond2_biorep <- unlist(str_split(donors_condition2_dfNames[i], "_"))[5]
+        cond2_biorep <- unlist(str_split(donors_condition2_dfNames[i], "_"))[6]
         colnames(cond2_data) <- c(paste(donor, conditions[2], cond2_biorep, "ref", sep = "_"), paste(donor, conditions[2], cond2_biorep, "alt", sep = "_"))
         alleleCounts <- cbind(alleleCounts, cond2_data)
         colData <- rbind(colData, c(donor, conditions[2], cond2_biorep, "ref"),
