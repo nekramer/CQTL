@@ -81,5 +81,5 @@ for donor in donors:
 hetInfo = pd.DataFrame(hetInfo, columns = ["variant", "donor", "rnahet", "maxAlt", "anyzero"])
 
 # Write to file
-hetInfo.to_csv("output/AI/RNAhets.csv", index = False)
+hetInfo.to_csv("output/AI/RNAhets_" + str(sys.argv[3]) + "_" + str(sys.argv[4]) + ".csv", index = False)
 

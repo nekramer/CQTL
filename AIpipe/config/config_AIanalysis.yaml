@@ -13,3 +13,6 @@ minAlleleCounts: 2
 minHets: 5
 ## Weight value for homozygotes in weight matrix for differential analysis
 weightVal: 1e-6
+
+## Path to dbSNP VCF file
+dbsnp: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/dbSNP/dbSNP155.GRCh38.p13.vcf.gz'

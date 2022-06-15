@@ -29,13 +29,15 @@ vcf_file = os.path.basename(vcf)
 vcf_prefix = vcf_file[:re.search("_nodups_biallelic.vcf.gz", vcf_file).span()[0]]
 
 onsuccess:
-    print("Allelic imbalance analysis workflow finished successfully!")
+    print("Allelic imbalance analysis (part 1) workflow finished successfully!")
 
 rule all:
     input:
-        'output/AI/differentialAllelicImbalance.rda',
-        'output/AI/agreementReport.txt',
-        'output/AI/AI_variant_positions.txt'
+        'output/vcf/' + vcf_prefix + '_nodups_biallelic_AI.recode.vcf.gz',
+        'output/vcf/' + vcf_prefix + '_nodups_biallelic_AI.recode.vcf.gz.tbi',
+        'output/AI/alleleCountsMatrix.txt',
+        'output/AI/colData.txt',
+        'output/AI/genohets.csv'
 
 rule overlapVariants:
     input:
@@ -56,7 +58,7 @@ rule VCFoverlapSamples:
         'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
     output:
         temp('output/vcf/AIsamples.txt'),
-        'output/vcf/' + vcf_prefix + '_nodups_biallelic_samples.vcf.gz'
+        temp('output/vcf/' + vcf_prefix + '_nodups_biallelic_samples.vcf.gz')
     params:
         donors = ",".join(samples['Donor'].unique().tolist()),
         donorConversions = 'donors.txt',
@@ -109,7 +111,7 @@ rule concatAlleleCounts:
     input:
         [expand("output/{group}/alleleCounts/{group}_commonCounts.csv", group = key) for key in read1]
     output:
-        temp('output/AI/alleleCountsMatrix.txt'),
+        'output/AI/alleleCountsMatrix.txt',
         'output/AI/colData.txt'
     params:
         donors = ",".join(samples['Donor'].unique().tolist()),
@@ -123,28 +125,12 @@ rule concatAlleleCounts:
         Rscript scripts/concatAlleleCounts.r {params.donors} {params.conditions} {input} 1> {log.out}
         """
 
-rule getRNAHets:
-    input:
-        'output/AI/alleleCountsMatrix.txt'
-    output:
-        temp('output/AI/RNAhets.csv')
-    params:
-        donors = ",".join(samples['Donor'].unique().tolist()),
-        minTotalAlleleCounts = config['minTotalAlleleCounts'],
-        minAlleleCounts = config['minAlleleCounts']
-    log:
-        out = "output/AI/logs/rnaHets.out"
-    shell:
-        """ 
-        python3 scripts/rnaHets.py {input} {params.donors} {params.minTotalAlleleCounts} {params.minAlleleCounts} 1> {log.out}
-        """
-         
 rule getGenoHets:
     input:
         vcf = rules.VCFoverlapVariants.output,
         index = rules.VCFoverlapVariantsIndex.output
     output:
-        temp('output/AI/genohets.csv')
+        'output/AI/genohets.csv'
     params:
         donorConversions = 'donors.txt'
     log:
@@ -152,84 +138,4 @@ rule getGenoHets:
     shell:
         """
         python3 scripts/genoHets.py {input.vcf} {params.donorConversions} 1> {log.out}
-        """
-
-rule reportAgreement:
-    input:
-        rna = rules.getRNAHets.output,
-        geno = rules.getGenoHets.output
-    output:
-        'output/AI/agreementReport.txt'
-    shell:
-        """
-        python3 scripts/checkAgreement.py {input.geno} {input.rna} 1> {output}
-        """
-
-rule checkConcordance:
-    input:
-        rna = rules.getRNAHets.output,
-        geno = rules.getGenoHets.output
-    output:
-        temp('output/AI/removeVariants.csv')
-    log:
-        out = "output/AI/logs/checkConcordance.out"
-    params: 
-        minHets = config['minHets']
-    threads: 4
-    shell:
-        """
-        # joblib module needs this version of python3
-        module load python/3.9.6
-        python3 scripts/checkConcordance.py {input.geno} {input.rna} {params.minHets} 1> {log.out}
-        """
-
-rule filterVariants:
-    input:
-        matrix = 'output/AI/alleleCountsMatrix.txt',
-        filter = rules.checkConcordance.output,
-        rna = rules.getRNAHets.output
-    output:
-        'output/AI/alleleCountsMatrix_filtered.txt',
-        temp('output/AI/RNAhets_filtered.txt')
-    log:
-        out = 'output/AI/logs/filterVariants.out'
-    shell:
-        """
-        module load r/4.1.0
-        Rscript scripts/filterVariants.r {input.matrix} {input.filter} {input.rna} 1> {log.out}
-        """
-
-rule buildWeightsMatrix:
-    input:
-        matrix = 'output/AI/alleleCountsMatrix_filtered.txt',
-        hets = 'output/AI/RNAhets_filtered.txt'
-    output:
-        'output/AI/weightMatrix.txt'
-    log:
-        out = 'output/AI/logs/buildWeightsMatrix.out'
-    params:
-        weightVal = config['weightVal']
-    threads: 4
-    shell:
-        """
-        module load python/3.9.6
-        python3 scripts/buildWeightsMatrix.py {input.matrix} {input.hets} {params.weightVal} 1> {log.out}
-        """
-
-rule runDifferentialAnalysis:
-    input:
-        counts = 'output/AI/alleleCountsMatrix_filtered.txt',
-        colData = 'output/AI/colData.txt',
-        weights = 'output/AI/weightMatrix.txt'
-    output:
-        'output/AI/differentialAllelicImbalance.rda',
-        'output/AI/AI_variant_positions.txt'
-    log:
-        out = 'output/AI/logs/differentialAnalysis.out'
-    params:
-        weightVal = config['weightVal']
-    shell:
-        """
-        module load r/4.1.3
-        Rscript scripts/differentialAnalysis.r {input.counts} {input.colData} {input.weights} 1> {log.out}
         """

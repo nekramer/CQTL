@@ -5,6 +5,7 @@ args = commandArgs(trailingOnly = TRUE)
 # args[1]: alleleCounts matrix
 # args[2]: variants to remove
 # args[3]: RNAhets
+# args[4]: minHets
 
 # Read in alleleCounts matrix
 alleleCounts <- read.table(args[1])
@@ -20,5 +21,5 @@ alleleCounts_subset <- alleleCounts[!rownames(alleleCounts) %in% remove$variant,
 RNAhets_subset <- RNAhets[!RNAhets$variant %in% remove$variant,]
 
 # Write to files
-write.table(alleleCounts_subset, "output/AI/alleleCountsMatrix_filtered.txt", quote = FALSE, row.names = TRUE, col.names = TRUE)
+write.table(alleleCounts_subset, paste0("output/AI/alleleCountsMatrix_", args[4],".txt"), quote = FALSE, row.names = TRUE, col.names = TRUE)
 write.table(RNAhets_subset, "output/AI/RNAhets_filtered.txt", quote = FALSE, row.names = FALSE, col.names = TRUE)
