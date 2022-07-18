@@ -25,11 +25,30 @@ onsuccess:
 rule all:
     input:
         'output/AI/differentialAllelicImbalance.rda',
-        'output/AI/AI_variants.txt'
+        'output/AI/AI_variants.txt',
         'output/AI/RNAhets_' + str(config['minTotalAlleleCounts']) + '_' + str(config['minAlleleCounts']) + '.csv',
-        'output/AI/alleleCountsMatrix_filtered_' + config['minHets'] '.txt',
+        'output/reports/totalAlleleCountsReport_' + str(config['minTotalAlleleCounts']) + '_' + str(config['minAlleleCounts']) + '.csv',
+        "output/reports/GenoRNA_errorStats.csv",
+        'output/AI/alleleCountsMatrix_filtered_' + str(config['minHets']) + '.txt',
         'output/AI/weightMatrix.txt',
         'output/AI/agreementReport.txt',
+        'output/reports/total_RNAhets.csv'
+
+rule rnaReports:
+    input:
+        'output/AI/alleleCountsMatrix.txt'
+    output:
+        'output/reports/totalAlleleCountsReport_' + str(config['minTotalAlleleCounts']) + '_' + str(config['minAlleleCounts']) + '.csv'
+    params:
+        donors = ",".join(samples['Donor'].unique().tolist()),
+        minTotalAlleleCounts = config['minTotalAlleleCounts'],
+        minAlleleCounts = config['minAlleleCounts']
+    log:
+        out = "output/AI/logs/rnaReports"
+    shell:
+        """
+        python3 scripts/rnaReports.py {input} {params.donors} {params.minTotalAlleleCounts} {params.minAlleleCounts} 1> {log.out}
+        """
 
 rule getRNAHets:
     input:
@@ -47,6 +66,19 @@ rule getRNAHets:
         python3 scripts/rnaHets.py {input} {params.donors} {params.minTotalAlleleCounts} {params.minAlleleCounts} 1> {log.out}
         """
          
+rule totalRNAhets:
+    input:
+        'output/AI/RNAhets_' + str(config['minTotalAlleleCounts']) + '_' + str(config['minAlleleCounts']) + '.csv'
+    output:
+        'output/reports/total_RNAhets.csv'
+    log:
+        out = "output/AI/logs/totalRNAhets.out"
+    shell:
+        """
+        python3 scripts/variant_totalRNAHets.py {input} 1> {log.out}
+        """
+
+
 rule reportAgreement:
     input:
         rna = rules.getRNAHets.output,
@@ -60,10 +92,11 @@ rule reportAgreement:
 
 rule checkConcordance:
     input:
-        rna = rules.getRNAhets.output,
+        rna = rules.getRNAHets.output,
         geno = 'output/AI/genohets.csv'
     output:
-        temp('output/AI/removeVariants.csv')
+        'output/AI/removeVariants.csv',
+        "output/reports/GenoRNA_errorStats.csv"
     log:
         out = "output/AI/logs/checkConcordance.out"
     params: 
@@ -79,10 +112,10 @@ rule checkConcordance:
 rule filterVariants:
     input:
         matrix = 'output/AI/alleleCountsMatrix.txt',
-        filter = rules.checkConcordance.output,
+        filter = 'output/AI/removeVariants.csv',
         rna = rules.getRNAHets.output
     output:
-        'output/AI/alleleCountsMatrix_filtered_' + config['minHets'] '.txt',
+        'output/AI/alleleCountsMatrix_filtered_' + str(config['minHets']) + '.txt',
         temp('output/AI/RNAhets_filtered.txt')
     params:
         minHets = config['minHets']
@@ -96,7 +129,7 @@ rule filterVariants:
 
 rule buildWeightsMatrix:
     input:
-        matrix = 'output/AI/alleleCountsMatrix_filtered.txt',
+        matrix = 'output/AI/alleleCountsMatrix_filtered_' + str(config['minHets']) + '.txt',
         hets = 'output/AI/RNAhets_filtered.txt'
     output:
         'output/AI/weightMatrix.txt'
@@ -113,7 +146,7 @@ rule buildWeightsMatrix:
 
 rule runDifferentialAnalysis:
     input:
-        counts = 'output/AI/alleleCountsMatrix_filtered.txt',
+        counts = 'output/AI/alleleCountsMatrix_filtered_' + str(config['minHets']) + '.txt',
         colData = 'output/AI/colData.txt',
         weights = 'output/AI/weightMatrix.txt'
     output:

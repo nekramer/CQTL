@@ -69,10 +69,34 @@ The path to the processed VCF file from the first workflow will be added to this
 After running this workflow the pipeline will produce the following key files:
 
 - `output/AI/differentialAllelicImbalance.rda`: An RData file containing the results of running `DESeq2` using the produced allele counts matrix and weight matrix.
-- `output/AI/agreementReport.txt`: A text file generally showing the agreement between variants called heterozygotes and homozygotes from genotyping data versus RNA data.
-- `output/AI/AI_variant_positions.txt`: A text file listing the variant positions for all the variants included in the analysis.
+- `output/AI/AI_variants.txt`: A text file listing the variant positions and their 
+RSIDs for all the variants included in the analysis.
 
 If you wish to re-run `DESeq2` manually, the necessary components can be found in `output/AI`:
-- `alleleCountsMatrix_filtered`: The allele counts matrix for each variant, separated by donor, treatment, and ref/alt alleles.
+- `alleleCountsMatrix_filtered_{minHets}.txt`: The allele counts matrix for each variant, separated by donor, treatment, and ref/alt alleles.
 - `colData.txt`: Sample information for each of the columns in the allele counts matrix.
 - `weightMatrix.txt`: The weight matrix for weighting heterozygotes and homozygotes.
+
+## Reports
+
+The following reports will be produced to help assess the filtering parameters 
+associated with this workflow:
+
+- `output/reports/snpStats.txt`: Count of number of variants for each separate sample before any kind of filtering. 
+
+- `output/reports/unfiltered_commonSnps.txt`: Number of common variants all samples have pre-filtering.
+
+- `output/reports/genohetStats.csv`: Organized by variant, how many samples called heterozygotes based on 
+genotyping data alone. 
+
+- `output/reports/totalAlleleCountsReport_{minTotalAlleleCounts}_{minAlleleCounts}.csv`: Organized primarily by variant,
+shows which samples satisfy the given minTotalAlleleCount and minAlleleCounts thresholds. 
+
+- `output/reports/GenoRNA_errorStats.csv`: Organized by variant, number of donors called heterozygous based on RNA-seq data but have at least one allele with 0 read counts AND 
+number of donors called homozygous based on genotyping data but the alternate allele has
+greater than or equal to 10 RNA-seq reads.
+
+- `output/reports/total_RNAhets.csv`: Organized by variant, how many samples called heterozygotes based on 
+RNA-seq data alone.
+
+- `output/AI/agreementReport.txt`: A text file generally showing the agreement between variants called heterozygotes and homozygotes from genotyping data versus RNA-seq data.
