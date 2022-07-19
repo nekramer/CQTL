@@ -86,17 +86,17 @@ associated with this workflow:
 
 - `output/reports/unfiltered_commonSnps.txt`: Number of common variants all samples have pre-filtering.
 
-- `output/reports/genohetStats.csv`: Organized by variant, how many samples called heterozygotes based on 
-genotyping data alone. 
+- `output/reports/genohetStats.csv`: How many samples called heterozygous per variant based on 
+genotyping data alone.
+
+- `output/reports/total_RNAhets.csv`: How many samples called heterozygous per variant based on 
+RNA-seq data alone.
 
 - `output/reports/totalAlleleCountsReport_{minTotalAlleleCounts}_{minAlleleCounts}.csv`: Organized primarily by variant,
-shows which samples satisfy the given minTotalAlleleCount and minAlleleCounts thresholds. 
+shows which samples satisfy the given minTotalAlleleCount and minAlleleCounts thresholds based on RNA-seq reads. 
 
-- `output/reports/GenoRNA_errorStats.csv`: Organized by variant, number of donors called heterozygous based on RNA-seq data but have at least one allele with 0 read counts AND 
-number of donors called homozygous based on genotyping data but the alternate allele has
-greater than or equal to 10 RNA-seq reads.
-
-- `output/reports/total_RNAhets.csv`: Organized by variant, how many samples called heterozygotes based on 
-RNA-seq data alone.
+- `output/reports/GenoRNA_errorStats.csv`: Organized by variant, number of donors called heterozygous based on genotype but have at least one allele with 0 RNA-seq counts AND 
+number of donors called homozygous based on genotype but the alternate allele has
+greater than or equal to 10 RNA-seq counts. This report shows potential genotyping errors.
 
 - `output/AI/agreementReport.txt`: A text file generally showing the agreement between variants called heterozygotes and homozygotes from genotyping data versus RNA-seq data.
