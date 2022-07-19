@@ -31,7 +31,7 @@ rule all:
         "output/reports/GenoRNA_errorStats.csv",
         'output/AI/alleleCountsMatrix_filtered_' + str(config['minHets']) + '.txt',
         'output/AI/weightMatrix.txt',
-        'output/AI/agreementReport.txt',
+        'output/reports/agreementReport.txt',
         'output/reports/total_RNAhets.csv'
 
 rule rnaReports:
@@ -84,7 +84,7 @@ rule reportAgreement:
         rna = rules.getRNAHets.output,
         geno = 'output/AI/genohets.csv'
     output:
-        'output/AI/agreementReport.txt'
+        'output/reports/agreementReport.txt'
     shell:
         """
         python3 scripts/checkAgreement.py {input.geno} {input.rna} 1> {output}

@@ -31,7 +31,8 @@ countReads:
   memPerCpu: 32G
 
 
-
+reportAgreement:
+  memPerCpu: 8G
 overlapVariants:
   memPerCpu: 12G
 buildWeightsMatrix:

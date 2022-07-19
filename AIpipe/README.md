@@ -79,24 +79,24 @@ If you wish to re-run `DESeq2` manually, the necessary components can be found i
 
 ## Reports
 
-The following reports will be produced to help assess the filtering parameters 
+The following reports will be produced in `output/reports`to help assess the filtering parameters 
 associated with this workflow:
 
-- `output/reports/snpStats.txt`: Count of number of variants for each separate sample before any kind of filtering. 
+- `snpStats.txt`: Count of number of variants for each separate sample before any kind of filtering. 
 
-- `output/reports/unfiltered_commonSnps.txt`: Number of common variants all samples have pre-filtering.
+- `unfiltered_commonSnps.txt`: Number of common variants all samples have pre-filtering.
 
-- `output/reports/genohetStats.csv`: How many samples called heterozygous per variant based on 
+- `genohetStats.csv`: How many samples called heterozygous per variant based on 
 genotyping data alone.
 
-- `output/reports/total_RNAhets.csv`: How many samples called heterozygous per variant based on 
+- `total_RNAhets.csv`: How many samples called heterozygous per variant based on 
 RNA-seq data alone.
 
-- `output/reports/totalAlleleCountsReport_{minTotalAlleleCounts}_{minAlleleCounts}.csv`: Organized primarily by variant,
+- `totalAlleleCountsReport_{minTotalAlleleCounts}_{minAlleleCounts}.csv`: Organized primarily by variant,
 shows which samples satisfy the given minTotalAlleleCount and minAlleleCounts thresholds based on RNA-seq reads. 
 
-- `output/reports/GenoRNA_errorStats.csv`: Organized by variant, number of donors called heterozygous based on genotype but have at least one allele with 0 RNA-seq counts AND 
+- `GenoRNA_errorStats.csv`: Organized by variant, number of donors called heterozygous based on genotype but have at least one allele with 0 RNA-seq counts AND 
 number of donors called homozygous based on genotype but the alternate allele has
 greater than or equal to 10 RNA-seq counts. This report shows potential genotyping errors.
 
-- `output/AI/agreementReport.txt`: A text file generally showing the agreement between variants called heterozygotes and homozygotes from genotyping data versus RNA-seq data.
+- `agreementReport.txt`: A text file generally showing the agreement between variants called heterozygotes and homozygotes from genotyping data versus RNA-seq data.

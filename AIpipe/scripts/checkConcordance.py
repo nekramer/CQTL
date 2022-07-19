@@ -36,8 +36,29 @@ def checkVariant(key, variant):
     else:
         return key
 
+def getVariantStats(key, variant):
+    # Check that all genohet rows == rnahet rows
+    if all(variant.apply(lambda x: x.genohet == x.rnahet, axis = 1)):
+
+        # Check the number of rnahet == True / anyzero == True donors
+        zeroCountHetDonors = np.sum(variant.apply(lambda x : x.rnahet == True and x.anyzero == True, axis = 1))
+
+        # Check the number of rnahet == False / maxAlt >= 10 donors
+        altCountHomDonors = np.sum(variant.apply(lambda x : x.rnahet == False and x.maxAlt >= 10, axis = 1))
+     
+        return([key, zeroCountHetDonors, altCountHomDonors])
+
+    else:
+        return([key, None, None])    
+
 num_cores = multiprocessing.cpu_count()
 remove_variants = list(filter(None, Parallel(n_jobs = num_cores)(delayed(checkVariant)(key, variant) for key, variant in variantdfs.items())))
+
+variantStats = Parallel(n_jobs = num_cores)(delayed(getVariantStats)(key, variant) for key, variant in variantdfs.items())
+
+# Write variant stats to file
+variantStats = pd.DataFrame(variantStats, columns = ["variant", "# genoHet_anyZeroCounts", "# genoHom_10AltAlleleCounts"])
+variantStats.to_csv("output/reports/GenoRNA_errorStats.csv", index = False)
 
 # Clear out variant dictionary entries in remove_variants
 for var in remove_variants:
@@ -60,3 +81,5 @@ total_remove = remove_variants + remove_variants2
 # Write removal list to file
 total_remove = pd.DataFrame(total_remove, columns = ["variant"])
 total_remove.to_csv("output/AI/removeVariants.csv", index = False)
+
+
