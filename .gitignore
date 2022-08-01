@@ -1,0 +1,17 @@
+# Ignore all output folders
+*/output
+
+# Ignore all pipeline out files
+*/*.out
+
+# Ignore samplesheets
+*/*.csv
+
+# Ignore config updates
+*/config
+
+# Ignore env
+*/env
+
+# Ignore Genopipe remove.txt
+Genopipe/remove.txt
