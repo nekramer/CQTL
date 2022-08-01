@@ -18,7 +18,7 @@ onsuccess:
     print("VCFs processed successfully for Allelic Imbalance!")
 
     ## Remove dummy output file
-    os.remove("edit.done")
+    #os.remove("edit.done")
 
 
 rule all:
@@ -182,10 +182,11 @@ rule addVCFPath:
         name = rules.zipVCF2.output,
         config = 'config/config_AIanalysis.yaml'
     output:
-        touch('edit.done')
+        'edit.done'
     shell:
         """
         echo {input.name}
         echo {input.config}
         sed -i 's#vcf:#& "'{input.name}'"#' {input.config}
+        touch {output}
         """

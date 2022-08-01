@@ -5,7 +5,7 @@
 */*.out
 
 # Ignore samplesheets
-*/*.csv
+AIpipe/samplesheet.csv
 
 # Ignore config updates
 */config
