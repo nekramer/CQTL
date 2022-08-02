@@ -37,10 +37,17 @@ parameters specific to your analysis. The parameters are described below:
     sequence: '/proj/phanstiel_lab/References/GENCODE.GRCh38.p10/Sequence/GRCh38.p10.genome.fa.gz' # Path to reference sequence gzipped fasta file. The associated sequence dictionary must be in the same directory as this file.
     ```
 
-4. Submit the first workflow with `sbatch`:
+4. 
+    a. Submit the first workflow (VCF processing) with `sbatch`:
     
     ```bash
-    sbatch runAIpipe
+    sbatch runAIpipe_part1
+    ```
+    
+    b. After the first workflow is done running, submit the first workflow (RNA processing) with `sbatch`:
+
+    ```bash
+    sbatch runAIpipe_part2
     ```
 
 After running these steps the pipeline will produce the following key files:
@@ -79,7 +86,7 @@ If you wish to re-run `DESeq2` manually, the necessary components can be found i
 
 ## Reports
 
-The following reports will be produced in `output/reports`to help assess the filtering parameters 
+The following reports will be produced in `output/reports` to help assess the filtering parameters 
 associated with this workflow:
 
 - `snpStats.txt`: Count of number of variants for each separate sample before any kind of filtering. 

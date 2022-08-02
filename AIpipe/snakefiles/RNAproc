@@ -39,15 +39,6 @@ onsuccess:
         shutil.rmtree(os.path.join('output', key, 'trim'))
     os.remove('editDonors.done')
 
-## Run VCFproc first
-subworkflow VCFproc:
-    workdir:
-        "../"
-    snakefile:
-        "VCFproc"
-    configfile:
-        "config/config.yaml"
-
 ## Define rules
 rule all:
     input:
@@ -129,8 +120,8 @@ rule align:
     input:
         R1 = rules.trim.output.trim1,
         R2 = rules.trim.output.trim2,
-        vcf = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz'),
-        i = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi')
+        vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
+        i = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi'
     output:
         "output/{group}/align/{group}.Aligned.sortedByCoord.out.bam"
     threads: 8
@@ -195,8 +186,8 @@ rule assignGroups:
 rule countReads:
     input:
         bam = rules.assignGroups.output,
-        vcf = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz'),
-        i = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi')
+        vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
+        i = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi'
     output:
         "output/{group}/alleleCounts/{group}_alleleCounts.csv"
     threads: 1
@@ -214,7 +205,7 @@ rule countReads:
 
 rule editDonors:
     input:
-        vcf = VCFproc('output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz')
+        vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz'
     output:
         touch('editDonors.done')
     params:
