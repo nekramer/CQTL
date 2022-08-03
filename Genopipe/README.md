@@ -29,14 +29,11 @@ Installing GenomeStudio:
 4. To export a PLINK report, click **Analysis > Reports > Custom Report > PLINK**. A **map** and **ped** file should be generated. 
 
 ## Workflow
-1. Clone repo into working directory:
+1. Clone this entire repo into working directory and entire `Genopipe` subdirectory:
 
     ```bash
-    git clone --no-checkout https://github.com/nekramer/CQTL.git Genopipe
-    cd Genopipe
-    git sparse-checkout init --cone
-    git sparse-checkout set Genopipe
-    git checkout
+    git clone https://github.com/nekramer/CQTL.git
+    cd CQTL/Genopipe
     ```
 
 2. Edit the comma-separated `geno.csv` with the project name, batch name, PLINK map/ped file prefix, and the path to these files under the `Genotyping_Directory`
