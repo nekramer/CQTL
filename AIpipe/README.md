@@ -8,15 +8,13 @@ genotyping data.
 
 ## Workflow
 
-1. Clone repo into working directory:
+1. Clone this entire repo into working directory and entire `AIpipe` subdirectory:
 
     ```bash
-    git clone --no-checkout https://github.com/nekramer/CQTL.git AIpipe
-    cd AIpipe
-    git sparse-checkout init --cone
-    git sparse-checkout set AIpipe
-    git checkout
+    git clone https://github.com/nekramer/CQTL.git
+    cd CQTL/AIpipe
     ```
+
 2. Edit the comma-separated `samplesheet.csv` with the names of `Read1` and `Read2` gzipped fastq files and the path to these files
 under the `Sequencing_Directory` column. Additional sample metadata includes: `Proj`, `Donor`, `Condition`, `Time`, `Tech_Rep`, and `Seq_Rep`.
 
