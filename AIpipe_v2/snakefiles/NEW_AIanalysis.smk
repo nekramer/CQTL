@@ -56,13 +56,16 @@ rule mergeSampleVariants:
         #[expand("output/{group}/alleleCounts/{group}_alleleCounts.csv", group = key) for key in read1]
     output:
         'output/{group}/alleleCounts/{group}_alleleCounts_joined.csv'
+    params:
+        minTotalAlleleCounts = config['minTotalAlleleCounts'],
+        minAlleleCounts = config['minAlleleCounts']
     log:
         out = 'output/AI/logs/{group}_mergeSampleVariants.out'
     shell:
         """
         module load python/3.9.6
         mkdir -p output/AI/logs
-        python3 scripts/mergeSampleVariants.py {input.variants} {input} 1> {log.out}
+        python3 scripts/mergeSampleVariants.py {input} {params.minTotalAlleleCounts} {params.minAlleleCounts} 1> {log.out}
         """
      
 
