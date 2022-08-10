@@ -1,11 +1,19 @@
 library(googlesheets4)
 library(dplyr)
 
-donors <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
+GOOGLE_SHEET <- Sys.getenv("GOOGLE_SHEET")
+GSHEET_CLIENT_EMAIL <- Sys.getenv("GSHEET_CLIENT_EMAIL")
+GSHEET_PRIVATE_KEY <- Sys.getenv("GSHEET_PRIVATE_KEY")
+
+gs4_auth(email = GSHEET_CLIENT_EMAIL,
+        token = GSHEET_PRIVATE_KEY)
+
+
+donors <- read_sheet(ss = GOOGLE_SHEET,
                      sheet = "Donors")
-dna <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
+dna <- read_sheet(ss = GOOGLE_SHEET,
                      sheet = "DNAExtractionsLibraries")
-rna <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
+rna <- read_sheet(ss = GOOGLE_SHEET,
                      sheet = "RNA ExtractionsLibraries")
 
 # Donors we have all the data back for
