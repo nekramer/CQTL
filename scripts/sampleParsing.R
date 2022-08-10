@@ -1,14 +1,7 @@
 library(googlesheets4)
 library(dplyr)
 
-GOOGLE_SHEET <- Sys.getenv("GOOGLE_SHEET")
-GSHEET_CLIENT_EMAIL <- Sys.getenv("GSHEET_CLIENT_EMAIL")
-GARGLE_PASSWORD <- Sys.getenv("GARGLE_PASSWORD")
-
-# gs4_auth(email = GSHEET_CLIENT_EMAIL,
-#         token = )
-print(gs4_has_token())
-
+GOOGLE_SHEET <- "*******************"
 
 donors <- read_sheet(ss = GOOGLE_SHEET,
                      sheet = "Donors")
@@ -21,3 +14,6 @@ rna <- read_sheet(ss = GOOGLE_SHEET,
 rnaDonor <- rna %>% filter(!is.na(Sequencing_Directory)) %>% pull(Donor) %>% unique()
 donors %>% filter(Donor %in% rnaDonor) %>% group_by(Sex) %>% count()
 
+# To be extracted
+extractedRNA <-  rna %>% filter(is.na(Sequencing_Directory)) %>% pull(Donor) %>% unique()
+donors %>% filter(Donor %in% extractedRNA) %>% group_by(Sex) %>% count()
