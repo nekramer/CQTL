@@ -3,11 +3,11 @@ library(dplyr)
 
 GOOGLE_SHEET <- Sys.getenv("GOOGLE_SHEET")
 GSHEET_CLIENT_EMAIL <- Sys.getenv("GSHEET_CLIENT_EMAIL")
-GSHEET_PRIVATE_KEY <- Sys.getenv("GSHEET_PRIVATE_KEY")
+GARGLE_PASSWORD <- Sys.getenv("GARGLE_PASSWORD")
 
-gs4_deauth()
-gs4_auth(email = GSHEET_CLIENT_EMAIL,
-        scopes = "https://www.googleapis.com/auth/spreadsheets")
+# gs4_auth(email = GSHEET_CLIENT_EMAIL,
+#         token = )
+print(gs4_has_token())
 
 
 donors <- read_sheet(ss = GOOGLE_SHEET,

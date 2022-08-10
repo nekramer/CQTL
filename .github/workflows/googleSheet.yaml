@@ -18,11 +18,11 @@ jobs:
           r-version: '4.2.1'
 
       - name: Install packages
-        run: Rscript -e "install.packages(c('googlesheets4', 'tidyverse'))"
+        run: Rscript -e "install.packages(c('googlesheets4', 'tidyverse', 'sodium'))"
 
       - name: Execute sample parsing script
         env:
             GOOGLE_SHEET: ${{ secrets.GOOGLE_SHEET }}
             GSHEET_CLIENT_EMAIL: ${{ secrets.GSHEET_CLIENT_EMAIL }}
-            GSHEET_PRIVATE_KEY: ${{ secrets.GSHEET_PRIVATE_KEY }}
+            GARGLE_PASSWORD: ${{ secrets.REPO_PASSWORD }}
         run: Rscript scripts/sampleParsing.R
