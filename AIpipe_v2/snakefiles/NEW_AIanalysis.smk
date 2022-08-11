@@ -32,7 +32,9 @@ vcf_prefix = vcf_file[:re.search("_nodups_biallelic.vcf.gz", vcf_file).span()[0]
 rule all:
     input:
         'output/AI/variants.csv',
-        [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1]
+        [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1],
+        'output/AI/alleleCounts.pkl',
+        'output/AI/genohets.pkl'
 
 
 rule getVariants:
@@ -53,7 +55,6 @@ rule mergeSampleVariants:
     input:
         lambda wildcards: ['output/{group}/alleleCounts/{group}_alleleCounts.csv'.format(group=wildcards.group)],
         variants = rules.getVariants.output
-        #[expand("output/{group}/alleleCounts/{group}_alleleCounts.csv", group = key) for key in read1]
     output:
         'output/{group}/alleleCounts/{group}_alleleCounts_joined.csv'
     params:
@@ -68,47 +69,32 @@ rule mergeSampleVariants:
         python3 scripts/mergeSampleVariants.py {input} {params.minTotalAlleleCounts} {params.minAlleleCounts} 1> {log.out}
         """
      
+rule concatAlleleCounts:
+    input: 
+        [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1]
+    output:
+        'output/AI/alleleCounts.pkl'
+    log:
+        out = 'output/AI/logs/concatAlleleCounts.out'
+    shell:
+        """
+        module load python/3.9.6
+        mkdir -p output/AI/logs
+        python3 scripts/concatAlleleCounts.py {input} 1> {log.out}
+        """
 
 
-# rule VCFoverlapSamples:
-#     input:
-#         'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
-#     output:
-#         temp('output/vcf/AIsamples.txt'),
-#         temp('output/vcf/' + vcf_prefix + '_nodups_biallelic_samples.vcf.gz')
-#     params:
-#         donors = ",".join(samples['Donor'].unique().tolist()),
-#         donorConversions = 'donors.txt',
-#         prefix = vcf_prefix
-#     threads: 4
-#     log:
-#         err = "output/vcf/logs/removeDuplicates.err"
-#     shell:
-#         """
-#         module load r/4.1.0
-#         Rscript scripts/convertDonors.r {params.donors} {params.donorConversions}
-
-#         module load samtools
-#         bcftools view -S output/vcf/AIsamples.txt --threads {threads} -o output/vcf/{params.prefix}_nodups_biallelic_samples.vcf {input} 2> {log.err}
-        
-#         bgzip output/vcf/{params.prefix}_nodups_biallelic_samples.vcf
-#         """
-
-# rule mergeAlleleCounts:
-#     input:
-#         [expand("output/{group}/alleleCounts/{group}_alleleCounts.csv", group = key) for key in read1]
-#     output:
-#         'output/AI/alleleCountsMatrix.txt',
-#         'output/AI/weightsMatrix.txt',
-#         'output/AI/colData.txt'
-#     params:
-#         donors = ",".join(samples['Donor'].unique().tolist()),
-#         conditions = ",".join(samples['Condition'].unique().tolist())
-#     log:
-#         out = "output/AI/logs/concatAlleleCounts.out"
-#     shell:
-#         """
-#         module load r/4.2.1
-#         mkdir -p output/AI/logs
-#         Rscript scripts/mergeAlleleCounts.r {params.donors} {params.conditions} {input} 1> {log.out}
-#         """
+rule getGenoHets:
+    input:
+        vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
+        index = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi'
+    output:
+        'output/AI/genohets.csv'
+    params:
+        donorConversions = 'donors.txt'
+    log:
+        out = "output/AI/logs/genoHets.out"
+    shell:
+        """
+        python3 scripts/genoHets.py {input.vcf} {params.donorConversions} 1> {log.out}
+        """

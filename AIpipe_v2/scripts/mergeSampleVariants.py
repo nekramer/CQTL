@@ -27,18 +27,19 @@ sampleAlleleCounts_joined.set_index('variantID')
 # Go through each variant and record a weight value
 for variant in sampleAlleleCounts_joined.itertuples():
     if np.isnan(variant.refCount):
-        #variant.refCount = 0
-        #variant.altCount = 0
-        print(sampleAlleleCounts_joined.at[variant.Index, 'refCount'])
         sampleAlleleCounts_joined.at[variant.Index, 'refCount'] = 0
         sampleAlleleCounts_joined.at[variant.Index, 'altCount'] = 0
         sampleAlleleCounts_joined.at[variant.Index, 'weight'] = 0
     elif (variant.refCount + variant.altCount >= minTotal) and (min(variant.refCount, variant.altCount) >= minAllele):
         # Considered a het, so give weight of 1
         sampleAlleleCounts_joined.at[variant.Index, 'weight'] = 1
+
+    elif (variant.refCount + variant.altCount >= minTotal):
+        # Now considered a hom, so give weight of 1e-6
+        sampleAlleleCounts_joined.at[variant.Index, 'weight'] = 1e-6
     else:
-        # Considered a hom, so give weight of 1e-6
-         sampleAlleleCounts_joined.at[variant.Index, 'weight'] = 1e-6
+        # Doesn't have enough reads to be considered anything
+         sampleAlleleCounts_joined.at[variant.Index, 'weight'] = 0
 
 # Parse sample name from file
 sampleName = re.sub("_alleleCounts.csv", "", os.path.basename(sys.argv[1]))
