@@ -27,8 +27,9 @@ checkedWeights = mergedData.groupby('variantID').apply(checkVariant).rename('new
 # Merge new weights with sampleAlleleCounts data
 updatedWeightData = sampleAlleleCounts.merge(checkedWeights, right_index = True, left_on = 'variantID')
 
-# Pull out variantID, donor, refCount, altCount, condition, and newweight columns from merged data
-updatedWeightData.drop(['weight', 'genoweight'], axis = 1, inplace = True)
+# Drop old weight column from data and rename newweight column
+updatedWeightData.drop(['weight'], axis = 1, inplace = True)
+updatedWeightData.rename(columns = {'newweight': 'weight'}, inplace = True)
 
 # Write to file
 outputName = 'output/AI/' + str(sys.argv[3]) + '_alleleCounts_checked.csv'
