@@ -37,7 +37,10 @@ rule all:
         'output/AI/variants.csv',
         [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1],
         'output/AI/alleleCounts.pkl',
-        [expand("output/AI/{donor}_alleleCounts_joined.csv", donor = key) for key in groupedDonors]
+        "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz",
+        "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz.tbi",
+        [expand("output/AI/{donor}_alleleCounts_joined.csv", donor = key) for key in groupedDonors],
+        [expand('output/AI/{donor}_genoCounts.csv', donor = key) for key in groupedDonors]
         #'output/AI/genohets.pkl'
 
 
@@ -88,21 +91,72 @@ rule concatDonorConditions:
         mkdir -p output/AI/logs
         python3 scripts/concatDonorConditions.py {params.donor} {input} 1> {log.out}
         """
-
-rule getGenoHets:
+        
+rule VCFoverlapVariants:
     input:
         vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
-        index = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi'
+        variants = "output/AI/variants.csv"
     output:
-        'output/AI/genohets.csv'
+        "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz"
     params:
-        donorConversions = 'donors.txt'
-    log:
-        out = "output/AI/logs/genoHets.out"
+        prefix = "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI"
     shell:
         """
-        python3 scripts/genoHets.py {input.vcf} {params.donorConversions} 1> {log.out}
+        module load vcftools
+        module load samtools
+        vcftools --gzvcf {input.vcf} --snps {input.variants} --recode --recode-INFO-all --out {params.prefix}
+        bgzip {params.prefix}.recode.vcf   
         """
+
+rule VCFoverlapVariantsIndex:
+    input:
+        rules.VCFoverlapVariants.output
+    output:
+        "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz.tbi"
+    log:
+        out = "output/vcf/logs/VCFoverlapVariantsIndex.out",
+        err = "output/vcf/logs/VCFoverlapVariantsIndex.err"
+    shell:
+        """
+        module load samtools
+        tabix -p vcf {input} 2> {log.err} 1> {log.out}
+        """
+
+rule getGenoCounts:
+    input:
+        vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic_AI.recode.vcf.gz',
+        index = 'output/vcf/' + vcf_prefix + '_nodups_biallelic_AI.recode.vcf.gz.tbi',
+        donorConversions = 'donors.txt'
+    output:
+        'output/AI/{donor}_genoCounts.csv'
+    params:
+        donor = lambda wildcards: wildcards.donor
+    log:
+        out = 'output/AI/logs/{donor}_getGenoCounts.out'
+    shell:
+        """
+        module load python/3.9.6
+        mkdir -p output/AI/logs
+        python3 scripts/getGenoCounts.py {input.vcf} {params.donor} {input.donorConversions} 1> {log.out}
+        """
+
+
+
+
+# rule getGenoHets:
+#     input:
+#         vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
+#         index = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi'
+#     output:
+#         'output/AI/genohets.csv'
+#     params:
+#         donorConversions = 'donors.txt'
+#     log:
+#         out = "output/AI/logs/genoHets.out"
+#     shell:
+#         """
+#         python3 scripts/genoHets.py {input.vcf} {params.donorConversions} 1> {log.out}
+#         """
 
         
 
