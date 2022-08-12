@@ -173,8 +173,8 @@ rule indexVCF2:
         err = "output/vcf/logs/idnexVCF2.err"
     shell:
         """
-        module load gatk/4.1.7.0
-        gatk IndexFeatureFile -I {input} 2> {log.err} 1> {log.out}
+        module load samtools
+        tabix -p vcf {input} 2> {log.err} 1> {log.out}
         """
 
 rule addVCFPath:
