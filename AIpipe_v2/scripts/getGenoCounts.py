@@ -37,8 +37,8 @@ homWeights = np.full_like(homVariants, 1e-6)
 hetWeights = np.full_like(hetVariants, 1)
 
 ## Combine homVariants/homWeights and hetVariants/hetWeights into dataframes
-homDF = pd.DataFrame({'variantID': homVariants, 'weight': homWeights})
-hetDF = pd.DataFrame({'variantID': hetVariants, 'weight': hetWeights})
+homDF = pd.DataFrame({'variantID': homVariants, 'genoweight': homWeights})
+hetDF = pd.DataFrame({'variantID': hetVariants, 'genoweight': hetWeights})
 
 ## Concatenate homDF and hetDF and sort by variantID
 allDF = pd.concat([homDF, hetDF], axis = 0)

@@ -36,13 +36,12 @@ rule all:
     input:
         'output/AI/variants.csv',
         [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1],
-        'output/AI/alleleCounts.pkl',
+        #'output/AI/alleleCounts.pkl',
         "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz",
         "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz.tbi",
         [expand("output/AI/{donor}_alleleCounts_joined.csv", donor = key) for key in groupedDonors],
-        [expand('output/AI/{donor}_genoCounts.csv', donor = key) for key in groupedDonors]
-        #'output/AI/genohets.pkl'
-
+        [expand('output/AI/{donor}_genoCounts.csv', donor = key) for key in groupedDonors],
+        [expand('output/AI/{donor}_alleleCounts_checked.csv', donor = key) for key in groupedDonors]
 
 rule getVariants:
     input: 
@@ -140,50 +139,37 @@ rule getGenoCounts:
         python3 scripts/getGenoCounts.py {input.vcf} {params.donor} {input.donorConversions} 1> {log.out}
         """
 
-
-
-
-# rule getGenoHets:
-#     input:
-#         vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
-#         index = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi'
-#     output:
-#         'output/AI/genohets.csv'
-#     params:
-#         donorConversions = 'donors.txt'
-#     log:
-#         out = "output/AI/logs/genoHets.out"
-#     shell:
-#         """
-#         python3 scripts/genoHets.py {input.vcf} {params.donorConversions} 1> {log.out}
-#         """
-
-        
-
-# rule checkDonorVariants:
-#     input: 
-#         rules.getGenoHets.output,
-#         lambda wildcards: ['output/{group}/alleleCounts/{group}_alleleCounts_joined.csv'.format(group=wildcards.group)]
-#     output:
-
-#     log:
-
-#     shell:
-
-
-     
-rule concatAlleleCounts:
+rule checkDonorVariants:
     input: 
-        [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1]
+        lambda wildcards: ['output/AI/{donor}_alleleCounts_joined.csv'.format(donor=wildcards.donor)],
+        lambda wildcards: ['output/AI/{donor}_genoCounts.csv'.format(donor=wildcards.donor)]
     output:
-        'output/AI/alleleCounts.pkl'
+        'output/AI/{donor}_alleleCounts_checked.csv'
+    params:
+        donor = lambda wildcards: wildcards.donor
     log:
-        out = 'output/AI/logs/concatAlleleCounts.out'
+        out = 'output/AI/logs/{donor}_checkDonorVariants.out'
     shell:
         """
         module load python/3.9.6
         mkdir -p output/AI/logs
-        python3 scripts/concatAlleleCounts.py {input} 1> {log.out}
+        python3 scripts/checkDonorVariants.py {input} {params.donor} 1> {log.out}
         """
+
+
+     
+# rule concatAlleleCounts:
+#     input: 
+#         [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1]
+#     output:
+#         'output/AI/alleleCounts.pkl'
+#     log:
+#         out = 'output/AI/logs/concatAlleleCounts.out'
+#     shell:
+#         """
+#         module load python/3.9.6
+#         mkdir -p output/AI/logs
+#         python3 scripts/concatAlleleCounts.py {input} 1> {log.out}
+#         """
 
 

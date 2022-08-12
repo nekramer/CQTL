@@ -18,4 +18,4 @@ donorData = pd.concat(data_list, axis = 0)
 # File name
 outputName = 'output/AI/' + str(sys.argv[1]) + '_alleleCounts_joined.csv'
 
-donorData.to_csv(outputName)
+donorData.to_csv(outputName, index = False)
