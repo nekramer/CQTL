@@ -23,25 +23,27 @@ samples['id'] = samples[['Proj', 'Donor']].agg('_'.join, axis=1) + '_R_' + sampl
 read1 = samples.groupby(['id'])['Read1'].apply(list).to_dict()
 read2 = samples.groupby(['id'])['Read2'].apply(list).to_dict()
 
-## Extract grouped donors
+## Extract grouped donors, getting unique values for each key
 groupedDonors = samples.groupby('Donor')['Sample'].apply(list).to_dict()
+for key in groupedDonors.keys():
+    groupedDonors[key] = tuple(set(groupedDonors[key]))
 
 ## Get vcf file path and prefix of VCFproc processed vcf from config file
 vcf = config['vcf']
 vcf_file = os.path.basename(vcf)
 vcf_prefix = vcf_file[:re.search("_nodups_biallelic.vcf.gz", vcf_file).span()[0]]
 
-
 rule all:
     input:
         'output/AI/variants.csv',
         [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1],
-        #'output/AI/alleleCounts.pkl',
         "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz",
         "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz.tbi",
         [expand("output/AI/{donor}_alleleCounts_joined.csv", donor = key) for key in groupedDonors],
         [expand('output/AI/{donor}_genoCounts.csv', donor = key) for key in groupedDonors],
-        [expand('output/AI/{donor}_alleleCounts_checked.csv', donor = key) for key in groupedDonors]
+        [expand('output/AI/{donor}_alleleCounts_checked.csv', donor = key) for key in groupedDonors],
+        'output/AI/alleleCounts.csv',
+        'output/AI/numVariantHets.csv'
 
 rule getVariants:
     input: 
@@ -156,20 +158,32 @@ rule checkDonorVariants:
         python3 scripts/checkDonorVariants.py {input} {params.donor} 1> {log.out}
         """
 
+rule concatAlleleCounts:
+    input: 
+        [expand("output/AI/{donor}_alleleCounts_checked.csv", donor = key) for key in groupedDonors]
+    output:
+        'output/AI/alleleCounts.csv'
+    log:
+        out = 'output/AI/logs/concatAlleleCounts.out'
+    shell:
+        """
+        module load python/3.9.6
+        mkdir -p output/AI/logs
+        python3 scripts/concatAlleleCounts.py {input} 1> {log.out}
+        """
 
-     
-# rule concatAlleleCounts:
-#     input: 
-#         [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1]
-#     output:
-#         'output/AI/alleleCounts.pkl'
-#     log:
-#         out = 'output/AI/logs/concatAlleleCounts.out'
-#     shell:
-#         """
-#         module load python/3.9.6
-#         mkdir -p output/AI/logs
-#         python3 scripts/concatAlleleCounts.py {input} 1> {log.out}
-#         """
+rule checkVariantHets:
+    input:
+        rules.concatAlleleCounts.output
+    output:
+        'output/AI/numVariantHets.csv'
+    log:
+        out = 'output/AI/logs/checkVariantHets.out'
+    shell:
+        """
+        module load python/3.9.6
+        mkdir -p output/AI/logs
+        python3 scripts/checkVariantHets.py {input} 1> {log.out}
+        """
 
 

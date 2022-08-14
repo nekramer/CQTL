@@ -1,16 +1,20 @@
 import pandas as pd
 import sys
 
-# sys.argv[1]...sys.argv[n] = alleleCount file from each sample
+# sys.argv[1]...sys.argv[n] = checked alleleCount file from each sample
 
-# Read in each file and add to list
-data_list = []
+# Add names of files to list
+file_list = []
 
 for i in range(1, len(sys.argv)):
-    data = pd.read_csv(sys.argv[i])
-    data_list.append(data)
+    file_list.append(sys.argv[i])
 
-# Vertially concatenate all data into one DataFrame
-allData = pd.concat(data_list, axis = 0)
-
-allData.to_pickle('output/AI/alleleCounts.pkl')
+with open('output/AI/alleleCounts.csv', "a+") as output:
+    firstFile = True
+    for file in file_list:
+        with open(file, "r") as f:
+            if not firstFile:
+                next(f)
+            for line in f:
+                output.write(line)
+        firstFile = False
