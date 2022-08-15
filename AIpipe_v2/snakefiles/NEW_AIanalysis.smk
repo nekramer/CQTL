@@ -43,7 +43,8 @@ rule all:
         [expand('output/AI/{donor}_genoCounts.csv', donor = key) for key in groupedDonors],
         [expand('output/AI/{donor}_alleleCounts_checked.csv', donor = key) for key in groupedDonors],
         'output/AI/alleleCounts.csv',
-        'output/AI/numVariantHets.csv'
+        'output/AI/numVariantHets.csv',
+        'output/AI/alleleCountsplits.txt'
 
 rule getVariants:
     input: 
@@ -186,4 +187,17 @@ rule checkVariantHets:
         python3 scripts/checkVariantHets.py {input} 1> {log.out}
         """
 
+rule splitAlleleCountsFile:
+    input:
+        rules.concatAlleleCounts.output
+    output:
+        'output/AI/alleleCountsplits.txt'
+    log:
+        err = 'output/AI/logs/splitAlleleCountsFile.err'
+    shell:
+        """
+        mkdir -p output/AI/alleleCountSplits
+        split {input.alleleCounts} -l 100000 output/AI/alleleCountSplits/alleleCounts_split 2> {log.err}
+        ls -1 output/AI/alleleCountSplits > {output} 2>> {log.err}
+        """
 
