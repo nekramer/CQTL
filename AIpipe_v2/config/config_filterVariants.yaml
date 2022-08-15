@@ -1,0 +1,5 @@
+## Path to csv file that quantifies the number of heterozygote donors for each variant
+numVariantHets: 'output/AI/numVariantHets.csv'
+
+## Threshold of number of heterozygotes a variant must have to remain in the analysis
+minHets: 5
