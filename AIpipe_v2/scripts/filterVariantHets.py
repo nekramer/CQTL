@@ -5,27 +5,27 @@ import sys
 # sys.argv[2]: csv file that quantifies the number of heterozygote donors for each variant
 # sys.argv[3]: minimum het threshold for a variant
 
+## Read in split file
+if sys.argv[1] == "alleleCounts_splitaa":
+    # First file already has header
+    splitFile = pd.read_csv(sys.argv[1])
+    header = True
+else:
+    # Other files don't have headers, adding column names
+    splitFile = pd.read_csv(sys.argv[1], header = None)
+    splitFile.columns = ['variantID', 'refCount', 'altCount', 'donor', 'condition', 'weight']
+    header = False
+
+
 ## Read in number of variant hets
 numVariantHets = pd.read_csv(sys.argv[2])
 
 ## Filter numVariantHets for the variants that satisfy the minimum het threshold
 hetVars = numVariantHets.loc[numVariantHets.x >= int(sys.argv[3])]
 
+## Select rows in splitFile whose 'variantID' is in the 'variantID' of hetVars
+filteredSplit = splitFile[splitFile['variantID'].isin(hetVars.variantID)]
+
+## Write to file
 outputName = str(sys.argv[1]) + '_' + str(sys.argv[3]) + 'hets'
-with open(outputName, "a+") as output:
-    with open(sys.argv[1], "r") as f:
-        # Check for first split file for header
-        if str(sys.argv[1]) == "alleleCounts_splitaa":
-            firstLine = True
-        else: 
-            firstLine = False
-
-        for line in f:
-            if firstLine:
-                output.write(line)
-            else:
-                variant = line.split(",")[0]
-                if variant in hetVars.variantID.tolist():
-                    output.write(line)
-            firstLine = False    
-
+filteredSplit.to_csv(outputName, header = header, index = False)
