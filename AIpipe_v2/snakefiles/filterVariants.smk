@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-
-import pandas as pd
-import os, re
-
-
+import os
 import numpy as np
 import math
+import shutil
 
 ## Load config file
 configfile: "config/config_filterVariants.yaml"
@@ -20,6 +17,15 @@ splitListSubset = np.array_split(splitList, numSplits)
 splitListSubset_dict = {}
 for index, a in enumerate(splitListSubset):
     splitListSubset_dict[str(index)] = a
+
+onsuccess:
+    # Remove splits
+    shutil.rmtree('output/AI/alleleCountSplits')
+    os.remove('output/AI/alleleCountsplits.txt')
+
+    # Remove noncombined alleleCount het files
+    for key in splitListSubset_dict:
+        os.remove('output/AI/alleleCounts_' + str(config['minHets']) + 'hets{splitGroup}.csv'.format(splitGroup = key))
 
 rule all:
     input:
