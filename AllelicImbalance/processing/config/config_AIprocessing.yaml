@@ -1,0 +1,11 @@
+
+## Path to RNA-seq sample samplesheet
+samplesheet: 'samplesheet.csv'
+
+## Path to vcf processed with VCFproc workflow
+vcf: 'output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_nodups_biallelic.vcf.gz'
+
+## Minimum number of total read counts from both alleles to consider a heterozygote from RNA
+minTotalAlleleCounts: 10
+## Minimum number of read counts from either allele to consider a heterozygote from RNA
+minAlleleCounts: 2

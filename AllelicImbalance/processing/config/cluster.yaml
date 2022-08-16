@@ -1,0 +1,35 @@
+__default__:
+  name: "{rule}" # -J
+  partition: general # -p
+  time: 4320 # -t
+  cpusPerTask: "{threads}" # -c
+  memPerCpu: 4G # --mem-per-cpu
+  nodes: 1
+  output: "output/logs_slurm/{rule}.{jobid}.out"
+  error: "output/logs_slurm/{rule}.{jobid}.err"
+
+
+catR1:
+  name: "catR1.{wildcards}"
+catR2:
+  name: "catR2.{wildcards}"
+qc:
+  name: "qc.{wildcards}"
+trim:
+  name: "trim.{wildcards}"
+  memPerCpu: 5G
+align:
+  name: "align.{wildcards}"
+  memPerCpu: 5G
+index:
+  name: "index.{wildcards}"
+assignGroups:
+  name: "assignGroups.{wildcards}"
+  memPerCpu: 16G
+countReads:
+  name: "countReads.{wildcards}"
+  memPerCpu: 32G
+checkDonorVariants:
+  memPerCpu: 8G
+
+
