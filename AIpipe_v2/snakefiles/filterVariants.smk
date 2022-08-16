@@ -25,7 +25,10 @@ rule all:
     input:
         [expand('output/AI/alleleCountSplits/{splitFile}_' + str(config['minHets']) + 'hets', splitFile = l) for l in splitList],
         [expand('output/AI/alleleCounts_' + str(config['minHets']) + 'hets{splitGroup}.csv', splitGroup = key) for key in splitListSubset_dict],
-        'output/AI/alleleCounts_' + str(config['minHets']) + 'hets.csv'
+        'output/AI/alleleCounts_' + str(config['minHets']) + 'hets.csv',
+        'output/AI/alleleCountsMatrix.csv',
+        'output/AI/weightsMatrix.csv',
+        'output/AI/colData.csv'
 
 rule filterVariantHets:
     input:
@@ -74,5 +77,18 @@ rule concatVariantHets_part2:
         python3 scripts/concatVariantHets_part2.py {params.minHets} {input} 1> {log.out}
         """
 
-
+rule pivotMatrix:
+    input:
+        rules.concatVariantHets_part2.output
+    output:
+        'output/AI/alleleCountsMatrix.csv',
+        'output/AI/weightsMatrix.csv',
+        'output/AI/colData.csv'
+    log:
+        out = 'output/AI/logs/pivotMatrix.out'
+    shell:
+        """
+        module load python/3.9.6
+        python3 scripts/pivotMatrix.py {input} 1> {log.out}
+        """
 
