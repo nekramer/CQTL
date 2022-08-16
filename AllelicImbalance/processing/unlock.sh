@@ -16,15 +16,24 @@ case $1 in
             exit 2
             ;;
     
-    'AIpipe' | 'runAIpipe' | 'RNAproc' | 'VCFproc')
+    'VCFproc' | 'runVCFprocessing')
             ## Unlock snakemake workflow
-            snakemake -j 1 --unlock -s snakefiles/VCFproc --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
-            snakemake -j 1 --unlock -s snakefiles/RNAproc --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
+            snakemake -j 1 --unlock -s snakefiles/VCFproc.smk --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
             ;;
 
-    'AIanalysis' | 'runAIanalysis')
+     'RNAproc' | 'runRNAprocessing')
             ## Unlock snakemake workflow
-            snakemake -j 1 --unlock -s snakefiles/NEW_AIanalysis.smk --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
+            snakemake -j 1 --unlock -s snakefiles/RNAproc.smk --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
+            ;;      
+
+     'AIprocessing' | 'runAIprocessing')
+            ## Unlock snakemake workflow
+            snakemake -j 1 --unlock -s snakefiles/AIprocessing.smk --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
+            ;;
+
+     'filterVariants' | 'runFilterVariants')
+            ## Unlock snakemake workflow
+            snakemake -j 1 --unlock -s snakefiles/filterVariants.smk --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
             ;;
 esac
 
@@ -32,4 +41,4 @@ esac
 deactivate
 
 ## Success message
-echo -e "\033[0;32mDirectory unlocked, ready to rerun with sbatch runAIpipe_part1, sbatch runAIpipe_part2, or sbatch runAIanalysis"
+echo -e "\033[0;32mDirectory unlocked, ready to rerun."
