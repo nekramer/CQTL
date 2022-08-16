@@ -9,12 +9,10 @@ import sys
 if sys.argv[1] == "alleleCounts_splitaa":
     # First file already has header
     splitFile = pd.read_csv(sys.argv[1])
-    header = True
 else:
     # Other files don't have headers, adding column names
     splitFile = pd.read_csv(sys.argv[1], header = None)
     splitFile.columns = ['variantID', 'refCount', 'altCount', 'donor', 'condition', 'weight']
-    header = False
 
 
 ## Read in number of variant hets
@@ -28,4 +26,4 @@ filteredSplit = splitFile[splitFile['variantID'].isin(hetVars.variantID)]
 
 ## Write to file
 outputName = str(sys.argv[1]) + '_' + str(sys.argv[3]) + 'hets'
-filteredSplit.to_csv(outputName, header = header, index = False)
+filteredSplit.to_csv(outputName, header = False, index = False)
