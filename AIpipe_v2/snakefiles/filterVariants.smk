@@ -24,8 +24,8 @@ for index, a in enumerate(splitListSubset):
 rule all:
     input:
         [expand('output/AI/alleleCountSplits/{splitFile}_' + str(config['minHets']) + 'hets', splitFile = l) for l in splitList],
-        #'output/AI/alleleCounts_' + str(config['minHets']) + 'hets.csv'
-        [expand('output/AI/alleleCounts_' + str(config['minHets']) + 'hets{splitGroup}.csv', splitGroup = key) for key in splitListSubset_dict]
+        [expand('output/AI/alleleCounts_' + str(config['minHets']) + 'hets{splitGroup}.csv', splitGroup = key) for key in splitListSubset_dict],
+        'output/AI/alleleCounts_' + str(config['minHets']) + 'hets.csv'
 
 rule filterVariantHets:
     input:
@@ -56,7 +56,23 @@ rule concatVariantHets_part1:
     shell:
         """
         module load python/3.9.6
-        python3 scripts/concatVariantHets.py {params.minHets} {params.splitGroup} {input} 1> {log.out}
+        python3 scripts/concatVariantHets_part1.py {params.minHets} {params.splitGroup} {input} 1> {log.out}
         """
+
+rule concatVariantHets_part2:
+    input:
+        [expand("output/AI/alleleCounts_" + str(config['minHets']) + 'hets{splitGroup}.csv', splitGroup = key) for key in splitListSubset_dict]
+    output:
+        'output/AI/alleleCounts_' + str(config['minHets']) + 'hets.csv'
+    params:
+        minHets = config['minHets']
+    log:
+        out = 'output/AI/logs/concatVariantHets_part2.out'
+    shell:
+        """
+        module load python/3.9.6
+        python3 scripts/concatVariantHets_part2.py {params.minHets} {input} 1> {log.out}
+        """
+
 
 

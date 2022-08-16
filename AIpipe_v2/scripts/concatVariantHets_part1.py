@@ -17,7 +17,6 @@ with open(outputName, "a+") as output:
     output.write('variantID,refCount,altCount,donor,condition,weight\n')
 
     for file in file_list:
-        print(file)
         with open(file, "r") as f:
             for line in f:
                 output.write(line)
