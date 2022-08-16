@@ -57,7 +57,7 @@ rule getVariants:
         """
         module load r/4.2.1
         mkdir -p output/AI/logs
-        Rscript scripts/getVariants.r {input} 1> {log.out}
+        Rscript scripts/AIprocessing/getVariants.r {input} 1> {log.out}
         """
 
 rule mergeSampleVariants:
@@ -75,7 +75,7 @@ rule mergeSampleVariants:
         """
         module load python/3.9.6
         mkdir -p output/AI/logs
-        python3 scripts/mergeSampleVariants.py {input} {params.minTotalAlleleCounts} {params.minAlleleCounts} 1> {log.out}
+        python3 scripts/AIprocessing/mergeSampleVariants.py {input} {params.minTotalAlleleCounts} {params.minAlleleCounts} 1> {log.out}
         """
 
 rule concatDonorConditions:
@@ -91,7 +91,7 @@ rule concatDonorConditions:
         """
         module load python/3.9.6
         mkdir -p output/AI/logs
-        python3 scripts/concatDonorConditions.py {params.donor} {input} 1> {log.out}
+        python3 scripts/AIprocessing/concatDonorConditions.py {params.donor} {input} 1> {log.out}
         """
         
 rule VCFoverlapVariants:
@@ -139,7 +139,7 @@ rule getGenoCounts:
         """
         module load python/3.9.6
         mkdir -p output/AI/logs
-        python3 scripts/getGenoCounts.py {input.vcf} {params.donor} {input.donorConversions} 1> {log.out}
+        python3 scripts/AIprocessing/getGenoCounts.py {input.vcf} {params.donor} {input.donorConversions} 1> {log.out}
         """
 
 rule checkDonorVariants:
@@ -156,7 +156,7 @@ rule checkDonorVariants:
         """
         module load python/3.9.6
         mkdir -p output/AI/logs
-        python3 scripts/checkDonorVariants.py {input} {params.donor} 1> {log.out}
+        python3 scripts/AIprocessing/checkDonorVariants.py {input} {params.donor} 1> {log.out}
         """
 
 rule concatAlleleCounts:
@@ -170,7 +170,7 @@ rule concatAlleleCounts:
         """
         module load python/3.9.6
         mkdir -p output/AI/logs
-        python3 scripts/concatAlleleCounts.py {input} 1> {log.out}
+        python3 scripts/AIprocessing/concatAlleleCounts.py {input} 1> {log.out}
         """
 
 rule checkVariantHets:
@@ -184,7 +184,7 @@ rule checkVariantHets:
         """
         module load python/3.9.6
         mkdir -p output/AI/logs
-        python3 scripts/checkVariantHets.py {input} 1> {log.out}
+        python3 scripts/AIprocessing/checkVariantHets.py {input} 1> {log.out}
         """
 
 rule splitAlleleCountsFile:

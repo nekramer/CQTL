@@ -49,7 +49,7 @@ rule filterVariantHets:
     shell:
         """
         module load python/3.9.6
-        python3 scripts/filterVariantHets.py {input} {params.minHets} 1> {log.out}
+        python3 scripts/filterVariants/filterVariantHets.py {input} {params.minHets} 1> {log.out}
         """
 
 rule concatVariantHets_part1:
@@ -65,7 +65,7 @@ rule concatVariantHets_part1:
     shell:
         """
         module load python/3.9.6
-        python3 scripts/concatVariantHets_part1.py {params.minHets} {params.splitGroup} {input} 1> {log.out}
+        python3 scripts/filterVariants/concatVariantHets_part1.py {params.minHets} {params.splitGroup} {input} 1> {log.out}
         """
 
 rule concatVariantHets_part2:
@@ -80,7 +80,7 @@ rule concatVariantHets_part2:
     shell:
         """
         module load python/3.9.6
-        python3 scripts/concatVariantHets_part2.py {params.minHets} {input} 1> {log.out}
+        python3 scripts/filterVariants/concatVariantHets_part2.py {params.minHets} {input} 1> {log.out}
         """
 
 rule pivotMatrix:
@@ -95,6 +95,6 @@ rule pivotMatrix:
     shell:
         """
         module load python/3.9.6
-        python3 scripts/pivotMatrix.py {input} 1> {log.out}
+        python3 scripts/filterVariants/pivotMatrix.py {input} 1> {log.out}
         """
 
