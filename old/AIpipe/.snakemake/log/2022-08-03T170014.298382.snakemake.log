@@ -1,4 +1,0 @@
-Building DAG of jobs...
-MissingInputException in line 53 of /pine/scr/n/e/nekramer/8_1_22_AIproc/CQTL/AIpipe/snakefiles/AIanalysis_part2:
-Missing input files for rule getRNAHets:
-output/AI/alleleCountsMatrix.txt

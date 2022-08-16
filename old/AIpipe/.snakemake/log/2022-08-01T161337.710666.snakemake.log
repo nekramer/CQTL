@@ -1,6 +1,0 @@
-Building DAG of jobs...
-Nothing to be done.
-Complete log: /pine/scr/n/e/nekramer/8_1_22_AIproc/CQTL/AIpipe/.snakemake/log/2022-08-01T161337.710666.snakemake.log
-FileNotFoundError in line 21 of /pine/scr/n/e/nekramer/8_1_22_AIproc/CQTL/AIpipe/snakefiles/VCFproc:
-[Errno 2] No such file or directory: 'edit.done'
-  File "/pine/scr/n/e/nekramer/8_1_22_AIproc/CQTL/AIpipe/snakefiles/VCFproc", line 21, in __onsuccess
