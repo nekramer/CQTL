@@ -1,0 +1,78 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 1
+Job counts:
+	count	jobs
+	1	indexVCF1
+	1	indexVCF2
+	1	removeDuplicates
+	1	renameChroms
+	1	selectVariants
+	1	updateConfig
+	1	zipVCF1
+	1	zipVCF2
+	8
+
+[Mon Aug  1 14:28:23 2022]
+rule renameChroms:
+    input: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameContig.vcf
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf
+    log: output/vcf/logs/renameChroms.err
+    jobid: 7
+
+Submitted job 7 with external jobid '50793024'.
+Removing temporary output file output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameContig.vcf.
+[Mon Aug  1 14:29:05 2022]
+Finished job 7.
+1 of 8 steps (12%) done
+
+[Mon Aug  1 14:29:05 2022]
+rule zipVCF1:
+    input: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz
+    log: output/vcf/logs/zipVCF1.err
+    jobid: 5
+    threads: 4
+
+Submitted job 5 with external jobid '50793189'.
+[Mon Aug  1 14:29:46 2022]
+Finished job 5.
+2 of 8 steps (25%) done
+
+[Mon Aug  1 14:29:46 2022]
+rule indexVCF1:
+    input: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz.tbi
+    log: output/vcf/logs/indexVCF1.out, output/vcf/logs/indexVCF1.err
+    jobid: 6
+
+Submitted job 6 with external jobid '50793497'.
+[Mon Aug  1 14:34:03 2022]
+Finished job 6.
+3 of 8 steps (38%) done
+
+[Mon Aug  1 14:34:03 2022]
+rule updateConfig:
+    input: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz, output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz.tbi
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz, output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz.tbi
+    log: output/vcf/logs/updateConfig.out, output/vcf/logs/updateConfig.err
+    jobid: 4
+
+Submitted job 4 with external jobid '50794626'.
+[Mon Aug  1 14:34:55 2022]
+Error in rule updateConfig:
+    jobid: 4
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz, output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz.tbi
+    log: output/vcf/logs/updateConfig.out, output/vcf/logs/updateConfig.err (check log file(s) for error message)
+    shell:
+        
+        module load gatk/4.1.7.0
+        gatk UpdateVCFSequenceDictionary -V output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz --source-dictionary /proj/phanstiel_lab/SHARE/genomes/GENCODE.GRCh38.p10/Sequence/GRCh38.p10.genome.fa.gz --output output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz --replace=true 2> output/vcf/logs/updateConfig.err 1> output/vcf/logs/updateConfig.out
+        
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    cluster_jobid: 50794626
+
+Error executing rule updateConfig on cluster (jobid: 4, external: 50794626, jobscript: /pine/scr/n/e/nekramer/8_1_22_AIproc/CQTL/AIpipe/.snakemake/tmp.qmfjdx0e/snakejob.updateConfig.4.sh). For error details see the cluster log and the log files of the involved rule(s).
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: /pine/scr/n/e/nekramer/8_1_22_AIproc/CQTL/AIpipe/.snakemake/log/2022-08-01T142823.391773.snakemake.log

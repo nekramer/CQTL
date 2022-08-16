@@ -1,0 +1,24 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 1
+Job counts:
+	count	jobs
+	1	chromContig
+	1	indexVCF1
+	1	indexVCF2
+	1	removeDuplicates
+	1	renameChroms
+	1	selectVariants
+	1	updateConfig
+	1	zipVCF1
+	1	zipVCF2
+	9
+
+[Mon Aug  1 14:12:53 2022]
+rule chromContig:
+    input: /proj/phanstiel_lab/Data/processed/CQTL/geno/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_ALL_qc.vcf.gz
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameContig.vcf
+    log: output/vcf/logs/renameContig.err
+    jobid: 8
+
+Submitted job 8 with external jobid '50789334'.

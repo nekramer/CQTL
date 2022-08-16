@@ -1,0 +1,85 @@
+Building DAG of jobs...
+Executing subworkflow VCFproc.
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 1
+Job counts:
+	count	jobs
+	1	indexVCF2
+	1	removeDuplicates
+	1	selectVariants
+	1	updateConfig
+	1	zipVCF2
+	5
+
+[Mon Aug  1 14:56:22 2022]
+rule updateConfig:
+    input: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz, output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz.tbi
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz, output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz.tbi
+    log: output/vcf/logs/updateConfig.out, output/vcf/logs/updateConfig.err
+    jobid: 4
+
+Submitted job 4 with external jobid '50800494'.
+Removing temporary output file output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz.
+Removing temporary output file output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_renameChroms.vcf.gz.tbi.
+[Mon Aug  1 15:05:35 2022]
+Finished job 4.
+1 of 5 steps (20%) done
+
+[Mon Aug  1 15:05:35 2022]
+rule selectVariants:
+    input: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz, output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz.tbi
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_biallelic.vcf.gz, output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_biallelic.vcf.gz.tbi
+    log: output/vcf/logs/selectVariants.out, output/vcf/logs/selectVariants.err
+    jobid: 3
+
+Submitted job 3 with external jobid '50803410'.
+Removing temporary output file output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz.
+Removing temporary output file output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_newcontig.vcf.gz.tbi.
+[Mon Aug  1 15:33:45 2022]
+Finished job 3.
+2 of 5 steps (40%) done
+
+[Mon Aug  1 15:33:45 2022]
+rule removeDuplicates:
+    input: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_biallelic.vcf.gz, output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_biallelic.vcf.gz.tbi
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_nodups_biallelic.vcf
+    log: output/vcf/logs/removeDuplicates.err
+    jobid: 2
+    threads: 4
+
+Submitted job 2 with external jobid '50806658'.
+Removing temporary output file output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_biallelic.vcf.gz.
+Removing temporary output file output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_biallelic.vcf.gz.tbi.
+[Mon Aug  1 15:35:27 2022]
+Finished job 2.
+3 of 5 steps (60%) done
+
+[Mon Aug  1 15:35:27 2022]
+rule zipVCF2:
+    input: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_nodups_biallelic.vcf
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_nodups_biallelic.vcf.gz
+    log: output/vcf/logs/zipVCF2.err
+    jobid: 0
+    threads: 4
+
+Submitted job 0 with external jobid '50806677'.
+[Mon Aug  1 15:36:19 2022]
+Finished job 0.
+4 of 5 steps (80%) done
+
+[Mon Aug  1 15:36:19 2022]
+rule indexVCF2:
+    input: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_nodups_biallelic.vcf.gz
+    output: output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_nodups_biallelic.vcf.gz.tbi
+    log: output/vcf/logs/indexVCF2.out, output/vcf/logs/idnexVCF2.err
+    jobid: 1
+
+Submitted job 1 with external jobid '50806683'.
+[Mon Aug  1 15:37:51 2022]
+Finished job 1.
+5 of 5 steps (100%) done
+Complete log: /pine/scr/n/e/nekramer/8_1_22_AIproc/CQTL/AIpipe/.snakemake/log/2022-08-01T145622.246850.snakemake.log
+FileNotFoundError in line 21 of /pine/scr/n/e/nekramer/8_1_22_AIproc/CQTL/AIpipe/snakefiles/VCFproc:
+[Errno 2] No such file or directory: 'edit.done'
+  File "/pine/scr/n/e/nekramer/8_1_22_AIproc/CQTL/AIpipe/snakefiles/VCFproc", line 21, in __onsuccess
