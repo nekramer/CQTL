@@ -1,6 +1,7 @@
 # Function to parse variant IDs in the format chrX:pos:ref:alt and
 # convert to GRanges
-
+library(stringr)
+library(purrr)
 varID_to_GRanges <- function(varIDs){
   
   chr <- varIDs %>% str_split(":") %>% map(1) %>% unlist()
