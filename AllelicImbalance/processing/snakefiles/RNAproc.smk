@@ -34,9 +34,17 @@ onsuccess:
     ## Success message
     print("Allelic imbalance RNA processing finished successfully!")
 
-    ## Remove trim directory
     for key in read1:
+        ## Remove concatenated fastqs
+        shutil.rmtree(os.path.join('output', key, 'fastq'))
+        ## Remove trim directory
         shutil.rmtree(os.path.join('output', key, 'trim'))
+        ## Remove grouped directory
+        shutil.rmtree(os.path.join('output', key, 'grouped'))
+        ## Remove extra align logs
+        os.remove(os.path.join('output', key, 'align', key) + '.SJ.out.tab')
+        os.remove(os.path.join('output', key, 'align', key) + '.Log.final.out')
+        os.remove(os.path.join('output', key, 'align', key) + '.Log.progress.out')
     os.remove('editDonors.done')
 
 ## Define rules
@@ -59,9 +67,6 @@ rule catR1:
         cat {input} > {output} 2> {log.err}
         """
 
-#include: "../../rules/catR1.rule"
-#include: "../../rules/catR2.rule"
-
 rule catR2:
     input:
         lambda wildcards: read2.get(wildcards.group)
@@ -75,8 +80,6 @@ rule catR2:
         mkdir -p output/{wildcards.group}/fastq
         cat {input} > {output} 2> {log.err}
         """
-
-#include: "../../rules/qc.rule"
 
 rule qc:
     input:
@@ -94,8 +97,6 @@ rule qc:
         mkdir -p output/{wildcards.group}/qc
         fastqc -t {threads} -o output/{wildcards.group}/qc {input.R1} {input.R2} 2> {log.err}
         """
-
-#include: "../../rules/trim.rule"
 
 rule trim:
     input:
@@ -148,7 +149,7 @@ rule align:
         '--alignIntronMax 1000000 '
         '--alignMatesGapMax 1000000 '
         '--waspOutputMode SAMtag '
-        '--varVCFfile <(zcat {input.vcf})'
+        '--varVCFfile <(zcat {input.vcf}) 1> {log.out}'
 
 #include: "../../rules/index.rule"
 
