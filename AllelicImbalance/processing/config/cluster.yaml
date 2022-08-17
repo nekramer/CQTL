@@ -28,7 +28,7 @@ assignGroups:
   memPerCpu: 16G
 countReads:
   name: "countReads.{wildcards}"
-  memPerCpu: 32G
+  memPerCpu: 36G
 checkDonorVariants:
   memPerCpu: 8G
 

@@ -1,4 +1,4 @@
-# Allelic Imbalance Processing
+# Allelic Imbalance rocessing
 
 Snakemake workflows for preparing imputed genotyping data and RNA-seq data for 
 [GATK ASERead Counter](https://gatk.broadinstitute.org/hc/en-us/articles/360037428291-ASEReadCounter) and preparing data for 
