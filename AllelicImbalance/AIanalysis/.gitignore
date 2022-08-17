@@ -1,1 +1,5 @@
 .Rproj.user
+data/alleleCountsMatrix.csv
+data/colData.csv
+data/weightsMatrix.csv
+scripts/__pycache__/
