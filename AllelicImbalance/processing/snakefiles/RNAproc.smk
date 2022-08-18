@@ -2,6 +2,7 @@
 
 import pandas as pd
 import os, shutil
+import glob
 
 ## Load config file
 configfile: "config/config.yaml"
@@ -42,9 +43,10 @@ onsuccess:
         ## Remove grouped directory
         shutil.rmtree(os.path.join('output', key, 'grouped'))
         ## Remove extra align logs
+        for f in glob.glob(os.path.join('output', key, 'align', key) + "*.out"):
+            os.remove(f)
         os.remove(os.path.join('output', key, 'align', key) + '.SJ.out.tab')
-        os.remove(os.path.join('output', key, 'align', key) + '.Log.final.out')
-        os.remove(os.path.join('output', key, 'align', key) + '.Log.progress.out')
+        
     os.remove('editDonors.done')
 
 ## Define rules
