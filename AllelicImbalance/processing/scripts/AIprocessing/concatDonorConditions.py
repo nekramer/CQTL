@@ -16,6 +16,6 @@ for i in range(2, len(sys.argv)):
 donorData = pd.concat(data_list, axis = 0)
 
 # File name
-outputName = 'output/AI/' + str(sys.argv[1]) + '/' + str(sys.argv[2]) + '_alleleCounts_joined.csv'
+outputName = 'output/AI/' + str(sys.argv[1]) + '/' + str(sys.argv[1]) + '_alleleCounts_joined.csv'
 
 donorData.to_csv(outputName, index = False)
