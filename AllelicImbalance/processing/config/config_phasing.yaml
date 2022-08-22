@@ -1,0 +1,7 @@
+
+## Path to vcf processed with VCFproc workflow
+vcf: 'output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_nodups_biallelic.vcf.gz'
+
+## Path to directory of genetic maps
+geneticMapDir: '/proj/phanstiel_lab/References/geneticMaps/GRCh38'
+geneticMapPrefix: 'genetic_map_GRCh38_chr'
