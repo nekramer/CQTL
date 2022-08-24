@@ -14,7 +14,9 @@ genoDonors <- dna %>% filter(!is.na(`File Directory`)) %>% pull(Donor) %>% unlis
 # Pull these donors from RNA sample sheet
 samplesheet <- rna %>% filter(Donor %in% genoDonors) %>% 
   filter(NYGCQC != "FAIL") %>%
-  filter(Tech_Rep == 1)
+  filter(!(Donor == "AM7205" & Tech_Rep == 2)) %>%
+  filter(!(Donor == "AM7204" & Tech_Rep == 2)) %>%
+  filter(!(Donor == "AM7224" & Tech_Rep == 2))
 
 samplesheet$Tech_Rep <- unlist(samplesheet$Tech_Rep)
 samplesheet$Seq_Rep <- unlist(samplesheet$Seq_Rep)
