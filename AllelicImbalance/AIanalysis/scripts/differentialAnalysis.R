@@ -3,10 +3,23 @@ library(DESeq2)
 library(googlesheets4)
 library(dplyr)
 
+# colData ######################################################################
+
+colData <- fread("../processing/output/AI/colData.csv", data.table = FALSE)
+
+
+donorInfo <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
+                        sheet = "Donors") %>% rename(donor = Donor)
+donorInfo$donor <- unlist(donorInfo$donor)
+
+
+
+colData <- colData %>% left_join(donorInfo[,c("donor", "Sex", "Age")])
+
 # Allele counts matrix #########################################################
 
-alleleCountsMatrix <- fread("alleleCountsMatrix.csv", data.table = FALSE,
-                            colClasses = c("character", rep("numeric", 224)),
+alleleCountsMatrix <- fread("../processing/output/AI/alleleCountsMatrix.csv", data.table = FALSE,
+                            colClasses = c("character", rep("numeric", nrow(colData))),
                             skip = 4)
 
 # Set rownames as first column (variant IDs)
@@ -20,24 +33,13 @@ alleleCountsMatrix <- as.matrix(alleleCountsMatrix)
 
 # Weight matrix ################################################################
 
-weightMatrix <- fread("weightsMatrix.csv", skip = 4, data.table = FALSE,
-                      colClasses = c("character", rep("numeric", 224)))
+weightMatrix <- fread("../processing/output/AI/weightsMatrix.csv", skip = 4, data.table = FALSE,
+                      colClasses = c("character", rep("numeric", nrow(colData))))
 rownames(weightMatrix) <- weightMatrix$V1
 weightMatrix <- weightMatrix[,-1]
 weightMatrix <- as.matrix(weightMatrix)
 
-# colData ######################################################################
 
-colData <- fread("colData.csv", data.table = FALSE)
-
-
-donorInfo <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
-                        sheet = "Donors") %>% rename(donor = Donor)
-donorInfo$donor <- unlist(donorInfo$donor)
-
-
-
-colData <- colData %>% left_join(donorInfo[,c("donor", "Sex", "Age")])
 
 
 # DESeq ########################################################################
@@ -52,22 +54,19 @@ sizeFactors(dds) <- rep(1, ncol(alleleCountsMatrix))
 dds$allele <- relevel(dds$allele, ref = "ref")
 
 allelic_imbalance_analysis <- DESeq(dds)
-save(allelic_imbalance_analysis, file = paste0("../data/", Sys.Date(), "_AIanalysis.rda"))
+save(allelic_imbalance_analysis, file = paste0("data/", Sys.Date(), "_AIanalysis.rda"))
 
 resCTL = results(allelic_imbalance_analysis,name = "conditionCTL.allelealt")
 notNA_resCTL = resCTL[!is.na(resCTL$log2FoldChange),]
-save(notNA_resCTL, file = paste0("../data/", Sys.Date(), "_AIresCTL.rda"))
+#save(notNA_resCTL, file = paste0("data/", Sys.Date(), "_AIresCTL.rda"))
 resFNF = results(allelic_imbalance_analysis,name = "conditionFNF.allelealt")
 notNA_resFNF = resFNF[!is.na(resFNF$log2FoldChange),]
-save(notNA_resFNF, file = paste0("../data/", Sys.Date(), "_AIresFNF.rda"))
-
+#save(notNA_resFNF, file = paste0("data/", Sys.Date(), "_AIresFNF.rda"))
 
 
 # Filter for signif
 sigCTL = notNA_resCTL[notNA_resCTL$padj < 0.01 & abs(notNA_resCTL$log2FoldChange) > log2(1.1),]
+save(sigCTL, file = paste0("data/", Sys.Date(), "_AIsigCTL.rda"))
 sigFNF = notNA_resFNF[notNA_resFNF$padj < 0.01 & abs(notNA_resFNF$log2FoldChange) > log2(1.1),]
+save(sigFNF, file = paste0("data/", Sys.Date(), "_AIsigFNF.rda"))
 
-
-# DESeq (v2) ########################################################################
-design2 <- ~0 + condition:donor + condition:allele + Sex
-dds2 <- DESeqDataSetFromMatrix(alleleCountsMatrix, colData, design2)
