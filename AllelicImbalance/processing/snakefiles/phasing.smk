@@ -11,7 +11,7 @@ vcf_prefix = vcf_file[:re.search("_nodups_biallelic.vcf.gz", vcf_file).span()[0]
 rule all:
     input:
         [expand('output/vcf/{prefix}_nodups_biallelic_chr{chrom}.phased.{ext}', prefix = vcf_prefix, chrom = range(1, 23), ext = ['haps', 'sample'])],
-        [expand('output/vcf/{prefix}_nodups_biallelic_chr{chrom}.phased.allele.haps', prefix = vcf_prefix, chrom = range(1, 23))]
+        [expand('output/vcf/{prefix}_nodups_biallelic_chr{chrom}.phased.allele.named.haps', prefix = vcf_prefix, chrom = range(1, 23))]
 
 rule splitVCF:
     input: 
@@ -54,7 +54,7 @@ rule hapsToAlleles:
     input: 
         rules.phaseData.output.haps
     output:
-        'output/vcf/' + vcf_prefix + '_nodups_biallelic_chr{chrom}.phased.allele.haps'
+        temp('output/vcf/' + vcf_prefix + '_nodups_biallelic_chr{chrom}.phased.allele.haps')
     params:
         chrom = lambda wildcards: wildcards.chrom,
         prefix = vcf_prefix
@@ -66,3 +66,19 @@ rule hapsToAlleles:
         python3 scripts/phasing/hapsToAlleles.py {input} {params.chrom} {params.prefix} 1> {log.out}
         """
 
+rule renameHapColumns:
+    input:
+        haps = rules.hapsToAlleles.output,
+        samples = rules.phaseData.output.samples
+    output:
+        'output/vcf/' + vcf_prefix + '_nodups_biallelic_chr{chrom}.phased.allele.named.haps'
+    params:
+        chrom = lambda wildcards: wildcards.chrom,
+        prefix = vcf_prefix
+    log:
+        out = 'output/vcf/logs/renameHapColumns_chr{chrom}.out'
+    shell:
+        """
+        module load python/3.9.6
+        python3 scripts/phasing/renameHapColumns.py {input.haps} {input.samples} {params.chrom} {params.prefix} 1> {log.out}
+        """
