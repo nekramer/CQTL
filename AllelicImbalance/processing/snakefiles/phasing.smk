@@ -10,7 +10,8 @@ vcf_prefix = vcf_file[:re.search("_nodups_biallelic.vcf.gz", vcf_file).span()[0]
 
 rule all:
     input:
-        [expand('output/vcf/{prefix}_nodups_biallelic_chr{chrom}.phased.{ext}', prefix = vcf_prefix, chrom = range(1, 23), ext = ['haps', 'sample'])]
+        [expand('output/vcf/{prefix}_nodups_biallelic_chr{chrom}.phased.{ext}', prefix = vcf_prefix, chrom = range(1, 23), ext = ['haps', 'sample'])],
+        [expand('output/vcf/{prefix}_nodups_biallelic_chr{chrom}.phased.allele.haps', prefix = vcf_prefix, chrom = range(1, 23))]
 
 rule splitVCF:
     input: 
@@ -47,5 +48,21 @@ rule phaseData:
         """
         module load shapeit
         shapeit --input-vcf {input} --input-map {params.geneticMapDir}/{params.geneticMapPrefix}{params.chrom}_sorted.txt --thread {threads} --output-max {output.haps} {output.samples} --output-log {log.out}
+        """
+
+rule hapsToAlleles:
+    input: 
+        rules.phaseData.output.haps
+    output:
+        'output/vcf/' + vcf_prefix + '_nodups_biallelic_chr{chrom}.phased.allele.haps'
+    params:
+        chrom = lambda wildcards: wildcards.chrom,
+        prefix = vcf_prefix
+    log:
+        out = 'output/vcf/logs/haptToAlleles_chr{chrom}.out'
+    shell:
+        """
+        module load python/3.9.6
+        python3 scripts/phasing/hapsToAlleles.py {input} {params.chrom} {params.prefix} 1> {log.out}
         """
 
