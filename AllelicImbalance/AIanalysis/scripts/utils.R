@@ -16,11 +16,20 @@ varID_to_GRanges <- function(varIDs, GRanges = TRUE){
   return(ranges) 
 }
 
-GRanges_to_Genes <- function(ranges, txdb, orgdb){
-  genes <- subsetByOverlaps(genes(txdb), ranges)
+GRanges_to_Genes <- function(ranges, txdb, orgdb, singleStrandOnly = TRUE){
+  genes <- subsetByOverlaps(suppressMessages(genes(txdb, 
+                                  single.strand.genes.only = singleStrandOnly)), 
+                            ranges)
+  
+  if (singleStrandOnly == FALSE){
+    geneids <- names(genes)
+    genes <- unlist(genes)
+    genes$gene_id <- geneids
+  }
   
   # Find matching keys of overlaps and grab those genes
   overlaps <- findOverlaps(genes, ranges)
+  
   gene_overlaps <- genes[from(overlaps)]
   snp_overlaps <- cbind(gene_overlaps$gene_id, as.data.frame(ranges[to(overlaps),]))
   colnames(snp_overlaps)[1] <- "gene_id"
