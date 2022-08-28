@@ -29,7 +29,16 @@ assignGroups:
 countReads:
   name: "countReads.{wildcards}"
   memPerCpu: 45G
+
 checkDonorVariants:
   memPerCpu: 8G
 
+hapsToAlleles:
+  memPerCpu: 8G
+renameHapColumns:
+  memPerCpu: 6G
 
+mergeAlleleCountHaplotypes:
+  memPerCpu: 6G
+getHapGenes:
+  memPerCpu: 12G
