@@ -2,6 +2,7 @@
 # convert to GRanges/dataframe
 library(stringr)
 library(purrr)
+library(plyranges)
 varID_to_GRanges <- function(varIDs, GRanges = TRUE){
   
   chr <- varIDs %>% str_split(":") %>% map(1) %>% unlist()
@@ -22,9 +23,9 @@ GRanges_to_Genes <- function(ranges, txdb, orgdb, singleStrandOnly = TRUE){
                             ranges)
   
   if (singleStrandOnly == FALSE){
-    geneids <- names(genes)
-    genes <- unlist(genes)
-    genes$gene_id <- geneids
+    
+    genes <- bind_ranges(as.list(genes), .id = "gene_id")
+    genes$gene_id <- as.character(genes$gene_id)
   }
   
   # Find matching keys of overlaps and grab those genes
@@ -33,7 +34,7 @@ GRanges_to_Genes <- function(ranges, txdb, orgdb, singleStrandOnly = TRUE){
   gene_overlaps <- genes[from(overlaps)]
   snp_overlaps <- cbind(gene_overlaps$gene_id, as.data.frame(ranges[to(overlaps),]))
   colnames(snp_overlaps)[1] <- "gene_id"
-  
+
   # Get gene names from orgDb
   ## Get gene id type from txdb metadata
   txdb_metadata <- metadata(txdb)
@@ -49,7 +50,6 @@ GRanges_to_Genes <- function(ranges, txdb, orgdb, singleStrandOnly = TRUE){
   }
   
   gene_symbols <- suppressMessages(AnnotationDbi::select(orgdb, keys = gene_overlaps$gene_id, columns = "SYMBOL", keytype = gene_keytype))
-  
   # Recombine with original gene information
   gene_overlaps_symbols <- merge(gene_overlaps, gene_symbols, by.x = "gene_id", by.y = gene_keytype)
   # Combine matched gene names with matched snps by matching geneids
