@@ -9,7 +9,7 @@ colData <- fread("../processing/output/AI/colData.csv", data.table = FALSE)
 
 
 donorInfo <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
-                        sheet = "Donors") %>% rename(donor = Donor)
+                        sheet = "Donors") %>% dplyr::rename(donor = Donor)
 donorInfo$donor <- unlist(donorInfo$donor)
 
 
@@ -52,7 +52,7 @@ assays(dds)[["weights"]] <- weightMatrix
 sizeFactors(dds) <- rep(1, ncol(alleleCountsMatrix))
 # Relevel with reference allele set first
 dds$allele <- relevel(dds$allele, ref = "ref")
-
+save(dds, file = "data/dds.rda")
 allelic_imbalance_analysis <- DESeq(dds)
 save(allelic_imbalance_analysis, file = paste0("data/", Sys.Date(), "_AIanalysis.rda"))
 
