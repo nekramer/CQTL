@@ -5,6 +5,7 @@ library(purrr)
 library(plyranges)
 library(dplyr)
 library(tidyr)
+
 varID_to_GRanges <- function(varIDs, GRanges = TRUE){
   
   chr <- varIDs %>% str_split(":") %>% map(1) %>% unlist()
@@ -64,6 +65,7 @@ GRanges_to_Genes <- function(ranges, txdb, orgdb, singleStrandOnly = TRUE){
   colnames(snp_genes) <- c("chr", "pos", "gene_symbol", "gene_start", "gene_end", "gene_strand", gene_keytype)
   
   return(snp_genes)
+
 }
 
 reformatRSIDdata <- function(dataPath){
@@ -87,5 +89,4 @@ reformatDESeqdata <- function(data, geneData){
     left_join(geneData, by = c("chr", "pos")) %>%
     filter(!is.na(rsid))
   return(data)
-  
 }

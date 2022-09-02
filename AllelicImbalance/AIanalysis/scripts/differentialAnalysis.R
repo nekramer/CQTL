@@ -12,8 +12,6 @@ donorInfo <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMq
                         sheet = "Donors") %>% dplyr::rename(donor = Donor)
 donorInfo$donor <- unlist(donorInfo$donor)
 
-
-
 colData <- colData %>% left_join(donorInfo[,c("donor", "Sex", "Age")])
 
 # Allele counts matrix #########################################################
