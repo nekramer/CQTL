@@ -21,9 +21,8 @@ getGenes <- function(countData_chunk, chrom, chunkNum, txdb = TxDb.Hsapiens.UCSC
     colnames(countData_ranges) <- c("id", "group", "snp", "ref", "total", "chr", "pos")
     ASEP_genes <- left_join(countData_ranges, genes)
 
-    # Only keep necessary columns and rename gene_symbol to gene
+    # Only keep necessary columns
     ASEP_genes_final <- ASEP_genes[,c("id", "group", "snp", "ref", "total", "gene_symbol")]
-    colnames(ASEP_genes_final)[6] <- c("gene")
 
     # Keep rest of gene info in separate dataframe
     gene_info <- ASEP_genes[,c("gene_symbol", "gene_start", "gene_end", "gene_strand")]
@@ -54,5 +53,5 @@ for (chunk in 1:nChunks){
 }
 
 # Write files for headers
-fwrite(data.frame(matrix(header, nrow = 1)), file = paste0("output/AI/chr", args[2], "_ASEPheader.txt"), col.names = FALSE)
+fwrite(data.frame(matrix(c(header, "gene"), nrow = 1)), file = paste0("output/AI/chr", args[2], "_ASEPheader.txt"), col.names = FALSE)
 fwrite(data.frame(matrix(c("gene_symbol", "gene_start", "gene_end", "gene_strand"), nrow = 1)), file = paste0("output/AI/chr", args[2], "_geneheader.txt"), col.names = FALSE)

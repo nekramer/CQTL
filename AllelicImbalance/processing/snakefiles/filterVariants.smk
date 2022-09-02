@@ -26,9 +26,6 @@ onsuccess:
     # Remove noncombined alleleCount het files
     for key in splitListSubset_dict:
         os.remove('output/AI/alleleCounts_' + str(config['minHets']) + 'hets{splitGroup}.csv'.format(splitGroup = key))
-    
-    # Remove unpivoted matrix
-    os.remove('output/AI/alleleCounts_' + str(config['minHets']) + 'hets.csv')
 
 rule all:
     input:

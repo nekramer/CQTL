@@ -212,7 +212,7 @@ rule splitAlleleCountsFile:
     shell:
         """
         mkdir -p output/AI/alleleCountSplits
-        split {input.alleleCounts} -l 100000 output/AI/alleleCountSplits/alleleCounts_split 2> {log.err}
+        split {input} -l 100000 output/AI/alleleCountSplits/alleleCounts_split 2> {log.err}
         ls -1 output/AI/alleleCountSplits > {output} 2>> {log.err}
         """
 

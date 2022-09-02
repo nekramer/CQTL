@@ -15,6 +15,8 @@ onsuccess:
         os.remove(file)
     for chr in range(1, 23):
         os.remove('genes_chr' + str(chr) + '.done')
+        os.remove('output/AI/chr' + str(chr) + '_ASEPheader.txt')
+        os.remove('output/AI/chr' + str(chr) + '_geneheader.txt')
 
 rule all:
     input:
