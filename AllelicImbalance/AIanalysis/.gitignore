@@ -2,6 +2,8 @@
 data/alleleCountsMatrix.csv
 data/colData.csv
 data/weightsMatrix.csv
+data/dds.rda
+data/*_AIanalysis.rda
 scripts/__pycache__/
 runASEP-*.out
 .snakemake/*
