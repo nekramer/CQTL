@@ -8,7 +8,7 @@ rule runASEP:
     input:
         lambda wildcards: '../processing/output/AI/chr{chrom}_ASEPfinal.txt'.format(chrom=wildcards.chrom)
     output:
-        'data/chr{chrom}_ASEP.rda'
+        temp('data/chr{chrom}_ASEP.rda')
     params:
         chrom = lambda wildcards: wildcards.chrom
     threads: 8
