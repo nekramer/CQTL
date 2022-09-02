@@ -3,3 +3,7 @@ data/alleleCountsMatrix.csv
 data/colData.csv
 data/weightsMatrix.csv
 scripts/__pycache__/
+runASEP-*.out
+.snakemake/*
+logs/*
+env/*
