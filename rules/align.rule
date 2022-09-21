@@ -1,0 +1,30 @@
+rule align:
+    input:
+        R1 = rules.trim.output.trim1,
+        R2 = rules.trim.output.trim2
+    output:
+        "output/{group}/align/{group}.Aligned.sortedByCoord.out.bam"
+    threads: 8
+    log:
+        out = "output/{group}/logs/{group}_align.out"
+    params:
+        genomeDir = config['genomeDir']
+    shell:
+        'module load star/2.7.0a &&'
+        'mkdir -p output/{wildcards.group}/align &&'
+        'star --runThreadN {threads} '
+        '--genomeDir {params.genomeDir} '
+        '--readFilesCommand zcat ' 
+        '--readFilesIn {input.R1} {input.R2} '
+        '--outFileNamePrefix output/{wildcards.group}/align/{wildcards.group}. ' 
+        '--outSAMtype BAM SortedByCoordinate '
+        '--outFilterType BySJout '
+        '--outFilterMultimapNmax 20 ' 
+        '--alignSJoverhangMin 8 ' 
+        '--alignSJDBoverhangMin 1 '
+        '--outFilterMismatchNmax 999 ' 
+        '--outFilterMismatchNoverReadLmax 0.04 ' 
+        '--alignIntronMin 20 ' 
+        '--alignIntronMax 1000000 '
+        '--alignMatesGapMax 1000000 '
+        '--waspOutputMode SAMtag 1> {log.out}'
