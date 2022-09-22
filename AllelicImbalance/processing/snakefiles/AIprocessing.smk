@@ -32,7 +32,6 @@ for key in groupedDonors.keys():
 ## Get vcf file path and prefix of VCFproc processed vcf from config file
 vcf = config['vcf']
 vcf_file = os.path.basename(vcf)
-#vcf_prefix = vcf_file[:re.search("_nodups_biallelic.vcf.gz", vcf_file).span()[0]]
 vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
 onsuccess:
@@ -62,6 +61,60 @@ rule all:
 
 include: "../../../rules/VCFprocessing.smk"
 
+include: "../../../rules/RNAprocessing.smk"
+
+rule assignGroups:
+    input:
+        R = rules.align.output,
+        I = rules.index.output
+    output:
+        "output/{group}/grouped/{group}.grouped.sort.bam"
+    threads: 1
+    log:
+        err = "output/{group}/logs/{group}_assignGroups.err"
+    shell:
+        """
+        mkdir -p output/{wildcards.group}/grouped
+        module load picard/2.2.4
+        module load java/10.0.2
+        java -jar /nas/longleaf/apps/picard/2.2.4/picard-tools-2.2.4/picard.jar AddOrReplaceReadGroups I={input.R} O={output} RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM={wildcards.group} SORT_ORDER=coordinate 2> {log.err}
+        """
+
+rule countReads:
+    input:
+        bam = rules.assignGroups.output,
+        vcf = rules.zipVCF2.output,
+        i = rules.indexVCF2.output
+    output:
+        "output/{group}/alleleCounts/{group}_alleleCounts.csv"
+    threads: 1
+    log:
+        err = "output/{group}/logs/{group}_countReads.err"
+    params:
+        sequence = config['sequence']
+    shell:
+        """
+        mkdir -p output/{wildcards.group}/alleleCounts
+        module load gatk/4.1.7.0
+        module load python/3.6.6
+        gatk ASEReadCounter --input {input.bam} --variant {input.vcf} --output {output} --output-format RTABLE --min-base-quality 20 --disable-read-filter NotDuplicateReadFilter --reference {params.sequence} 2> {log.err}
+        """
+
+rule editDonors:
+    input:
+        vcf = rules.zipVCF2.output
+    output:
+        temp(touch('editDonors.done'))
+    params:
+        donors = ",".join(samples['Donor'].unique().tolist())
+    shell:
+        """
+        module load samtools
+        module load python/3.9.6
+        bcftools query -l {input.vcf} > donors.txt
+
+        python3 scripts/RNAproc/matchDonors.py donors.txt {params.donors}
+        """
 
 rule getVariants:
     input: 
@@ -114,8 +167,7 @@ rule concatDonorConditions:
         
 rule VCFoverlapVariants:
     input:
-        #vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
-        vcf = rules.indexVCF2.output,
+        vcf = rules.zipVCF2.output,
         variants = "output/AI/variants.csv"
     output:
         "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz"
@@ -145,9 +197,10 @@ rule VCFoverlapVariantsIndex:
 
 rule getGenoCounts:
     input:
-        vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic_AI.recode.vcf.gz',
-        index = 'output/vcf/' + vcf_prefix + '_nodups_biallelic_AI.recode.vcf.gz.tbi',
-        donorConversions = 'donors.txt'
+        vcf = rules.VCFoverlapVariants.output,
+        index = rules.VCFoverlapVariantsIndex.output,
+        donorConversions = 'donors.txt',
+        donorDone = 'editDonors.done'
     output:
         'output/AI/{donor}/{donor}_genoCounts.csv'
     params:
