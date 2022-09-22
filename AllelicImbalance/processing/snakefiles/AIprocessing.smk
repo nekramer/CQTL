@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pandas as pd
-import os
+import os, re
 import shutil
 
 ## Load config file
@@ -32,7 +32,8 @@ for key in groupedDonors.keys():
 ## Get vcf file path and prefix of VCFproc processed vcf from config file
 vcf = config['vcf']
 vcf_file = os.path.basename(vcf)
-vcf_prefix = vcf_file[:re.search("_nodups_biallelic.vcf.gz", vcf_file).span()[0]]
+#vcf_prefix = vcf_file[:re.search("_nodups_biallelic.vcf.gz", vcf_file).span()[0]]
+vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
 onsuccess:
     # Remove intermediate sample joined allele count files
@@ -58,6 +59,9 @@ rule all:
         'output/AI/alleleCounts.csv',
         'output/AI/numVariantHets.csv',
         'output/AI/alleleCountsplits.txt'
+
+include: "../../../rules/VCFprocessing.smk"
+
 
 rule getVariants:
     input: 
@@ -110,7 +114,8 @@ rule concatDonorConditions:
         
 rule VCFoverlapVariants:
     input:
-        vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
+        #vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
+        vcf = rules.indexVCF2.output,
         variants = "output/AI/variants.csv"
     output:
         "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz"
