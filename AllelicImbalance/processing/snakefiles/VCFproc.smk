@@ -170,7 +170,7 @@ rule indexVCF2:
     threads: 1
     log:
         out = "output/vcf/logs/indexVCF2.out",
-        err = "output/vcf/logs/idnexVCF2.err"
+        err = "output/vcf/logs/indexVCF2.err"
     shell:
         """
         module load samtools

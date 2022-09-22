@@ -43,10 +43,6 @@ onsuccess:
     for key in groupedDonors:
         shutil.rmtree('output/AI/{donor}'.format(donor = key))
 
-    # Remove additional subsetted vcf files
-    os.remove('output/vcf/' + vcf_prefix + '_nodups_biallelic_AI.recode.vcf.gz')
-    os.remove('output/vcf/' + vcf_prefix + '_nodups_biallelic_AI.recode.vcf.gz.tbi')
-
 rule all:
     input:
         [expand("output/{group}/alleleCounts/{group}_alleleCounts_joined.csv", group = key) for key in read1],
@@ -170,7 +166,7 @@ rule VCFoverlapVariants:
         vcf = rules.zipVCF2.output,
         variants = "output/AI/variants.csv"
     output:
-        "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz"
+        temp("output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz")
     params:
         prefix = "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI"
     shell:
@@ -185,7 +181,7 @@ rule VCFoverlapVariantsIndex:
     input:
         rules.VCFoverlapVariants.output
     output:
-        "output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz.tbi"
+        temp("output/vcf/" + vcf_prefix + "_nodups_biallelic_AI.recode.vcf.gz.tbi")
     log:
         out = "output/vcf/logs/VCFoverlapVariantsIndex.out",
         err = "output/vcf/logs/VCFoverlapVariantsIndex.err"

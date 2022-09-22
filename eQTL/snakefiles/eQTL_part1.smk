@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-
 import pandas as pd
 import os, shutil
+import re
 import glob
 
 ## Load config file
@@ -26,27 +26,23 @@ read2 = samples.groupby(['id'])['Read2'].apply(list).to_dict()
 
 ## Get vcf file path of post-imputed, qc'd gzipped vcf file
 vcf = config["vcf"]
+vcf_file = os.path.basename(vcf)
+vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
 ## Define rules
 rule all:
     input:
         [expand("output/mbv/{group}.bamstat.txt", group = key) for key in read1]
 
+include: "../../rules/VCFprocessing.smk"
 
-include: "../../rules/catR1.rule"
-
-include: "../../rules/catR2.rule"
-
-include: "../../rules/qc.rule"
-
-include: "../../rules/trim.rule"
-
-include: "../../rules/align.rule"
+include: "../../rules/RNAprocessing.smk"
 
 rule mbv:
     input:
         bam = rules.align.output,
-        vcf = vcf
+        index = rules.index.output,
+        vcf = rules.zipVCF2.output
     output:
         'output/mbv/{group}.bamstat.txt'
     params:

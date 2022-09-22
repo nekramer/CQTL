@@ -5,7 +5,7 @@ samplesheet: 'samplesheet.csv'
 vcf: '/proj/phanstiel_lab/Data/processed/CQTL/geno/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_ALL_qc.vcf.gz'
 
 ## Genome-specific reference parameters
-chromNames: 'chromNames.txt' # 2-column text file. 1st column: format of chromosome names in vcf file, 2nd column: required format of chromosome names for compatibility with contigs
+chromNames: '../chromNames.txt' # 2-column text file. 1st column: format of chromosome names in vcf file, 2nd column: required format of chromosome names for compatibility with contigs
 
 # GRCh38
 genomeDir: '/proj/seq/data/STAR_genomes/GRCh38_p10_GENCODE' # Path to folder of STAR genome.
