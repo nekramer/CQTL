@@ -16,17 +16,7 @@ case $1 in
             exit 2
             ;;
     
-    'VCFproc' | 'runVCFprocessing')
-            ## Unlock snakemake workflow
-            snakemake -j 1 --unlock -s snakefiles/VCFproc.smk --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
-            ;;
-
-     'RNAproc' | 'runRNAprocessing')
-            ## Unlock snakemake workflow
-            snakemake -j 1 --unlock -s snakefiles/RNAproc.smk --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
-            ;;      
-
-     'AIprocessing' | 'runAIprocessing')
+       'AIprocessing' | 'runAIprocessing')
             ## Unlock snakemake workflow
             snakemake -j 1 --unlock -s snakefiles/AIprocessing.smk --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --parsable" --cluster-status ./scripts/status.py
             ;;
