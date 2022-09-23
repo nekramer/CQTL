@@ -32,7 +32,9 @@ vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 ## Define rules
 rule all:
     input:
-        [expand("output/mbv/{group}.bamstat.txt", group = key) for key in read1]
+        [expand("output/mbv/{group}.bamstat.txt", group = key) for key in read1],
+        [expand("output/quant/{group}/quant.sf", group = key) for key in read1]
+
 
 include: "../../rules/VCFprocessing.smk"
 
@@ -50,9 +52,27 @@ rule mbv:
     shell:
         """
         module load qtltools/{params.version}
-        QTLtools mbv --bam {input.bam} --vcf {input.vcf} --out output/mbv/{wildcards.group}.bamstat.txt
+        QTLtools mbv --bam {input.bam} --vcf {input.vcf} --out output/mbv/all.bamstat.txt
         """
 
+# rule mbvParse:
 
+rule quant:
+    input:
+        trim1 = rules.trim.output.trim1,
+        trim2 = rules.trim.output.trim2
+    output:
+        "output/quant/{group}/quant.sf"
+    params:
+        version = config['salmonVersion'],
+        index = config['salmon']
+    log:
+        out = 'output/logs/quant_{group}.out',
+        err = 'output/logs/quant_{group}.err'
 
+    shell:
+        """
+        module load salmon/{params.version}
+        salmon quant --writeUnmappedNames -l A -1 {input.trim1} -2 {input.trim2} -i {params.index} -o output/quant/{wildcards.group} --threads 1 1> {log.out} 2> {log.err}
+        """
 
