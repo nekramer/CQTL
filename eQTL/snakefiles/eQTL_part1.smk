@@ -33,7 +33,9 @@ vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 rule all:
     input:
         [expand("output/mbv/{group}.bamstat.txt", group = key) for key in read1],
-        [expand("output/quant/{group}/quant.sf", group = key) for key in read1]
+        [expand("output/quant/{group}/quant.sf", group = key) for key in read1],
+        "output/normquant/CTL_CPMadjTMM_invNorm.bed",
+        "output/normquant/FNF_CPMadjTMM_invNorm.bed"
 
 
 include: "../../rules/VCFprocessing.smk"
@@ -52,7 +54,7 @@ rule mbv:
     shell:
         """
         module load qtltools/{params.version}
-        QTLtools mbv --bam {input.bam} --vcf {input.vcf} --out output/mbv/all.bamstat.txt
+        QTLtools mbv --bam {input.bam} --vcf {input.vcf} --out output/mbv/{wildcards.group}.bamstat.txt
         """
 
 # rule mbvParse:
@@ -76,3 +78,20 @@ rule quant:
         salmon quant --writeUnmappedNames -l A -1 {input.trim1} -2 {input.trim2} -i {params.index} -o output/quant/{wildcards.group} --threads 1 1> {log.out} 2> {log.err}
         """
 
+rule quantNorm:
+    input:
+        [expand("output/quant/{group}/quant.sf", group = key) for key in read1]
+    output:
+        "output/normquant/CTL_CPMadjTMM_invNorm.bed",
+        "output/normquant/FNF_CPMadjTMM_invNorm.bed"
+    params:
+        version = config['Rversion'],
+        samplesheet = config['samplesheet']
+    log:
+        out = 'output/logs/quantNorm.out',
+        err = 'output/logs/quantNorm.err'
+    shell:
+        """
+        module load r/{params.version}
+        Rscript scripts/quantNorm.R {params.samplesheet} {input} 1> {log.out} 2> {log.err}
+        """
