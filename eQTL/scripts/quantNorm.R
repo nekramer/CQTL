@@ -18,9 +18,13 @@ inverseNormGene <- function(geneRow){
 args <- commandArgs(trailingOnly = TRUE)
 samplesheet <- args[1]
 sampleQuants <- args[2:length(args)]
+samples <- basename(dirname(sampleQuants))
+
 coldata <- read_csv(samplesheet) %>%
   # Get distinct samples
   distinct(Sample, .keep_all = TRUE) %>%
+  # Put in order of input quants
+  arrange(match(Sample, samples)) %>%
   # add files
   mutate(files = sampleQuants) %>%
   # names column
@@ -59,14 +63,28 @@ colnames(CTL_CPMadjTMM_invNorm) <- c("gene_id", colnames(CTL_CPMadjTMM))
 FNF_CPMadjTMM_invNorm <- as.data.frame(t(apply(FNF_CPMadjTMM, 1, inverseNormGene))) %>%
   rownames_to_column("gene_id")
 colnames(FNF_CPMadjTMM_invNorm) <- c("gene_id", colnames(FNF_CPMadjTMM))
-# Join with gene info -------------------------------------------------------
+
+# Also inverse normalize across genes in combined conditions
+CPMadjTMM_invNorm <- as.data.frame(t(apply(CQTL_CPMadjTMM, 1, inverseNormGene))) %>%
+  rownames_to_column("gene_id")
+colnames(CPMadjTMM_invNorm) <- c("gene_id", colnames(CQTL_CPMadjTMM))
+
+# Join with gene info, add length column, and reorder into BED format --------
 gene_info <- as.data.frame(rowRanges(gse_filtered)) %>% 
-  dplyr::select(seqnames, start, end, strand, gene_id, gene_name)
+  dplyr::select(seqnames, start, end, strand, gene_id, gene_name) %>%
+  mutate(seqnames = paste0("chr", seqnames))
 
-CTL_CPMadjTMM_invNorm <- CTL_CPMadjTMM_invNorm %>% left_join(gene_info) 
-FNF_CPMadjTMM_invNorm <- FNF_CPMadjTMM_invNorm %>% left_join(gene_info)
+CTL_CPMadjTMM_invNorm <- CTL_CPMadjTMM_invNorm %>% left_join(gene_info) %>%
+  relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
+  rename("seqnames" = "#chr")
+FNF_CPMadjTMM_invNorm <- FNF_CPMadjTMM_invNorm %>% left_join(gene_info) %>%
+  relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
+  rename("seqnames" = "#chr")
+CPMadjTMM_invNorm <- CPMadjTMM_invNorm %>% left_join(gene_info) %>%
+  relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
+  rename("seqnames" = "#chr")
 
-write_csv(CTL_CPMadjTMM_invNorm, file = "output/normquant/CTL_CPMadjTMM_invNorm.bed")
-write_csv(FNF_CPMadjTMM_invNorm, file = "output/normquant/FNF_CPMadjTMM_invNorm.bed")
-
+write_delim(CTL_CPMadjTMM_invNorm, file = "output/normquant/CTL_CPMadjTMM_invNorm.bed", delim = "\t")
+write_delim(FNF_CPMadjTMM_invNorm, file = "output/normquant/FNF_CPMadjTMM_invNorm.bed", delim = "\t")
+write_delim(CPMadjTMM_invNorm, file = "output/normquant/ALL_CPMadjTMM_invNorm.bed", delim = "\t")
 
