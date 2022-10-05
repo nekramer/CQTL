@@ -48,13 +48,16 @@ gse_filtered <- gse[keep,]
 # TMM normalization ---------------------------------------------------------
 gse_quant <- calcNormFactors(gse_filtered, method = "TMM")
 
-# Grab CPM counts ---------------------------------------------------------
+# Grab CPM counts -----------------------------------------------------------
 CQTL_CPMadjTMM <- as.data.frame(cpm(gse_quant))
 
 # Inverse normal transformation -----------------------------------------------
 # Split based on condition
-CTL_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("CTL"))
-FNF_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("FNF"))
+CTL_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("CTL")) %>%
+  rename_with(.fn = ~ unlist(str_split(.x, "_"))[2]) 
+
+FNF_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("FNF")) %>%
+  rename_with(.fn = ~ unlist(str_split(.x, "_"))[2])
 
 # Inverse normalize across genes in each condition
 CTL_CPMadjTMM_invNorm <- as.data.frame(t(apply(CTL_CPMadjTMM, 1, inverseNormGene))) %>%
@@ -69,20 +72,23 @@ CPMadjTMM_invNorm <- as.data.frame(t(apply(CQTL_CPMadjTMM, 1, inverseNormGene)))
   rownames_to_column("gene_id")
 colnames(CPMadjTMM_invNorm) <- c("gene_id", colnames(CQTL_CPMadjTMM))
 
-# Join with gene info, add length column, and reorder into BED format --------
+# Join with gene info, sort, and reorder into BED format --------
 gene_info <- as.data.frame(rowRanges(gse_filtered)) %>% 
   dplyr::select(seqnames, start, end, strand, gene_id, gene_name) %>%
   mutate(seqnames = paste0("chr", seqnames))
 
 CTL_CPMadjTMM_invNorm <- CTL_CPMadjTMM_invNorm %>% left_join(gene_info) %>%
   relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
-  rename("seqnames" = "#chr")
+  rename("seqnames" = "#chr") %>%
+  arrange(`#chr`, start)
 FNF_CPMadjTMM_invNorm <- FNF_CPMadjTMM_invNorm %>% left_join(gene_info) %>%
   relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
-  rename("seqnames" = "#chr")
+  rename("seqnames" = "#chr") %>%
+  arrange(`#chr`, start)
 CPMadjTMM_invNorm <- CPMadjTMM_invNorm %>% left_join(gene_info) %>%
   relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
-  rename("seqnames" = "#chr")
+  rename("seqnames" = "#chr") %>%
+  arrange(`#chr`, start)
 
 write_delim(CTL_CPMadjTMM_invNorm, file = "output/normquant/CTL_CPMadjTMM_invNorm.bed", delim = "\t")
 write_delim(FNF_CPMadjTMM_invNorm, file = "output/normquant/FNF_CPMadjTMM_invNorm.bed", delim = "\t")

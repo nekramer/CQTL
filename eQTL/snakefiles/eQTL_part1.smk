@@ -34,19 +34,45 @@ rule all:
     input:
         [expand("output/mbv/{group}.bamstat.txt", group = key) for key in read1],
         [expand("output/quant/{group}/quant.sf", group = key) for key in read1],
-        "output/normquant/CTL_CPMadjTMM_invNorm.bed",
-        "output/normquant/FNF_CPMadjTMM_invNorm.bed"
+        [expand("output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz", condition = ['CTL', 'FNF', 'ALL'])],
+        [expand("output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz.tbi", condition = ['CTL', 'FNF', 'ALL'])],
+        [expand("output/covar/{condition}_PC.csv", condition = ['CTL', 'FNF', 'ALL'])],
+        [expand('output/covar/{condition}_PCcovar.txt', condition = ['CTL', 'FNF', 'ALL'])],
+        #[expand('output/qtl/PC_{condition}perm1Mb.txt', condition = ['CTL', 'FNF'])]
 
 
 include: "../../rules/VCFprocessing.smk"
 
 include: "../../rules/RNAprocessing.smk"
 
+rule renameVCFdonors:
+    input:
+        #vcf = rules.zipVCF2.output
+        vcf = rules.updateConfig.output.v
+    output:
+        vcf = 'output/vcf/' + vcf_prefix + '_newcontig_rename.vcf.gz',
+        index = 'output/vcf/' + vcf_prefix + '_newcontig_rename.vcf.gz.tbi'
+    params:
+        donors = ",".join(samples['Donor'].unique().tolist()),
+        samtoolsVersion = config['samtoolsVersion'],
+        pythonVersion = config['pythonVersion'],
+        prefix = vcf_prefix
+    shell:
+        """
+        module load samtools/{params.samtoolsVersion}
+        module load python/{params.pythonVersion}
+        bcftools query -l {input.vcf} > donors.txt
+        python3 scripts/renameVCFdonors.py donors.txt {params.donors}
+        gunzip {input.vcf}
+        bcftools reheader -s samples.txt -o output/vcf/{params.prefix}_newcontig_rename.vcf output/vcf/{params.prefix}_newcontig.vcf
+        bgzip output/vcf/{params.prefix}_newcontig_rename.vcf && tabix -p vcf {output.vcf}
+        """
+
 rule mbv:
     input:
         bam = rules.align.output,
         index = rules.index.output,
-        vcf = rules.zipVCF2.output
+        vcf = rules.renameVCFdonors.output.vcf
     output:
         'output/mbv/{group}.bamstat.txt'
     params:
@@ -57,7 +83,7 @@ rule mbv:
         QTLtools mbv --bam {input.bam} --vcf {input.vcf} --out output/mbv/{wildcards.group}.bamstat.txt
         """
 
-# rule mbvParse:
+# # rule mbvParse:
 
 rule quant:
     input:
@@ -82,8 +108,7 @@ rule quantNorm:
     input:
         [expand("output/quant/{group}/quant.sf", group = key) for key in read1]
     output:
-        "output/normquant/CTL_CPMadjTMM_invNorm.bed",
-        "output/normquant/FNF_CPMadjTMM_invNorm.bed"
+        [expand("output/normquant/{condition}_CPMadjTMM_invNorm.bed", condition = ['CTL', 'FNF', 'ALL'])]
     params:
         version = config['Rversion'],
         samplesheet = config['samplesheet']
@@ -95,3 +120,77 @@ rule quantNorm:
         module load r/{params.version}
         Rscript scripts/quantNorm.R {params.samplesheet} {input} 1> {log.out} 2> {log.err}
         """
+
+rule indexQuant:
+    input:
+        lambda wildcards: ['output/normquant/{condition}_CPMadjTMM_invNorm.bed'.format(condition=wildcards.condition)]
+    output:
+        bed = 'output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz',
+        index = 'output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz.tbi'
+    params:
+        version = config['samtoolsVersion']
+    log:
+        out = 'output/logs/{condition}_indexQuant.out',
+        err = 'output/logs/{condition}_indexQuant.err'
+    shell:
+        """
+        module load samtools/{params.version}
+        bgzip {input} && tabix -p bed {output.bed} 1> {log.out} 2> {log.err}
+        """
+
+rule getPCs:
+    input:
+        lambda wildcards: ['output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz'.format(condition=wildcards.condition)]
+    output:
+        'output/covar/{condition}_PC.csv'
+    params:
+        version = config['Rversion'],
+        samplesheet = config['samplesheet']
+    log:
+        out = 'output/logs/{condition}_getPCs.out',
+        err = 'output/logs/{condition}_getPCs.err'
+    shell:
+        """
+        module load r/{params.version}
+        Rscript scripts/getPCs.R {params.samplesheet} {input} {wildcards.condition} 1> {log.out} 2> {log.err}
+        """
+
+rule makePCcovar:
+    input:
+        lambda wildcards: ['output/covar/{condition}_PC.csv'.format(condition=wildcards.condition)]
+    output:
+        'output/covar/{condition}_PCcovar.txt'
+    params:
+        version = config['Rversion'],
+        donorSamplesheet = config['donorSamplesheet']
+    log:
+        out = 'output/logs/{condition}_makePCcovar.out',
+        err = 'output/logs/{condition}_makePCcovar.err'
+    shell:
+        """
+        module load r/{params.version}
+        Rscript scripts/formatPCcovariates.R {input} {params.donorSamplesheet} {wildcards.condition} 1> {log.out} 2> {log.err}
+        """
+
+# rule PC_eQTL:
+#     input:
+#         vcf = rules.renameVCFdonors.output.vcf,
+#         vcfIndex = rules.renameVCFdonors.output.index,
+#         bed = rules.indexQuant.output.bed,
+#         bedIndex = rules.indexQuant.output.index,
+#         cov = rules.makePCcovar.output
+#     output:
+#         'output/qtl/PC_{condition}perm1Mb.txt'
+#     params:
+#         version = config['QTLToolsVersion']
+#     log:
+#         out = 'output/logs/{condition}_PCeQTL.out',
+#         err = 'output/logs/{condition}_PCeQTL.err'
+#     shell:
+#         """
+#         module load qtltools/{params.version}
+#         QTLtools cis --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --permute 1000 --window 1000000 --out {output} 1> {log.out} 2> {log.err}
+#         """
+    
+    
+        

@@ -1,5 +1,6 @@
 ## Path to RNA-seq sample samplesheet
 samplesheet: 'samplesheet.csv'
+donorSamplesheet: 'donorSamplesheet.csv'
 
 ## Path to imputed genotyping vcf
 vcf: '/proj/phanstiel_lab/Data/processed/CQTL/geno/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_ALL_qc.vcf.gz'
@@ -16,3 +17,6 @@ salmon: '/proj/seq/data/salmon_RNAseq_genomes/hg38_cdna/salmon_index/default' # 
 ## Software versions
 QTLToolsVersion: "1.3.1"
 salmonVersion: "1.4.0"
+Rversion: "4.1.3"
+samtoolsVersion: "1.9"
+pythonVersion: "3.9.6"
