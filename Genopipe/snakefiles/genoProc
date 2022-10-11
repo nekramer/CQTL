@@ -39,7 +39,9 @@ rule all:
         [expand("output/imputation/{prefix}_chr{chr}.recode.vcf.gz", prefix = mergeName, chr = c) for c in range(1, 23)],
         "output/reports/" + mergeName + ".sexcheck",
         "output/reports/" + mergeName + ".genome",
-        "output/ancestry/ancestry.pdf"
+        "output/ancestry/" + mergeName + "_ref_merge.pca.evec",
+        "output/ancestry/" + mergeName + "_ref_merge.eval",
+        "output/ancestry/" + mergeName + "_ancestry.pdf"
 
 rule convertBinary:
     input:
@@ -467,7 +469,8 @@ rule runEigenstrat:
     input:
         rules.convertEigenstrat.output
     output:
-        "output/ancestry/" + mergeName + "_ref_merge.pca.evec"
+        "output/ancestry/" + mergeName + "_ref_merge.pca.evec",
+        "output/ancestry/" + mergeName + "_ref_merge.eval"
     params:
         prefix = "output/ancestry/" + mergeName + "_ref_merge",
         outpre = mergeName
