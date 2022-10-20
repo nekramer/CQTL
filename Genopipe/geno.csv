@@ -1,4 +1,6 @@
-﻿Proj,Batch,File_Prefix,Genotyping_Directory
-PROJ,Batch1,Prefix1,/path/to/batch1
-PROJ,Batch2,Prefix2,/path/to/batch2
-PROJ,Batch3,Prefix3,/path/to/batch3
+Proj,Batch,File_Prefix,Genotyping_Directory
+CQTL,COA_01_GDA8,COA_01_GDA8,/proj/phanstiel_lab/Data/raw/CQTL/geno/COA_01_GDA8
+CQTL,COA2_01,COA2_01,/proj/phanstiel_lab/Data/raw/CQTL/geno/COA2_01
+CQTL,COA3_01_GDA8,COA3_01_GDA8,/proj/phanstiel_lab/Data/raw/CQTL/geno/COA3_01_GDA8
+CQTL,COA4,COA4,/proj/phanstiel_lab/Data/raw/CQTL/geno/COA4
+CQTL,COA5,COA5,/proj/phanstiel_lab/Data/raw/CQTL/geno/COA5
