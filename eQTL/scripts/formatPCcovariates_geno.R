@@ -3,17 +3,30 @@ library(tidyverse)
 library(janitor)
 
 args <- commandArgs(trailingOnly = TRUE)
-numPC <- as.numeric(args[4])
-prefix <- args[5]
-batch <- as.logical(args[6])
 
-# Read in PCs 
+
+numPC <- as.numeric(args[4])
+numgenoPC <- as.numeric(args[6])
+batch <- as.logical(args[7])
+prefix <- args[8]
+
+
+# Read in RNA PCs 
 PCs <- read_csv(args[1]) %>% 
   dplyr::rename("Donor" = 1) %>%
   # Keep different number of PC's depending on condition
   dplyr::select(Donor, num_range("PC", 1:numPC))
-  
-  
+
+# Read in geno PCs
+genoPCs <- read_delim(args[5], delim = " ") %>% 
+  dplyr::select(-SampleID) %>%
+  # Put donor columns in same order as RNA PCs
+  relocate(all_of(PCs$Donor)) %>%
+  mutate("covariate" = paste0("geno_PC", 1:nrow(.))) %>%
+  relocate(covariate) %>%
+  # Keep different number of PC's depending on condition
+  filter(covariate %in% paste0("geno_PC", 1:numgenoPC))
+
 donorInfo <- read_csv(args[2]) %>% dplyr::select(Donor, Sex)
 
 if (batch == TRUE){
@@ -25,9 +38,9 @@ if (batch == TRUE){
     right_join(donorInfo)
 }
 
-# Join PC's with donorInfo to get Sex covariate
+# Join all covariates
 covariates <- PCs %>% left_join(donorInfo) %>% 
-  # Transpose for QTLtools
+  # Transpose
   t() %>%
   as.data.frame() %>%
   # Rename rows and columns
@@ -35,15 +48,19 @@ covariates <- PCs %>% left_join(donorInfo) %>%
   row_to_names(row_number = 1)
 colnames(covariates)[1] <- "covariate"
 
+covariates <- rbind(covariates, genoPCs)
+
 # Write to tab-delimited file
 if (batch == TRUE){
-  write_delim(covariates, file = paste0("output/covar/", prefix, "_PC_batch_covar.txt"),
+  write_delim(covariates, file = paste0("output/covar/", prefix, 
+                                        "_PC_genoPC_batch_covar.txt"),
               delim = "\t")
 } else {
-  write_delim(covariates, file = paste0("output/covar/", prefix, "_PC_covar.txt"),
+  write_delim(covariates, file = paste0("output/covar/", prefix, 
+                                        "_PC_genoPC_covar.txt"),
               delim = "\t")
 }
 
-  
+
 
 

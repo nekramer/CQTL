@@ -20,3 +20,9 @@ salmonVersion: "1.4.0"
 Rversion: "4.1.3"
 samtoolsVersion: "1.9"
 pythonVersion: "3.9.6"
+
+## Covariate parameters
+genoCovar: 'no'
+batchCovar: 'TRUE'
+
+FDRthreshold: 0.05

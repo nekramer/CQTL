@@ -3,6 +3,7 @@ library(tximeta)
 library(readr)
 library(dplyr)
 library(tibble)
+library(stringr)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 library(DESeq2)
 library(edgeR)
@@ -53,11 +54,11 @@ CQTL_CPMadjTMM <- as.data.frame(cpm(gse_quant))
 
 # Inverse normal transformation -----------------------------------------------
 # Split based on condition
-CTL_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("CTL")) %>%
-  rename_with(.fn = ~ unlist(str_split(.x, "_"))[2]) 
+CTL_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("CTL"))  %>%
+  rename_with(.fn = ~ unlist(lapply(str_split(.x, "_"), `[[`, 2))) 
 
 FNF_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("FNF")) %>%
-  rename_with(.fn = ~ unlist(str_split(.x, "_"))[2])
+  rename_with(.fn = ~ unlist(lapply(str_split(.x, "_"), `[[`, 2)))
 
 # Inverse normalize across genes in each condition
 CTL_CPMadjTMM_invNorm <- as.data.frame(t(apply(CTL_CPMadjTMM, 1, inverseNormGene))) %>%

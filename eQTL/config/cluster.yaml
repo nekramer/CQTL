@@ -7,6 +7,7 @@ __default__:
   nodes: 1
   output: "output/logs_slurm/{rule}.{jobid}.out"
   error: "output/logs_slurm/{rule}.{jobid}.err"
+  constraint: rhel8
 
 
 catR1:
@@ -21,3 +22,13 @@ trim:
 align:
   name: "align.{wildcards}"
   memPerCpu: 5G
+
+
+genoPCA:
+  memPerCpu: 16G
+getPEER:
+  constraint: rhel7
+PC_eQTL:
+  memPerCpu: 8G
+PEER_eQTL:
+  memPerCpu: 8G
