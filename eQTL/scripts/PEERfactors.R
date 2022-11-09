@@ -31,13 +31,7 @@ runPEER <- function(Nk, data, prefix){
   
   # Write to output
   write_csv(factors, file = paste0("output/covar/", prefix,"_PEERfactors_k", Nk, ".txt"))
-  
-  
-  # Check variance of residuals to see if its decreasing and we want to add more iterations
-  residualVariance <- as.data.frame(PEER_getResidualVars(model))
-  write_csv(residualVariance, file = paste0("output/covar/", prefix, "_PEERresidualvariance_k", Nk, ".txt"))
-  
-  
+
 }
 
 # Read in data
@@ -47,5 +41,5 @@ expressionData <- read_delim(args[1]) %>%
   mutate(across(where(is.character), as.numeric)) %>%
   as.matrix()
   
-lapply(seq(10, 100, 10), runPEER, data = expressionData, prefix = args[2])
+lapply(seq(1, 15, 1), runPEER, data = expressionData, prefix = args[2])
 

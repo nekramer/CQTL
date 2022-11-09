@@ -35,14 +35,24 @@ correlationTests_cor <- function(x, y){
 
 #' A function to appropriately read in and name the columns of output
 #' from QTLtools cis permutation pass
-readQTLtools <- function(filePath){
+readQTLtools_perm <- function(filePath){
   
   qtlData <- read_delim(filePath, col_names = FALSE)
   colnames(qtlData) <- c("gene_id", "gene_chr", "gene_start", "gene_end", 
                          "gene_strand", "num_cis_variants", "dist", "variantID",
                          "variant_chr", "variant_start", "variant_end",
                          "dof1", "dof2", "bml1", "bml2", "nom_pval", 
-                         "r_squared", "beta", "adj_emp_pval", "adj_beta_val")
+                         "r_squared", "beta", "adj_emp_pval", "adj_beta_pval")
   
+  return(qtlData)
+}
+
+readQTLtools_nom <- function(filePath){
+  qtlData <- read_delim(filePath, col_names = FALSE)
+  colnames(qtlData) <- c("gene_id", "gene_chr", "gene_start", "gene_end",
+                         "gene_strand", "num_cis_variants", "dist",
+                         "variantID", "variant_chr", "variant_start",
+                         "variant_end", "nom_pval", "r_squared", "beta",
+                         "best_hit")
   return(qtlData)
 }
