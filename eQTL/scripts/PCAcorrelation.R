@@ -16,8 +16,8 @@ pcs <- read_csv(args[1]) %>% filter(Donor != 'sdev')
 pc_variance <- read_csv(args[1]) %>% filter(Donor == 'sdev') %>%
   dplyr::select(-Donor) %>% t() %>% as.data.frame() %>%
   rownames_to_column(var = "PC") %>%
-  rename("V1" = "sdev") %>%
-  mutate("PC" = as.numeric(gsub("PC", "", pc_variance$PC))) %>%
+  dplyr::rename(sdev = V1) %>%
+  mutate("PC" = as.numeric(gsub("PC", "", .$PC))) %>%
   # Calculate variance explained 
   mutate(varianceExplained = sdev^2/sum(sdev^2)) %>%
   # Percent variance explained
@@ -29,7 +29,7 @@ ggplot(data = pcs, mapping = aes(x = PC1, y = PC2)) +
   xlab(paste0("PC1 (", round(pc_variance$percentVarianceExplained[1], digits = 2), " %)")) +
   ylab(paste0("PC2 (", round(pc_variance$percentVarianceExplained[2], digits = 2), " %)"))
 
-ggsave(filename = "output/plots/", condition, "_pca.pdf")
+ggsave(filename = paste0("output/plots/", condition, "_pca.pdf"))
 
 
 # Scree plots -------------------------------------------------------------
@@ -43,7 +43,7 @@ ggplot(data = pc_variance, mapping = aes(x = PC, y = percentVarianceExplained)) 
   scale_x_continuous(breaks = seq(0, nrow(pc_variance), 5)) + 
   theme_minimal()
 
-ggsave(filename = "output/plots/", condition, "_screeplot.pdf")
+ggsave(filename = paste0("output/plots/", condition, "_screeplot.pdf"))
 
 # Pearson's correlations and p-values ------------------------------------
 
@@ -64,6 +64,6 @@ cor_p <- correlationTests_p(pcs %>% dplyr::select(-Donor), info) %>%
   na.omit()
 
 # Plot and save -----------------------------------------------------------
-png(file = paste0("output/plots/", condition, " _PC_correlation.png"))
+png(file = paste0("output/plots/", condition, "_PC_correlation.png"))
 corrplot(cors, p.mat = cor_p, sig.level = 0.05)
 dev.off()

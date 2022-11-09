@@ -11,22 +11,6 @@ vcf = config["vcf"]
 vcf_file = os.path.basename(vcf)
 vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
-## Define actions on success
-onsuccess:
-
-    ## Success message
-    print("VCFs processed successfully for Allelic Imbalance!")
-
-    ## Remove dummy output file
-    os.remove("edit.done")
-
-
-rule all:
-    input:
-        'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
-        'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi',
-        'edit.done'
-
 include: "../../../rules/VCFprocessing.smk"
 
 rule selectVariants:
@@ -90,15 +74,4 @@ rule indexVCF2:
         """
         module load samtools
         tabix -p vcf {input} 2> {log.err} 1> {log.out}
-        """
-
-rule addVCFPath:
-    input:
-        name = rules.zipVCF2.output,
-        config = 'config/config_AIanalysis.yaml'
-    output:
-        touch('edit.done')
-    shell:
-        """
-        sed -i 's#vcf:#& "'{input.name}'"#' {input.config}
         """

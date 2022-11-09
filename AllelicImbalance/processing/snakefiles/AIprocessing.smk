@@ -35,8 +35,20 @@ vcf_file = os.path.basename(vcf)
 vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
 onsuccess:
-    # Remove intermediate sample joined allele count files
+
     for key in read1:
+        ## Remove concatenated fastqs
+        shutil.rmtree(os.path.join('output', key, 'fastq'))
+        ## Remove trim directory
+        shutil.rmtree(os.path.join('output', key, 'trim'))
+        ## Remove grouped directory
+        shutil.rmtree(os.path.join('output', key, 'grouped'))
+        ## Remove extra align logs
+        for f in glob.glob(os.path.join('output', key, 'align', key) + "*.out"):
+            os.remove(f)
+        
+        os.remove(os.path.join('output', key, 'align', key) + '.SJ.out.tab')
+        # Remove intermediate sample joined allele count files
         os.remove('output/{group}/alleleCounts/{group}_alleleCounts_joined.csv'.format(group = key))
 
     # Remove intermediate joined and checked allele counts files and genotyping counts for each donor
@@ -55,62 +67,9 @@ rule all:
         'output/AI/numVariantHets.csv',
         'output/AI/alleleCountsplits.txt'
 
-include: "../../../rules/VCFprocessing.smk"
+include: "VCFproc.smk"
 
-include: "../../../rules/RNAprocessing.smk"
-
-rule assignGroups:
-    input:
-        R = rules.align.output,
-        I = rules.index.output
-    output:
-        "output/{group}/grouped/{group}.grouped.sort.bam"
-    threads: 1
-    log:
-        err = "output/{group}/logs/{group}_assignGroups.err"
-    shell:
-        """
-        mkdir -p output/{wildcards.group}/grouped
-        module load picard/2.2.4
-        module load java/10.0.2
-        java -jar /nas/longleaf/apps/picard/2.2.4/picard-tools-2.2.4/picard.jar AddOrReplaceReadGroups I={input.R} O={output} RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM={wildcards.group} SORT_ORDER=coordinate 2> {log.err}
-        """
-
-rule countReads:
-    input:
-        bam = rules.assignGroups.output,
-        vcf = rules.zipVCF2.output,
-        i = rules.indexVCF2.output
-    output:
-        "output/{group}/alleleCounts/{group}_alleleCounts.csv"
-    threads: 1
-    log:
-        err = "output/{group}/logs/{group}_countReads.err"
-    params:
-        sequence = config['sequence']
-    shell:
-        """
-        mkdir -p output/{wildcards.group}/alleleCounts
-        module load gatk/4.1.7.0
-        module load python/3.6.6
-        gatk ASEReadCounter --input {input.bam} --variant {input.vcf} --output {output} --output-format RTABLE --min-base-quality 20 --disable-read-filter NotDuplicateReadFilter --reference {params.sequence} 2> {log.err}
-        """
-
-rule editDonors:
-    input:
-        vcf = rules.zipVCF2.output
-    output:
-        temp(touch('editDonors.done'))
-    params:
-        donors = ",".join(samples['Donor'].unique().tolist())
-    shell:
-        """
-        module load samtools
-        module load python/3.9.6
-        bcftools query -l {input.vcf} > donors.txt
-
-        python3 scripts/RNAproc/matchDonors.py donors.txt {params.donors}
-        """
+include: "RNAproc.smk"
 
 rule getVariants:
     input: 
