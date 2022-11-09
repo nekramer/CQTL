@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-import os, re
+# import os, re
 
-## Load config file
-configfile: "config/config.yaml"
+# ## Load config file
+# configfile: "config/config_.yaml"
 
-## Get file path of post-imputed, qc'd gzipped vcf file
-vcf = config["vcf"]
+# ## Get file path of post-imputed, qc'd gzipped vcf file
+# vcf = config["vcf"]
 
-## Determine a prefix for the vcf file
-vcf_file = os.path.basename(vcf)
-vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
+# ## Determine a prefix for the vcf file
+# vcf_file = os.path.basename(vcf)
+# vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
 include: "../../../rules/VCFprocessing.smk"
 

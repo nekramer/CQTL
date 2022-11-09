@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
 
-import pandas as pd
-import os, shutil
-import glob
+# import pandas as pd
+# import os, shutil
+# import glob
 
-## Load config file
-configfile: "config/config.yaml"
+# ## Load config file
+# configfile: "config/config.yaml"
 
-## Read in samplesheet
-samples = pd.read_csv(config["samplesheet"],sep=",")
+# ## Read in samplesheet
+# samples = pd.read_csv(config["samplesheet"],sep=",")
 
-## Convert samplesheet columns to strings
-samples = samples.astype(str)
+# ## Convert samplesheet columns to strings
+# samples = samples.astype(str)
 
-## Concatenate Sequencing_Directory to Read1 and Read2 for full read paths
-samples['Read1'] = samples[['Sequencing_Directory', 'Read1']].apply(lambda row: os.path.join(*row), axis=1)
-samples['Read2'] = samples[['Sequencing_Directory', 'Read2']].apply(lambda row: os.path.join(*row), axis=1)
+# ## Concatenate Sequencing_Directory to Read1 and Read2 for full read paths
+# samples['Read1'] = samples[['Sequencing_Directory', 'Read1']].apply(lambda row: os.path.join(*row), axis=1)
+# samples['Read2'] = samples[['Sequencing_Directory', 'Read2']].apply(lambda row: os.path.join(*row), axis=1)
 
-## Group Seq_Reps
-samples['id'] = samples[['Proj', 'Donor']].agg('_'.join, axis=1) + '_R_' + samples[['Condition', 'Time', 'Tech_Rep']].agg('_'.join, axis=1)
+# ## Group Seq_Reps
+# samples['id'] = samples[['Proj', 'Donor']].agg('_'.join, axis=1) + '_R_' + samples[['Condition', 'Time', 'Tech_Rep']].agg('_'.join, axis=1)
 
-## Extract grouped read1 and read2s
-read1 = samples.groupby(['id'])['Read1'].apply(list).to_dict()
-read2 = samples.groupby(['id'])['Read2'].apply(list).to_dict()
+# ## Extract grouped read1 and read2s
+# read1 = samples.groupby(['id'])['Read1'].apply(list).to_dict()
+# read2 = samples.groupby(['id'])['Read2'].apply(list).to_dict()
 
-## Get vcf file path of post-imputed, qc'd gzipped vcf file
-vcf = config["vcf"]
-vcf_file = os.path.basename(vcf)
-vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
+# ## Get vcf file path of post-imputed, qc'd gzipped vcf file
+# vcf = config["vcf"]
+# vcf_file = os.path.basename(vcf)
+# vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
 include: "../../../rules/RNAprocessing.smk"
 
