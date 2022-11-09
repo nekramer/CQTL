@@ -6,7 +6,7 @@ suppressPackageStartupMessages(library("readr"))
 
 parser <- ArgumentParser()
 parser$add_argument('--subset', default = 'freeze', 
-                    help = 'Character describing which subset to create samplesheet from. Options are "pilot", "freeze", and "all".')
+                    help = 'Character describing which subset to create samplesheet from. Options are "pilot", "freeze", "replicate", and "all".')
 parser$add_argument('--output', default = "samplesheet.csv",
                     help = 'Output file path and name.')
 
@@ -42,44 +42,71 @@ check_Sample_Reps <- function(Sample, samplesheet){
   
 }
 
+grabReps <- function(Sample, samplesheet){
+  
+  donor <- Sample[['Donor']]
+  condition <- Sample[['Condition']]
+  
+  valid_samples <- samplesheet %>%
+    filter(Donor == donor & Condition == condition) %>%
+    filter(NYGCQC == "PASS" & !is.na(Sequencing_Directory))
+  
+  return(valid_samples)
+}
 
-# Get samples with more than 1 rep
-extra_Reps <- samplesheet %>% 
-  filter(Tech_Rep > 1 & NYGCQC == "PASS" & !is.na(Sequencing_Directory))
+if (args$subset != "replicate"){
+  
+  # Get samples with more than 1 rep
+  extra_Reps <- samplesheet %>% 
+    filter(Tech_Rep > 1 & NYGCQC == "PASS" & !is.na(Sequencing_Directory))
+  
+  # Check if these samples have a good first Tech_Rep
+  keep_extra_reps <- apply(extra_Reps %>% 
+                             distinct(Sample, .keep_all = TRUE), 
+                           1, check_Sample_Reps, samplesheet = samplesheet)
+  
+  # Filter out extra replicates and add back in one per sample
+  samplesheet <- samplesheet %>%
+    filter(NYGCQC == "PASS" & !is.na(Sequencing_Directory)) %>%
+    # Remove extra_Reps
+    anti_join(extra_Reps) %>%
+    # Join back in whichever were kept from the extra reps
+    bind_rows(keep_extra_reps) %>% 
+    # Get distinct rows 
+    distinct()
+  
+  # Filter based on subset
+  if (args$subset == "freeze"){
+    
+    # Freeze at 79 donors 
+    new_samplesheet <- samplesheet %>%
+      mutate(RNAshippedDate = as.Date(RNAshippedDate)) %>%
+      filter(RNAshippedDate <= "2022-03-10")
+    
+  } else if (args$subset == "pilot"){
+    
+    # Pilot dataset of 26 donors
+    new_samplesheet <- samplesheet %>%
+      mutate(RNAshippedDate = as.Date(RNAshippedDate)) %>%
+      filter(RNAshippedDate <= "2020-12-02")
+    
+  } else if (args$subset == "all"){
+    
+    # Grab all samples, still pulling one tech rep
+    new_samplesheet <- samplesheet
+  }
 
-# Check if these samples have a good first Tech_Rep
-keep_extra_reps <- apply(extra_Reps %>% distinct(Sample, .keep_all = TRUE), 1, check_Sample_Reps, samplesheet = samplesheet)
+} else if (args$subset == "replicate"){
 
-# Filter out extra replicates and add back in one per sample
-samplesheet <- samplesheet %>%
-  filter(NYGCQC == "PASS" & !is.na(Sequencing_Directory)) %>%
-  # Remove extra_Reps
-  anti_join(extra_Reps) %>%
-  # Join back in whichever were kept from the extra reps
-  bind_rows(keep_extra_reps) %>% 
-  # Get distinct rows 
-  distinct()
-
-# Filter based on subset
-if (args$subset == "freeze"){
+  # Grab samples and their valid replicates
+  multiReps <- samplesheet %>% 
+    filter(Seq_Rep == 1 & NYGCQC == "PASS" & !is.na(Sequencing_Directory)) %>% 
+    group_by(Donor, Condition) %>% 
+    summarise(n = n()) %>% filter(n >= 2)
   
-  # Freeze at 79 donors 
-  new_samplesheet <- samplesheet %>%
-    mutate(RNAshippedDate = as.Date(RNAshippedDate)) %>%
-    filter(RNAshippedDate <= "2022-03-10")
-  
-} else if (args$subset == "pilot"){
-  
-  # Pilot dataset of 26 donors
-  new_samplesheet <- samplesheet %>%
-    mutate(RNAshippedDate = as.Date(RNAshippedDate)) %>%
-    filter(RNAshippedDate <= "2020-12-02")
-  
-} else if (args$subset == "all"){
-  
-  # Grab all samples, still pulling one tech rep
-  new_samplesheet <- samplesheet
-  
+  new_samplesheet <- apply(multiReps, 1, grabReps, samplesheet = samplesheet) %>%
+    bind_rows()
+    
 } else {
   
   stop("Invalid subset option.")
