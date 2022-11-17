@@ -5,9 +5,12 @@ import re
 import glob
 import numpy as np
 from kneed import KneeLocator
+import os.path
+from os import path
+import subprocess
 
 ## Load config file
-configfile: "config/config.yaml"
+configfile: "config/config_QTLtools_eQTL.yaml"
 
 ## Read in samplesheet
 samples = pd.read_csv(config["samplesheet"], sep = ",")
@@ -31,182 +34,79 @@ vcf = config["vcf"]
 vcf_file = os.path.basename(vcf)
 vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
-rule_all_inputs = [[expand("output/covar/{condition}_PC.csv", condition = ['CTL', 'FNF', 'ALL'])],
-        [expand('output/pca/{condition}_PC.csv', condition = ['CTL', 'FNF'])],
-        [expand('output/covar/{condition}_PCkneedle.txt', condition = ['CTL', 'FNF'])],
-        [expand('output/covar/{condition}_PEERfactors_k{Nk}.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)],
-        [expand('output/plots/{condition}_PEER{Nk}_correlation.png', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)],
-        [expand('output/covar/{condition}_validPEER.txt', condition = ['CTL', 'FNF'])],
-        [expand('output/plots/{condition}_pca.pdf', condition = ['CTL', 'FNF'])],
-        [expand('output/plots/{condition}_screeplot.pdf', condition = ['CTL', 'FNF'])],
-        [expand('output/plots/{condition}_PC_correlation.png', condition = ['CTL', 'FNF'])]]
+## Number of PEER factors
+Nk = config['PEERfactors']
 
-#[expand("output/mbv/{group}.bamstat.txt", group = key) for key in read1]
+# rule_all_inputs = [[expand("output/covar/{condition}_PC.csv", condition = ['CTL', 'FNF', 'ALL'])],
+#         [expand('output/pca/{condition}_PC.csv', condition = ['CTL', 'FNF'])],
+#         [expand('output/covar/{condition}_PCkneedle.txt', condition = ['CTL', 'FNF'])],
+#         [expand('output/covar/{condition}_PEERfactors_k{Nk}.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(1, 16, 1)],
+#         [expand('output/plots/{condition}_PEER{Nk}_correlation.png', condition = ['CTL', 'FNF'], Nk = n) for n in range(1, 16, 1)],
+#         [expand('output/covar/{condition}_validPEER.txt', condition = ['CTL', 'FNF'])],
+#         [expand('output/plots/{condition}_pca.pdf', condition = ['CTL', 'FNF'])],
+#         [expand('output/plots/{condition}_screeplot.pdf', condition = ['CTL', 'FNF'])],
+#         [expand('output/plots/{condition}_PC_correlation.png', condition = ['CTL', 'FNF'])]]
 
-if config['genoCovar'] == 'yes':
-    include: 'genoCovariate.smk'
-    if config['batchCovar'] == 'TRUE':
-        rule_all_inputs.extend([[expand('output/covar/{condition}_PC_genoPC_batch_covar.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/covar/{condition}_PEER_k{Nk}_genoPC_batch_covar.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        pcCov = ['output/covar/{condition}_PC_genoPC_batch_covar.txt']
-        peerCov = ['output/covar/{condition}_PEER_k{Nk}_genoPC_batch_covar.txt']
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_genoPC_batch_perm1Mb.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_genoPC_batch_perm1Mb.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        pcQTL_perm = ['output/qtl/{condition}_PC_genoPC_batch_perm1Mb.txt']
-        peerQTL_perm = ['output/qtl/{condition}_PEER_k{Nk}_genoPC_batch_perm1Mb.txt']
+rule_all_inputs = [[expand('output/covar/{condition}_PEERfactors_k{Nk}.txt', condition = ['CTL', 'FNF'], Nk = Nk)],
+                    [expand('output/covar/{condition}_PEERfactors_k{Nk}_variance.txt', condition = ['CTL', 'FNF'], Nk = Nk)],
+                    [expand('output/covar/{condition}_PEERkneedle.txt', condition = ['CTL', 'FNF'])]]
 
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_genoPC_batch_perm1Mb_FDR.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_genoPC_batch_perm1Mb_FDR.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
+        #[expand("output/mbv/{group}.bamstat.txt", group = key) for key in read1]
 
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_genoPC_batch_nom1Mb.txt', condition = ['CTL', 'FNF'])]])
-        pcQTL_nominal = ['output/qtl/{condition}_PC_genoPC_batch_nom1Mb.txt']
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_genoPC_batch_nom1Mb.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        peerQTL_nominal = ['output/qtl/{condition}_PEER_k{Nk}_genoPC_batch_nom1Mb.txt']
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_genoPC_batch_nom1Mb_final.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        PEER_postProcessing = ['output/qtl/{condition}_PEER_k{Nk}_genoPC_batch_nom1Mb_final.txt']
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_genoPC_batch_nom1Mb_final.txt', condition = ['CTL', 'FNF'])]])
-        PC_postProcessing = ['output/qtl/{condition}_PC_genoPC_batch_nom1Mb_final.txt']
+include: 'genoCovariate.smk'
+batches = ['RNAKitBatch', 'RNASequencingBatch', 'genoBatch', 'DNAKitBatch']
 
 
-        #pcMultipleTesting_perm = ['output/qtl/{condition}_PC_genoPC_batch_perm1Mb_FDR.txt']
-        #peerMultipleTesting_perm = ['output/qtl/{condition}_PEER_k{Nk}_genoPC_batch_perm1Mb_FDR.txt']
-
-        #peer_eGene = [expand('output/qtl/{{condition}}_PEER_k{Nk}_genoPC_batch_perm1Mb_FDR.txt', Nk = n) for n in range(10, 81, 10)]
-
-        #rule_all_inputs.extend([[expand('output/summary/{condition}_genoPC_batch.txt', condition = ['CTL', 'FNF'])]])
-        #eGene = ['output/summary/{condition}_genoPC_batch.txt']
-    else:
-        rule_all_inputs.extend([[expand('output/covar/{condition}_PC_genoPC_covar.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/covar/{condition}_PEER_k{Nk}_genoPC_covar.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        pcCov = ['output/covar/{condition}_PC_genoPC_covar.txt']
-        peerCov = ['output/covar/{condition}_PEER_k{Nk}_genoPC_covar.txt']
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_genoPC_perm1Mb.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_genoPC_perm1Mb.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        pcQTL_perm = ['output/qtl/{condition}_PC_genoPC_perm1Mb.txt']
-        peerQTL_perm = ['output/qtl/{condition}_PEER_k{Nk}_genoPC_perm1Mb.txt']
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_genoPC_perm1Mb_FDR.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_genoPC_perm1Mb_FDR.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        
-        #pcMultipleTesting_perm = ['output/qtl/{condition}_PC_genoPC_perm1Mb_FDR.txt']
-        #peerMultipleTesting_perm = ['output/qtl/{condition}_PEER_k{Nk}_genoPC_perm1Mb_FDR.txt']
-
-        
-
-        #peer_eGene = [expand('output/qtl/{{condition}}_PEER_k{Nk}_genoPC_perm1Mb_FDR.txt', Nk = n) for n in range(10, 81, 10)]
-
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_genoPC_nom1Mb.txt', condition = ['CTL', 'FNF'])]])
-        pcQTL_nominal = ['output/qtl/{condition}_PC_genoPC_nom1Mb.txt']
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_genoPC_nom1Mb.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        peerQTL_nominal = ['output/qtl/{condition}_PEER_k{Nk}_genoPC_nom1Mb.txt']
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_genoPC_nom1Mb_final.txt', condition = ['CTL', 'FNF'])]])
-        PC_postProcessing = ['output/qtl/{condition}_PC_genoPC_nom1Mb_final.txt']
-
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_genoPC_nom1Mb_final.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        PEER_postProcessing = ['output/qtl/{condition}_PEER_k{Nk}_genoPC_nom1Mb_final.txt']
-
-        #rule_all_inputs.extend([[expand('output/summary/{condition}_genoPC.txt', condition = ['CTL', 'FNF'])]])
-        #eGene = ['output/summary/{condition}_genoPC.txt']
+if config['iteratePEER'] == 'TRUE':
+    peerCov = 'output/covar/{condition}_PEER_k{Nk}_genoPC'
+    peerQTL_perm = 'output/qtl/{condition}_PEER_k{Nk}_genoPC'
+    peerQTL_nominal = 'output/qtl/{condition}_PEER_k{Nk}_genoPC'
+    PEER_postProcessing = 'output/qtl/{condition}_PEER_k{Nk}_genoPC'
+    peerMultipleTesting_perm = 'output/qtl/{condition}_PEER_k{Nk}_genoPC'
 else:
-    include: 'no_genoCovariate.smk'
-    if config['batchCovar'] == 'TRUE':
-        rule_all_inputs.extend([[expand('output/covar/{condition}_PC_batch_covar.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/covar/{condition}_PEER_k{Nk}_batch_covar.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        pcCov = ['output/covar/{condition}_PC_batch_covar.txt']
-        peerCov = ['output/covar/{condition}_PEER_k{Nk}_batch_covar.txt']
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_batch_perm1Mb.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_batch_perm1Mb.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        pcQTL_perm = ['output/qtl/{condition}_PC_batch_perm1Mb.txt']
-        peerQTL_perm = ['output/qtl/{condition}_PEER_k{Nk}_batch_perm1Mb.txt']
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_batch_perm1Mb_FDR.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_batch_perm1Mb_FDR.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        
-        #pcMultipleTesting_perm = ['output/qtl/{condition}_PC_batch_perm1Mb_FDR.txt']
-        #peerMultipleTesting_perm = ['output/qtl/{condition}_PEER_k{Nk}_batch_perm1Mb_FDR.txt']
+    peerCov = 'output/covar/{condition}_PEER_kneedle_genoPC'
+    peerQTL_perm = 'output/qtl/{condition}_PEER_kneedle_genoPC'
+    peerQTL_nominal = 'output/qtl/{condition}_PEER_kneedle_genoPC'
+    PEER_postProcessing = 'output/qtl/{condition}_PEER_kneedle_genoPC'
+    peerMultipleTesting_perm = 'output/qtl/{condition}_PEER_kneedle_genoPC'
 
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_batch_nom1Mb.txt', condition = ['CTL', 'FNF'])]])
-        pcQTL_nominal = ['output/qtl/{condition}_PC_batch_nom1Mb.txt']
 
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_batch_nom1Mb.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        peerQTL_nominal = ['output/qtl/{condition}_PEER_k{Nk}_batch_nom1Mb.txt']
+for b in batches:
+    b_include = config[b]
+    if b_include == "TRUE":
 
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_batch_nom1Mb_final.txt', condition = ['CTL', 'FNF'])]])
-        PC_postProcessing = ['output/qtl/{condition}_PC_batch_nom1Mb_final.txt']
+        peerCov += '_{}'.format(b)
+        peerQTL_perm += '_{}'.format(b)
+        peerQTL_nominal += '_{}'.format(b)
+        PEER_postProcessing += '_{}'.format(b)
+        peerMultipleTesting_perm += '_{}'.format(b)
 
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_batch_nom1Mb_final.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        PEER_postProcessing = ['output/qtl/{condition}_PEER_k{Nk}_batch_nom1Mb_final.txt']
+peerCov += ".txt"
+peerQTL_perm += "_perm1Mb.txt"
+peerQTL_nominal += "_nom1Mb.txt"
+PEER_postProcessing += "_nom1Mb_final.txt"
+peerMultipleTesting_perm += "_perm1Mb_FDR.txt"
 
-        #peer_eGene = [expand('output/qtl/{{condition}}_PEER_k{Nk}_batch_perm1Mb_FDR.txt', Nk = n) for n in range(10, 81, 10)]
 
-        #rule_all_inputs.extend([[expand('output/summary/{condition}_batch.txt', condition = ['CTL', 'FNF'])]])
-        #eGene = ['output/summary/{condition}_batch.txt']
-    else:
-        rule_all_inputs.extend([[expand('output/covar/{condition}_PC_covar.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/covar/{condition}_PEER_k{Nk}_covar.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        pcCov = ['output/covar/{condition}_PC_covar.txt']
-        peerCov = ['output/covar/{condition}_PEER_k{Nk}_covar.txt']
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_perm1Mb.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_perm1Mb.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        pcQTL_perm = ['output/qtl/{condition}_PC_perm1Mb.txt']
-        peerQTL_perm = ['output/qtl/{condition}_PEER_k{Nk}_perm1Mb.txt']
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_perm1Mb_FDR.txt', condition = ['CTL', 'FNF'])]])
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_perm1Mb_FDR.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        
-        #pcMultipleTesting_perm = ['output/qtl/{condition}_PC_perm1Mb_FDR.txt']
-        #peerMultipleTesting_perm = ['output/qtl/{condition}_PEER_k{Nk}_perm1Mb_FDR.txt']
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_nom1Mb.txt', condition = ['CTL', 'FNF'])]])
-        pcQTL_nominal = ['output/qtl/{condition}_PC_nom1Mb.txt']
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_nom1Mb.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        peerQTL_nominal = ['output/qtl/{condition}_PEER_k{Nk}_nom1Mb.txt']
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PC_nom1Mb_final.txt', condition = ['CTL', 'FNF'])]])
-        PC_postProcessing = ['output/qtl/{condition}_PC_nom1Mb_final.txt']
-
-        rule_all_inputs.extend([[expand('output/qtl/{condition}_PEER_k{Nk}_nom1Mb_final.txt', condition = ['CTL', 'FNF'], Nk = n) for n in range(10, 81, 10)]])
-        PEER_postProcessing = ['output/qtl/{condition}_PEER_k{Nk}_nom1Mb_final.txt']
-        #peer_eGene = [expand('output/qtl/{{condition}}_PEER_k{Nk}_perm1Mb_FDR.txt', Nk = n) for n in range(10, 81, 10)]
-
-        #rule_all_inputs.extend([[expand('output/summary/{condition}_none.txt', condition = ['CTL', 'FNF'])]])
-        #eGene = ['output/summary/{condition}_none.txt']
+if config['iteratePEER'] == 'TRUE':
+    rule_all_inputs.extend([[expand(peerCov, condition = ['CTL', 'FNF'], Nk = n) for n in range(5, Nk + 1, 5)]])
+    rule_all_inputs.extend([[expand(peerQTL_perm, condition = ['CTL', 'FNF'], Nk = n) for n in range(5, Nk + 1, 5)]])
+    rule_all_inputs.extend([[expand(peerQTL_nominal, condition = ['CTL', 'FNF'], Nk = n) for n in range(5, Nk + 1, 5)]])
+    rule_all_inputs.extend([[expand(PEER_postProcessing, condition = ['CTL', 'FNF'], Nk = n) for n in range(5, Nk + 1, 5)]])
+    rule_all_inputs.extend([[expand(peerMultipleTesting_perm, condition = ['CTL', 'FNF'], Nk = n) for n in range(5, Nk + 1, 5)]])
+else:
+    rule_all_inputs.extend([[expand(peerCov, condition = ['CTL', 'FNF'])]])
+    rule_all_inputs.extend([[expand(peerQTL_perm, condition = ['CTL', 'FNF'])]])
+    rule_all_inputs.extend([[expand(peerQTL_nominal, condition = ['CTL', 'FNF'])]])
+    rule_all_inputs.extend([[expand(PEER_postProcessing, condition = ['CTL', 'FNF'])]])
+    rule_all_inputs.extend([[expand(peerMultipleTesting_perm, condition = ['CTL', 'FNF'])]])
 
 ## Define rules
 rule all:
     input:
         rule_all_inputs
 
-include: "../../rules/VCFprocessing.smk"
-
-include: "../../rules/RNAprocessing.smk"
-
-rule renameVCFdonors:
-    input:
-        vcf = rules.updateConfig.output.v
-    output:
-        vcf = 'output/vcf/' + vcf_prefix + '_newcontig_rename.vcf.gz',
-        index = 'output/vcf/' + vcf_prefix + '_newcontig_rename.vcf.gz.tbi'
-    params:
-        donors = ",".join(samples['Donor'].unique().tolist()),
-        samtoolsVersion = config['samtoolsVersion'],
-        pythonVersion = config['pythonVersion'],
-        prefix = vcf_prefix
-    shell:
-        """
-        module load samtools/{params.samtoolsVersion}
-        module load python/{params.pythonVersion}
-        bcftools query -l {input.vcf} > donors.txt
-        python3 scripts/renameVCFdonors.py donors.txt {params.donors}
-        gunzip {input.vcf}
-        bcftools reheader -s samples.txt -o output/vcf/{params.prefix}_newcontig_rename.vcf output/vcf/{params.prefix}_newcontig.vcf
-        bgzip output/vcf/{params.prefix}_newcontig_rename.vcf && tabix -p vcf {output.vcf}
-        """
-
+include: "eQTL.smk"
 
 # rule mbv:
 #     input:
@@ -225,230 +125,13 @@ rule renameVCFdonors:
 
 # # rule mbvParse:
 
-rule quant:
-    input:
-        trim1 = rules.trim.output.trim1,
-        trim2 = rules.trim.output.trim2
-    output:
-        "output/quant/{group}/quant.sf"
-    params:
-        version = config['salmonVersion'],
-        index = config['salmon']
-    log:
-        out = 'output/logs/quant_{group}.out',
-        err = 'output/logs/quant_{group}.err'
-
-    shell:
-        """
-        module load salmon/{params.version}
-        salmon quant --writeUnmappedNames -l A -1 {input.trim1} -2 {input.trim2} -i {params.index} -o output/quant/{wildcards.group} --threads 1 1> {log.out} 2> {log.err}
-        """
-
-rule quantNorm:
-    input:
-        [expand("output/quant/{group}/quant.sf", group = key) for key in read1]
-    output:
-        [expand("output/normquant/{condition}_CPMadjTMM_invNorm.bed", condition = ['CTL', 'FNF', 'ALL'])]
-    params:
-        version = config['Rversion'],
-        samplesheet = config['samplesheet']
-    log:
-        out = 'output/logs/quantNorm.out',
-        err = 'output/logs/quantNorm.err'
-    shell:
-        """
-        module load r/{params.version}
-        Rscript scripts/quantNorm.R {params.samplesheet} {input} 1> {log.out} 2> {log.err}
-        """
-
-rule indexQuant:
-    input:
-        lambda wildcards: ['output/normquant/{condition}_CPMadjTMM_invNorm.bed'.format(condition=wildcards.condition)]
-    output:
-        bed = 'output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz',
-        index = 'output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz.tbi'
-    params:
-        version = config['samtoolsVersion']
-    log:
-        out = 'output/logs/{condition}_indexQuant.out',
-        err = 'output/logs/{condition}_indexQuant.err'
-    shell:
-        """
-        module load samtools/{params.version}
-        bgzip {input} && tabix -p bed {output.bed} 1> {log.out} 2> {log.err}
-        """
-
-rule getPCs:
-    input:
-        lambda wildcards: ['output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz'.format(condition=wildcards.condition)]
-    output:
-        pcaCovar = 'output/covar/{condition}_PC.csv',
-        pcaCor = 'output/pca/{condition}_PC.csv'
-    params:
-        version = config['Rversion'],
-        samplesheet = config['samplesheet']
-    log:
-        out = 'output/logs/{condition}_getPCs.out',
-        err = 'output/logs/{condition}_getPCs.err'
-    shell:
-        """
-        module load r/{params.version}
-        Rscript scripts/getPCs.R {params.samplesheet} {input} {wildcards.condition} 1> {log.out} 2> {log.err}
-        """
-
-rule getPCs_all:
-    input:
-        'output/normquant/ALL_CPMadjTMM_invNorm.bed.gz'
-    output:
-        'output/covar/ALL_PC.csv'
-    params:
-        version = config['Rversion'],
-        samplesheet = config['samplesheet']
-    log:
-        out = 'output/logs/ALL_getPCs.out',
-        err = 'output/logs/ALL_getPCs.err'
-    shell:
-        """
-        module load r/{params.version}
-        Rscript scripts/getPCs_all.R {params.samplesheet} {input} 1> {log.out} 2> {log.err}
-        """
-
-rule PCAcorrelation:
-    input: 
-        rules.getPCs.output.pcaCor
-    output:
-        'output/plots/{condition}_pca.pdf',
-        'output/plots/{condition}_screeplot.pdf',
-        'output/plots/{condition}_PC_correlation.png'
-    params:
-        version = config['Rversion'],
-        samplesheet = config['samplesheet'],
-        donorSamplesheet = config['donorSamplesheet']
-    log:
-        out = 'output/logs/{condition}_PCAcorrelation.out',
-        err = 'output/logs/{condition}_PCAcorrelation.err'
-    shell:
-        """
-        module load r/{params.version}
-        Rscript scripts/PCAcorrelation.R {input} {params.donorSamplesheet} {params.samplesheet} {wildcards.condition} 1> {log.out} 2> {log.err}
-        """
-
-rule pcaKneedle:
-    input:
-        rules.getPCs.output.pcaCor
-    output:
-        'output/covar/{condition}_PCkneedle.txt'
-    log:
-        out = 'output/logs/{condition}_pcaKneedle.out',
-        err = 'output/logs/{condition}_pcaKneedle.err'
-    run:
-        PC = pd.read_csv(str(input))
-
-        # Grab sdev
-        sdev = PC.loc[PC["Donor"] == 'sdev'].to_numpy()
-
-        # Get rid of 'sdev' in first index
-        sdev = np.delete(sdev, 0)
-
-        # Calculate variance explained by each PC
-        varExplained = np.square(sdev)/sum(np.square(sdev))
-
-        # Generate vector for number of PCs
-        x = range(1, len(PC.columns))
-
-        # Calculate knee
-        kneedle = KneeLocator(x, varExplained, curve = "convex", direction = "decreasing")
-
-        # Write knee to file
-        numPCs = kneedle.knee
-        file = open(str(output), 'w')
-        file.write(str(numPCs))
-        file.close()
-
-
-rule getPEER:
-    input:
-        lambda wildcards: ['output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz'.format(condition=wildcards.condition)]
-    output:
-        [expand('output/covar/{{condition}}_PEERfactors_k{Nk}.txt', Nk = n) for n in range(10, 81, 10)]
-    log:
-        out = 'output/logs/{condition}_getPEER.out',
-        err = 'output/logs/{condition}_getPEER.err'
-    shell:
-        """
-        module load r/4.2.0
-        Rscript scripts/PEERfactors.R {input} {wildcards.condition} 1> {log.out} 2> {log.err}
-        """
-
-rule checkPEER:
-    input:
-        [expand("output/covar/{{condition}}_PEERfactors_k{Nk}.txt", Nk = n) for n in range(10, 81, 10)]
-    output:
-        'output/covar/{condition}_validPEER.txt'
-    log:
-        out = 'output/logs/{condition}_checkPEER.out',
-        err = 'output/logs/{condition}_checkPEER.err'
-    params:
-        condition = lambda wildcards: wildcards.condition
-    run:
-        for file in input:
-            peerFactors = pd.read_csv(str(file))
-            peerFactors = peerFactors.drop('Donor', axis = 1)
-            if not peerFactors.isnull().values.all():
-                index = input.index(file)
-                Nk = range(10, 81, 10)
-                # Write Nk as a valid PEER factor
-                outFile = open(str(output), 'a')
-                outFile.write(str(Nk[index])+"\n")
-                outFile.close()
-
-rule PEERcorrelation:
-    input: 
-        peer = lambda wildcards: 'output/covar/{condition}_PEERfactors_k{Nk}.txt'.format(condition=wildcards.condition, Nk=wildcards.Nk),
-        check = rules.checkPEER.output
-    output:
-        'output/plots/{condition}_PEER{Nk}_correlation.png'
-    params:
-        version = config['Rversion'],
-        samplesheet = config['samplesheet'],
-        donorSamplesheet = config['donorSamplesheet']
-    log:
-        out = 'output/logs/{condition}_PEERk{Nk}_correlation.out',
-        err = 'output/logs/{condition}_PEERk{Nk}_correlation.err'
-    shell:
-        """
-        module load r/{params.version}
-        Rscript scripts/PEERcorrelation.R {input.peer} {params.donorSamplesheet} {params.samplesheet} {wildcards.condition} {wildcards.Nk} {input.check} 1> {log.out} 2> {log.err}
-        """
-
-rule PC_eQTL:
-    input:
-        vcf = rules.renameVCFdonors.output.vcf,
-        vcfIndex = rules.renameVCFdonors.output.index,
-        bed = rules.indexQuant.output.bed,
-        bedIndex = rules.indexQuant.output.index,
-        cov = pcCov
-    output:
-        pcQTL_perm
-    params:
-        version = config['QTLToolsVersion']
-    log:
-        out = 'output/logs/{condition}_PCeQTL.out',
-        err = 'output/logs/{condition}_PCeQTL.err'
-    shell:
-        """
-        module load qtltools/{params.version}
-        QTLtools cis --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --permute 1000 --window 1000000 --out {output} 1> {log.out} 2> {log.err}
-        """
-
 rule PEER_eQTL:
     input:
-        vcf = rules.renameVCFdonors.output.vcf,
-        vcfIndex = rules.renameVCFdonors.output.index,
+        vcf = rules.filterVCFvariants.output.vcf,
+        vcfIndex = rules.filterVCFvariants.output.index,
         bed = rules.indexQuant.output.bed,
         bedIndex = rules.indexQuant.output.index,
-        cov = peerCov,
-        check = lambda wildcards: 'output/covar/{condition}_validPEER.txt'.format(condition=wildcards.condition)
+        cov = peerCov
     output:
         peerQTL_perm
     params:
@@ -459,43 +142,16 @@ rule PEER_eQTL:
     shell:
         """
         module load qtltools/{params.version}
-        if grep -Fx {wildcards.Nk} {input.check}
-        then
-            QTLtools cis --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --permute 1000 --window 1000000 --out {output} 1> {log.out} 2> {log.err}
-        else
-            touch {output}
-        fi
+        QTLtools cis --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --permute 1000 --window 1000000 --out {output} 1> {log.out} 2> {log.err}
         """
     
-rule PC_nominal_eQTL:
-    input:
-        vcf = rules.renameVCFdonors.output.vcf,
-        vcfIndex = rules.renameVCFdonors.output.index,
-        bed = rules.indexQuant.output.bed,
-        bedIndex = rules.indexQuant.output.index,
-        cov = pcCov
-    output:
-        pcQTL_nominal
-    params:
-        version = config['QTLToolsVersion']
-    log:
-        out = 'output/logs/{condition}_PCnominal_eQTL.out',
-        err = 'output/logs/{condition}_PCnominal_eQTL.err'
-    shell:
-        """
-        module load qtltools/{params.version}
-        QTLtools cis --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --nominal 0.01 --window 1000000 --out {output} 1> {log.out} 2> {log.err}
-        """
-
-
 rule PEER_nominal_eQTL:
     input:
-        vcf = rules.renameVCFdonors.output.vcf,
-        vcfIndex = rules.renameVCFdonors.output.index,
+        vcf = rules.filterVCFvariants.output.vcf,
+        vcfIndex = rules.filterVCFvariants.output.index,
         bed = rules.indexQuant.output.bed,
         bedIndex = rules.indexQuant.output.index,
-        cov = peerCov,
-        check = lambda wildcards: 'output/covar/{condition}_validPEER.txt'.format(condition=wildcards.condition)
+        cov = peerCov
     output:
         peerQTL_nominal
     params:
@@ -506,39 +162,14 @@ rule PEER_nominal_eQTL:
     shell:
         """
         module load qtltools/{params.version}
-        if grep -Fx {wildcards.Nk} {input.check}
-        then
-            QTLtools cis --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --nominal 1 --window 1000000 --out {output} 1> {log.out} 2> {log.err}
-        else
-            touch {output}
-        fi
+        QTLtools cis --vcf {input.vcf} --bed {input.bed} --cov {input.cov} --nominal 1 --window 1000000 --out {output} 1> {log.out} 2> {log.err}
         """ 
-
-rule PC_qtlPostProcessing:
-    input:
-        nomData = rules.PC_nominal_eQTL.output,
-        permData = rules.PC_eQTL.output,
-        geneInfo = rules.indexQuant.output.bed
-    output:
-        PC_postProcessing
-    params:
-        version = config['Rversion'],
-        FDRthreshold = config['FDRthreshold']
-    log:
-        out = 'output/logs/{condition}_PC_qtlPostProcessing.out',
-        err = 'output/logs/{condition}_PC_qtlPostProcessing.err',
-    shell:
-        """
-        module load r/{params.version}
-        Rscript scripts/postProcessQTLtools.R {input.nomData} {input.permData} {params.FDRthreshold} {input.geneInfo} {output} 1> {log.out} 2> {log.err}
-        """       
 
 rule PEER_qtlPostProcessing:
     input:
         nomData = rules.PEER_nominal_eQTL.output,
         permData = rules.PEER_eQTL.output,
-        geneInfo = rules.indexQuant.output.bed,
-        check = lambda wildcards: 'output/covar/{condition}_validPEER.txt'.format(condition=wildcards.condition)
+        geneInfo = rules.indexQuant.output.bed
     output:
         PEER_postProcessing
     params:
@@ -550,71 +181,22 @@ rule PEER_qtlPostProcessing:
     shell:
         """
         module load r/{params.version}
-        if grep -Fx {wildcards.Nk} {input.check}
-        then
-            Rscript scripts/postProcessQTLtools.R {input.nomData} {input.permData} {params.FDRthreshold} {input.geneInfo} {output} 1> {log.out} 2> {log.err}
-        else
-            touch {output}
-        fi
+        Rscript scripts/postProcessQTLtools.R {input.nomData} {input.permData} {params.FDRthreshold} {input.geneInfo} {output} 1> {log.out} 2> {log.err}
         """
 
-
-
-
-# rule PC_multipleTesting_perm:
-#     input:
-#         qtlResult = pcQTL_perm,
-#         geneInfo = rules.indexQuant.output.bed
-#     output:
-#         pcMultipleTesting_perm
-#     params:
-#         version = config['Rversion']
-#     log:
-#         out = 'output/logs/{condition}_PCeQTL_multipleTesting_perm.out',
-#         err = 'output/logs/{condition}_PCeQTL_multipleTesting_perm.err'
-#     shell:
-#         """
-#         module load r/{params.version}
-#         Rscript scripts/correctQTLs.R {input.qtlResult} {input.geneInfo} {output} 1> {log.out} 2> {log.err}
-#         """
-
-# rule PEER_multipleTesting_perm:
-#     input:
-#         qtlResult = peerQTL_perm,
-#         geneInfo = rules.indexQuant.output.bed,
-#         check = lambda wildcards: 'output/covar/{condition}_validPEER.txt'.format(condition=wildcards.condition)
-#     output:
-#         peerMultipleTesting_perm
-#     params:
-#         version = config['Rversion']
-#     log:
-#         out = 'output/logs/{condition}_PEERk{Nk}_eQTL_multipleTesting_perm.out',
-#         err = 'output/logs/{condition}_PEERk{Nk}_eQTL_multipleTesting_perm.err',
-#     shell:
-#         """
-#         module load r/{params.version}
-#         if grep -Fx {wildcards.Nk} {input.check}
-#         then
-#             Rscript scripts/correctQTLs.R {input.qtlResult} {input.geneInfo} {output} 1> {log.out} 2> {log.err}
-#         else
-#             touch {output}
-#         fi
-#         """
-
-# rule compareSig_eGenes:
-#     input:
-#         pcMultipleTesting_perm,
-#         peer_eGene
-#     output:
-#         eGene
-#     params:
-#         version = config['Rversion'],
-#         FDRthreshold = config['FDRthreshold']
-#     log:
-#         out = 'output/logs/{condition}_compareSig_eGenes.out',
-#         err = 'output/logs/{condition}_compareSig_eGenes.err'
-#     shell:
-#         """
-#         module load r/{params.version}
-#         Rscript scripts/compareSig_eGenes.R {params.FDRthreshold} {output} {input} 1> {log.out} 2> {log.err}
-#         """
+rule PEER_multipleTesting_perm:
+    input:
+        qtlResult = peerQTL_perm,
+        geneInfo = rules.indexQuant.output.bed
+    output:
+        peerMultipleTesting_perm
+    params:
+        version = config['Rversion']
+    log:
+        out = 'output/logs/{condition}_PEERk{Nk}_eQTL_multipleTesting_perm.out',
+        err = 'output/logs/{condition}_PEERk{Nk}_eQTL_multipleTesting_perm.err',
+    shell:
+        """
+        module load r/{params.version}
+        Rscript scripts/correctQTLs.R {input.qtlResult} {input.geneInfo} {output} 1> {log.out} 2> {log.err}
+        """

@@ -1,14 +1,28 @@
-if config['batchCovar'] == 'TRUE':
-    pccovarOutput = ['output/covar/{condition}_PC_genoPC_batch_covar.txt']
-    peercovarOutput = ['output/covar/{condition}_PEER_k{Nk}_genoPC_batch_covar.txt']
+batches = ['RNAKitBatch', 'RNASequencingBatch', 'genoBatch', 'DNAKitBatch']
+if config['iteratePEER'] == 'TRUE':
+    numPEER = 'None'
+    peer = lambda wildcards: 'output/covar/{condition}_PEERfactors_k{Nk}.txt'.format(condition=wildcards.condition, Nk=wildcards.Nk)
+    peercovarOutput = 'output/covar/{condition}_PEER_k{Nk}_genoPC'
+    covar_logout = 'output/logs/{condition}_makePEERcovar_geno_k{Nk}.out'
+    covar_logerr = 'output/logs/{condition}_makePEERcovar_geno_k{Nk}.err'
 else:
-    pccovarOutput = ['output/covar/{condition}_PC_genoPC_covar.txt'],
-    peercovarOutput = ['output/covar/{condition}_PEER_k{Nk}_genoPC_covar.txt']
+    numPEER = lambda wildcards: 'output/covar/{condition}_PEERkneedle.txt'.format(condition=wildcards.condition)
+    peer = lambda wildcards: 'output/covar/{condition}_PEERfactors_k{Nk}.txt'.format(condition=wildcards.condition, Nk=Nk)
+    peercovarOutput = 'output/covar/{condition}_PEER_kneedle_genoPC'
+    covar_logout = 'output/logs/{condition}_makePEERcovar_geno_kneedle.out'
+    covar_logerr = 'output/logs/{condition}_makePEERcovar_geno_kneedle.err'
+
+for b in batches:
+    b_include = config[b]
+    if b_include == "TRUE":
+        peercovarOutput += '_{}'.format(b)
+
+peercovarOutput += ".txt"
 
 rule genoPCA:
     input:
-        vcf = 'output/vcf/' + vcf_prefix + '_newcontig_rename.vcf.gz',
-        index = 'output/vcf/' + vcf_prefix + '_newcontig_rename.vcf.gz.tbi'
+        vcf = 'output/vcf/' + vcf_prefix + '_qtl.recode.vcf.gz',
+        index = 'output/vcf/' + vcf_prefix + '_qtl.recode.vcf.gz.tbi'
     output:
         pcs = 'output/covar/genotypes.pca',
         pcvar = 'output/covar/genotypes.pca_stats'
@@ -22,7 +36,6 @@ rule genoPCA:
         module load qtltools/{params.version}
         QTLtools pca --vcf {input.vcf} --scale --center --out output/covar/genotypes 1> {log.out} 2> {log.err}
         """
-
 
 rule genoPCkneedle:
     input:
@@ -60,35 +73,9 @@ rule genoPCkneedle:
         file.write(str(numPCs))
         file.close()
 
-
-rule makePCcovar_geno:
-    input:
-        seqPC = lambda wildcards: ['output/covar/{condition}_PC.csv'.format(condition=wildcards.condition)],
-        numPCs = lambda wildcards: ['output/covar/{condition}_PCkneedle.txt'.format(condition=wildcards.condition)],
-        genoPC = rules.genoPCA.output.pcs,
-        numgenoPCs = rules.genoPCkneedle.output
-    output:
-        pccovarOutput
-    params:
-        version = config['Rversion'],
-        donorSamplesheet = config['donorSamplesheet'],
-        samplesheet = config['samplesheet'],
-        batchCovar = config['batchCovar']
-    log:
-        out = 'output/logs/{condition}_makePCcovar_geno.out',
-        err = 'output/logs/{condition}_makePCcovar_geno.err'
-    shell:
-        """
-        module load r/{params.version}
-        numPCs=`cat {input.numPCs}`
-        numgenoPCs=`cat {input.numgenoPCs}`
-        Rscript scripts/formatPCcovariates_geno.R {input.seqPC} {params.donorSamplesheet} {params.samplesheet} ${{numPCs}} {input.genoPC} ${{numgenoPCs}} {params.batchCovar} {wildcards.condition} 1> {log.out} 2> {log.err}
-        """
-
 rule makePEERcovar_geno:
     input:
-        peer = lambda wildcards: 'output/covar/{condition}_PEERfactors_k{Nk}.txt'.format(condition=wildcards.condition, Nk=wildcards.Nk),
-        check = lambda wildcards: 'output/covar/{condition}_validPEER.txt'.format(condition=wildcards.condition),
+        peer = peer,
         genoPC = rules.genoPCA.output.pcs,
         numgenoPCs = rules.genoPCkneedle.output
     output:
@@ -96,14 +83,20 @@ rule makePEERcovar_geno:
     params:
         version = config['Rversion'],
         donorSamplesheet = config['donorSamplesheet'],
+        dnaSamplesheet = config['dnaSamplesheet'],
         samplesheet = config['samplesheet'],
-        batchCovar = config['batchCovar']
+        RNAKitBatch = config['RNAKitBatch'],
+        RNASequencingBatch = config['RNASequencingBatch'],
+        genoBatch = config['genoBatch'],
+        DNAKitBatch = config['DNAKitBatch'],
+        numPEER = numPEER
     log:
-        out = 'output/logs/{condition}_makePEERcovar_geno_k{Nk}.out',
-        err = 'output/logs/{condition}_makePEERcovar_geno_k{Nk}.err'
+        out = covar_logout,
+        err = covar_logerr
     shell:
         """
         module load r/{params.version}
         numgenoPCs=`cat {input.numgenoPCs}`
-        Rscript scripts/formatPEERcovariates_geno.R {input.peer} {params.donorSamplesheet} {params.samplesheet} {wildcards.condition} {wildcards.Nk} {input.check} {params.batchCovar} {input.genoPC} ${{numgenoPCs}} 1> {log.out} 2> {log.err}
+
+        Rscript scripts/formatPEERcovariates_geno.R {input.peer} {params.numPEER} {params.donorSamplesheet} {params.dnaSamplesheet} {params.genoBatch} {params.DNAKitBatch} {params.samplesheet} {params.RNAKitBatch} {params.RNASequencingBatch} {wildcards.condition} {input.genoPC} ${{numgenoPCs}} {output} 1> {log.out} 2> {log.err}
         """

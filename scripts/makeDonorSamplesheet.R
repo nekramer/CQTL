@@ -7,7 +7,7 @@ suppressPackageStartupMessages(library("readr"))
 parser <- ArgumentParser()
 parser$add_argument('--subset', default = 'freeze', 
                     help = 'Character describing which subset to get donor information from. Options are "pilot", "freeze", "replicate", and "all".')
-parser$add_argument('--output', default = "dnaSamplesheet.csv",
+parser$add_argument('--output', default = "donorSamplesheet.csv",
                     help = 'Output file path and name.')
 
 args <- parser$parse_args()

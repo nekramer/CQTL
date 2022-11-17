@@ -16,7 +16,7 @@ args <- parser$parse_args()
 gs4_auth("nekramer27@gmail.com")
 samplesheet <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
                           sheet = "RNAExtractionsLibraries",
-                          col_types = "ccccdddllllTTdddTTccccc")
+                          col_types = "ccccdddllllTTdddTTcccccc")
 
 check_Sample_Reps <- function(Sample, samplesheet){
   

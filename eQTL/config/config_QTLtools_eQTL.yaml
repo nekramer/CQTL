@@ -1,0 +1,43 @@
+## Samplesheets
+samplesheet: 'samplesheet.csv' # RNA
+donorSamplesheet: 'donorSamplesheet.csv' # donor information
+dnaSamplesheet: 'dnaSamplesheet.csv' # DNA
+
+## Variant parameters
+vcf: '/proj/phanstiel_lab/Data/processed/CQTL/geno/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_COA6_COA7/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_COA6_COA7_ALL_qc.vcf.gz' # Path to imputed genotyping vcf
+minorAllele: '10:count' # colon-separated string indicating minor allele filter on which to apply to variants included in QTL analysis; the first value should be a number and the second value should be either 'count' or 'freq'
+# minorAllele: '0.1:freq'
+minHets: 5
+
+
+## Genome-specific reference parameters
+chromNames: '../chromNames_hg38.txt' # 2-column text file. 1st column: format of chromosome names in vcf file, 2nd column: required format of chromosome names for compatibility with contigs
+
+# GRCh38
+#genomeDir: '/proj/seq/data/STAR_genomes/GRCh38_p10_GENCODE' # Path to folder of STAR genome.
+#chromSizes: '/proj/seq/data/STAR_genomes/GRCh38_p10_GENCODE/chrNameLength.txt' # Path to file of chromosome names and lengths.
+#sequence: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p10/Sequence/GRCh38.p10.genome.fa.gz' # Path to reference sequence gzipped fasta file. The associated sequence dictionary must be in the same directory as this file.
+genomeDir: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/STAR_idx'
+chromSizes: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/STAR_idx/chrNameLength.txt'
+sequence: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/Sequence/GRCh38.p13.genome.fa.gz'
+salmon: '/proj/seq/data/salmon_RNAseq_genomes/hg38_cdna/salmon_index/default' # Path to salmon index.
+
+## Software versions and paths
+QTLToolsVersion: "1.3.1"
+salmonVersion: "1.4.0"
+gatkVersion: "4.2.5.0"
+vcftoolsVersion: "0.1.15"
+Rversion: "4.1.3"
+samtoolsVersion: "1.9"
+pythonVersion: "3.9.6"
+
+## Covariate parameters
+RNAKitBatch: 'TRUE'
+RNASequencingBatch: 'TRUE'
+genoBatch: 'TRUE'
+DNAKitBatch: 'TRUE'
+PEERfactors: 20
+iteratePEER: 'TRUE'
+
+## Signficance threshold
+FDRthreshold: 0.05

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J eQTL
+#SBATCH -J eQTL_QTLtools
 #SBATCH -t 10-00:00:00
 #SBATCH -N 1
 #SBATCH -n 1
