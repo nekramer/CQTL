@@ -7,7 +7,7 @@ import numpy as np
 from kneed import KneeLocator
 
 ## Load config file
-configfile: "config/config.yaml"
+configfile: "config/config_limixQTL_eQTL.yaml"
 
 ## Read in samplesheet
 samples = pd.read_csv(config["samplesheet"], sep = ",")
@@ -32,9 +32,14 @@ vcf_file = os.path.basename(vcf)
 vcf_prefix = vcf_file[:re.search("_ALL_qc.vcf.gz", vcf_file).span()[0]]
 
 
-rule_all_inputs = []
-
-
+rule_all_inputs = [[expand('output/limix_input/{condition}_featureAnnotation.tsv', condition = ['CTL', 'FNF'])],
+                    [expand('output/limix_input/{condition}_phenotypeFile.tsv', condition = ['CTL', 'FNF'])],
+                    [expand('output/limix_input/geno.{filext}', filext = ['bed', 'bim', 'fam'])],
+                    [expand('output/limix_input/{condition}_PEER_k{Nk}_genoPC_batch_covariateMatrix.tsv', condition = ['CTL', 'FNF'], Nk = n) for n in range(1, 16, 1)],
+                    'output/limix_input/sampleMappingFile.tsv',
+                    [expand('output/{condition}_limixqtl/qtl_results_all.h5', condition = ['CTL', 'FNF'])],
+                    [expand('output/{condition}_limixqtl/snp_metadata_all.h5', condition = ['CTL', 'FNF'])],
+                    [expand('output/{condition}_limixqtl/feature_metadata_all.h5', condition = ['CTL', 'FNF'])]]
 
 #----------------------------------------------------------------------
 # Rules
@@ -44,98 +49,7 @@ rule all:
     input:
         rule_all_inputs
 
-include: "../../rules/VCFprocessing.smk"
-
-include: "../../rules/RNAprocessing.smk"
-
-rule renameVCFdonors:
-    input:
-        vcf = rules.updateConfig.output.v
-    output:
-        vcf = 'output/vcf/' + vcf_prefix + '_newcontig_rename.vcf.gz',
-        index = 'output/vcf/' + vcf_prefix + '_newcontig_rename.vcf.gz.tbi'
-    params:
-        donors = ",".join(samples['Donor'].unique().tolist()),
-        samtoolsVersion = config['samtoolsVersion'],
-        pythonVersion = config['pythonVersion'],
-        prefix = vcf_prefix
-    shell:
-        """
-        module load samtools/{params.samtoolsVersion}
-        module load python/{params.pythonVersion}
-        bcftools query -l {input.vcf} > donors.txt
-        python3 scripts/renameVCFdonors.py donors.txt {params.donors}
-        gunzip {input.vcf}
-        bcftools reheader -s samples.txt -o output/vcf/{params.prefix}_newcontig_rename.vcf output/vcf/{params.prefix}_newcontig.vcf
-        bgzip output/vcf/{params.prefix}_newcontig_rename.vcf && tabix -p vcf {output.vcf}
-        """
-
-rule quant:
-    input:
-        trim1 = rules.trim.output.trim1,
-        trim2 = rules.trim.output.trim2
-    output:
-        "output/quant/{group}/quant.sf"
-    params:
-        version = config['salmonVersion'],
-        index = config['salmon']
-    log:
-        out = 'output/logs/quant_{group}.out',
-        err = 'output/logs/quant_{group}.err'
-
-    shell:
-        """
-        module load salmon/{params.version}
-        salmon quant --writeUnmappedNames -l A -1 {input.trim1} -2 {input.trim2} -i {params.index} -o output/quant/{wildcards.group} --threads 1 1> {log.out} 2> {log.err}
-        """
-
-rule quantNorm:
-    input:
-        [expand("output/quant/{group}/quant.sf", group = key) for key in read1]
-    output:
-        [expand("output/normquant/{condition}_CPMadjTMM_invNorm.bed", condition = ['CTL', 'FNF', 'ALL'])]
-    params:
-        version = config['Rversion'],
-        samplesheet = config['samplesheet']
-    log:
-        out = 'output/logs/quantNorm.out',
-        err = 'output/logs/quantNorm.err'
-    shell:
-        """
-        module load r/{params.version}
-        Rscript scripts/quantNorm.R {params.samplesheet} {input} 1> {log.out} 2> {log.err}
-        """
-
-rule indexQuant:
-    input:
-        lambda wildcards: ['output/normquant/{condition}_CPMadjTMM_invNorm.bed'.format(condition=wildcards.condition)]
-    output:
-        bed = 'output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz',
-        index = 'output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz.tbi'
-    params:
-        version = config['samtoolsVersion']
-    log:
-        out = 'output/logs/{condition}_indexQuant.out',
-        err = 'output/logs/{condition}_indexQuant.err'
-    shell:
-        """
-        module load samtools/{params.version}
-        bgzip {input} && tabix -p bed {output.bed} 1> {log.out} 2> {log.err}
-        """
-
-rule getPEER:
-    input:
-        lambda wildcards: ['output/normquant/{condition}_CPMadjTMM_invNorm.bed.gz'.format(condition=wildcards.condition)]
-    output:
-        [expand('output/covar/{{condition}}_PEERfactors_k{Nk}.txt', Nk = n) for n in range(1, 16, 1)]
-    log:
-        out = 'output/logs/{condition}_getPEER.out',
-        err = 'output/logs/{condition}_getPEER.err'
-    shell:
-        """
-        module load r/4.2.0
-        Rscript scripts/PEERfactors.R {input} {wildcards.condition} 1> {log.out} 2> {log.err}
-        """
+include: "eQTL.smk"
 
 rule genoPCA:
     input:
@@ -275,7 +189,6 @@ rule makeSampleMappingFile:
         Rscript scripts/limixQTL/makeSampleMappingFile.R {input.donorSamplesheet} {output} 1> {log.out} 2> {log.err}
         """
 
-
 rule runMainPass:
     input:
         bed = rules.makeGenotypeFile.output.bed,
@@ -307,3 +220,4 @@ rule runMainPass:
         '--cis '
         '--output_directory output/{condition}_limixqtl 1> {log.out} 2> {log.err}'
 
+#rule InteractionPass:
