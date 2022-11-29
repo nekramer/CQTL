@@ -3,6 +3,7 @@
 library(data.table)
 library(dplyr)
 library(ggplot2)
+library(e1071)
 
 args = commandArgs(trailingOnly = TRUE)
 
@@ -15,8 +16,26 @@ colnames(pcaData) <- c("sample", "PC1","PC2")
 ## Read in panel data
 panel <- fread(args[2], data.table = FALSE)
 
+
 ## Match ref panel to pca data based on "sample" column
 pca_panel <- left_join(pcaData, panel, by = c("sample"))
+
+## SVN to infer super_pop
+pca_panel_train <- pca_panel %>% filter(!is.na(super_pop))
+pca_panel_train$super_pop <- as.factor(pca_panel_train$super_pop)
+pca_panel_test <- pca_panel %>% filter(is.na(super_pop))
+svm_ancestry <- svm(super_pop~PC1+PC2, data = pca_panel_train,
+                    type = "C-classification", kernel = "radial")
+
+prediction <- predict(svm_ancestry, pca_panel_test[,c("PC1", "PC2")])
+pca_panel_test$super_pop <- prediction
+
+pca_panel_test %>% dplyr::select(sample, super_pop) %>%
+  dplyr::rename("Donor" = sample) %>%
+  dplyr::rename("Predicted_Ancestry" = super_pop) %>%
+  write_csv(file = args[5])
+
+
 ## Rename our population name to argument name
 pca_panel[which(is.na(pca_panel$super_pop)), "super_pop"] <- args[3]
 
@@ -35,3 +54,5 @@ pcaplot <- ggplot(panel_df, aes(PC1, PC2)) +
     theme_light() + labs(color = "Population", fill = NULL)
 
 ggsave(filename = args[4], plot = pcaplot)
+
+
