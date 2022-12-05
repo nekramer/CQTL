@@ -2,6 +2,7 @@
 suppressPackageStartupMessages(library("argparse"))
 suppressPackageStartupMessages(library("googlesheets4"))
 suppressPackageStartupMessages(library("dplyr"))
+suppressPackageStartupMessages(library("purrr"))
 suppressPackageStartupMessages(library("readr"))
 
 parser <- ArgumentParser()
@@ -113,4 +114,9 @@ if (args$subset != "replicate"){
   
 }
 
-write_csv(new_samplesheet, file = args$output)
+# Filter out unhelpful columns (Notes, all NA)
+final_samplesheet <- new_samplesheet %>%
+  dplyr::select(-Notes) %>%
+  discard(~all(is.na(.x)))
+
+write_csv(final_samplesheet, file = args$output)

@@ -2,6 +2,7 @@
 suppressPackageStartupMessages(library("argparse"))
 suppressPackageStartupMessages(library("googlesheets4"))
 suppressPackageStartupMessages(library("dplyr"))
+suppressPackageStartupMessages(library("purrr"))
 suppressPackageStartupMessages(library("readr"))
 
 parser <- ArgumentParser()
@@ -16,7 +17,7 @@ args <- parser$parse_args()
 gs4_auth("nekramer27@gmail.com")
 samplesheet <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
                           sheet = "RNAExtractionsLibraries",
-                          col_types = "ccccdddllllTTdddTTccccc")
+                          col_types = "ccccdddllllTTdddTTcccccc")
 
 donorSamplesheet <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
                              sheet = "Donors",
@@ -57,11 +58,16 @@ if (args$subset == "freeze"){
     filter(Donor %in% pilot)
   
 } else if (args$subset == "all"){
-  new_dnaSamplesheet <- donorSamplesheet %>% 
+  new_donorSamplesheet <- donorSamplesheet %>% 
     filter(TARCQC == "PASS")
 } else {
   
   stop("Invalid subset option.")
 }
 
-write_csv(new_donorSamplesheet, file = args$output)
+# Filter out unhelpful columns (Notes, all NA)
+final_donorSamplesheet <- new_donorSamplesheet %>%
+  dplyr::select(-Notes, -`Notes for eliza`) %>%
+  discard(~all(is.na(.x)))
+ 
+write_csv(final_donorSamplesheet, file = args$output)

@@ -2,6 +2,7 @@
 suppressPackageStartupMessages(library("argparse"))
 suppressPackageStartupMessages(library("googlesheets4"))
 suppressPackageStartupMessages(library("dplyr"))
+suppressPackageStartupMessages(library("purrr"))
 suppressPackageStartupMessages(library("readr"))
 
 parser <- ArgumentParser()
@@ -16,7 +17,7 @@ args <- parser$parse_args()
 gs4_auth("nekramer27@gmail.com")
 samplesheet <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
                           sheet = "RNAExtractionsLibraries",
-                          col_types = "ccccdddllllTTdddTTccccc")
+                          col_types = "ccccdddllllTTdddTTcccccc")
 
 dnaSamplesheet <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1JwLw9D6rMqhHC9BPrZebAN40Wojo-CqbMdiIPXAzkLo/edit#gid=1699779981",
                           sheet = "DNAExtractionsLibraries",
@@ -64,4 +65,11 @@ if (args$subset == "freeze"){
   stop("Invalid subset option.")
 }
 
-write_csv(new_dnaSamplesheet, file = args$output)
+# Filter out unhelpful columns (all NA, Notes)
+final_dnaSamplesheet <- new_dnaSamplesheet %>%
+  dplyr::select(-Notes) %>%
+  discard(~all(is.na(.x))) %>%
+  # Rename Batch column
+  dplyr::rename("GenotypingBatch" = Batch)
+
+write_csv(final_dnaSamplesheet, file = args$output)
