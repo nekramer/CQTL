@@ -492,7 +492,8 @@ rule plotAncestry:
     input:
         rules.runEigenstrat.output
     output:
-        "output/ancestry/" + mergeName + "_ancestry.pdf"
+        plot = "output/ancestry/" + mergeName + "_ancestry.pdf",
+        predictions = "output/ancestry/" + mergeName + "_predictedAncestry.csv"
     params:
         panel = config['panel'],
         pca = "output/ancestry/" + mergeName + "_ref_merge.pca.evec",
@@ -501,7 +502,7 @@ rule plotAncestry:
         """
         mkdir -p output/ancestry
         module load r
-        Rscript scripts/plotAncestry.r {params.pca} {params.panel} {params.name} {output}
+        Rscript scripts/getAncestry.r {params.pca} {params.panel} {params.name} {output.plot} {output.predictions}
         """
 
 
