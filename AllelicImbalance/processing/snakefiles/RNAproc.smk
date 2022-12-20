@@ -31,6 +31,54 @@
 
 include: "../../../rules/RNAprocessing.smk"
 
+rule align:
+    input:
+        R1 = rules.trim.output.trim1,
+        R2 = rules.trim.output.trim2,
+        vcf = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz',
+        i = 'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz.tbi'
+    output:
+        "output/{group}/align/{group}.Aligned.sortedByCoord.out.bam"
+    threads: 8
+    log:
+        out = "output/{group}/logs/{group}_align.out"
+    params:
+        genomeDir = config['genomeDir']
+    shell:
+        'module load star/2.7.10a &&'
+        'mkdir -p output/{wildcards.group}/align &&'
+        'star --runThreadN {threads} '
+        '--genomeDir {params.genomeDir} '
+        '--readFilesCommand zcat ' 
+        '--readFilesIn {input.R1} {input.R2} '
+        '--outFileNamePrefix output/{wildcards.group}/align/{wildcards.group}. ' 
+        '--outSAMtype BAM SortedByCoordinate '
+        '--outFilterType BySJout '
+        '--outFilterMultimapNmax 20 ' 
+        '--alignSJoverhangMin 8 ' 
+        '--alignSJDBoverhangMin 1 '
+        '--outFilterMismatchNmax 999 ' 
+        '--outFilterMismatchNoverReadLmax 0.04 ' 
+        '--alignIntronMin 20 ' 
+        '--alignIntronMax 1000000 '
+        '--alignMatesGapMax 1000000 '
+        '--waspOutputMode SAMtag '
+        '--varVCFfile <(zcat {input.vcf}) 1> {log.out}'
+
+rule index:
+    input:
+        rules.align.output
+    output:
+        "output/{group}/align/{group}.Aligned.sortedByCoord.out.bam.bai"
+    threads: 8
+    log:
+        err = "output/{group}/logs/{group}_index.err"
+    shell:
+        """
+        module load samtools
+        samtools index -@ {threads} {input} {output} 2> {log.err}
+        """
+
 rule assignGroups:
     input:
         R = rules.align.output,

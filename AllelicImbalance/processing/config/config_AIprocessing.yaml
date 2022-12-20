@@ -13,7 +13,7 @@ chromNames: '../../chromNames_hg38.txt' # 2-column text file. 1st column: format
 #sequence: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p10/Sequence/GRCh38.p10.genome.fa.gz' # Path to reference sequence gzipped fasta file. The associated sequence dictionary must be in the same directory as this file.
 genomeDir: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/STAR_idx'
 chromSizes: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/STAR_idx/chrNameLength.txt'
-sequence: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/Sequence/GRCh38.primary_assembly.genome.fa.gz'
+sequence: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/Sequence/GRCh38.p13.genome.fa.gz'
 
 ## Minimum number of total read counts from both alleles to consider a heterozygote from RNA
 # Hollander et al used 25

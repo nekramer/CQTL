@@ -85,6 +85,11 @@ rule getVariants:
         Rscript scripts/AIprocessing/getVariants.r {input} 1> {log.out}
         """
 
+
+# For this step, grab a random sample to check the weight values
+# if refCount + altCount >= minTotal and min(refCount, altCount) >= minAllele, weight should be 1
+# if refCount + altCount >= minTotal and min(refCount, altCount) < minAllele, weight should be 1e-6
+# if refCount + altCount < minTotal, weight should be 0
 rule mergeSampleVariants:
     input:
         lambda wildcards: ['output/{group}/alleleCounts/{group}_alleleCounts.csv'.format(group=wildcards.group)],
@@ -103,6 +108,7 @@ rule mergeSampleVariants:
         python3 scripts/AIprocessing/mergeSampleVariants.py {input} {params.minTotalAlleleCounts} {params.minAlleleCounts} 1> {log.out}
         """
 
+# For this step, double check that all donor column are the same
 rule concatDonorConditions:
     input:
         lambda wildcards: expand('output/{group}/alleleCounts/{group}_alleleCounts_joined.csv', group = groupedDonors[wildcards.donor])
@@ -119,7 +125,8 @@ rule concatDonorConditions:
         mkdir -p output/AI/{params.donor}
         python3 scripts/AIprocessing/concatDonorConditions.py {params.donor} {input} 1> {log.out}
         """
-        
+
+# For this step check that the number of variants equals the number in the final VCF      
 rule VCFoverlapVariants:
     input:
         vcf = rules.zipVCF2.output,
