@@ -1,7 +1,6 @@
-
 rule PEER_kneedle:
     input:
-        rules.getPEER.output.var
+        [expand('output/covar/{{condition}}_PEERfactors_k{Nk}_variance.txt', Nk = Nk)]
     output:
         'output/covar/{condition}_PEERkneedle.txt'
     params:

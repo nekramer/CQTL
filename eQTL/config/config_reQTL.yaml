@@ -1,0 +1,32 @@
+## Samplesheets
+samplesheet: 'samplesheet.csv' # RNA
+donorSamplesheet: 'donorSamplesheet.csv' # donor information
+dnaSamplesheet: 'dnaSamplesheet.csv' # DNA
+
+## Path to permutation pass eQTLs, with multiple testing correction p-value columns
+eQTL: '/pine/scr/n/e/nekramer/iteratePEER_RNAKitBatch/output/qtl/'
+
+## Path to vcf inputted to QTL mapping
+vcf: '/pine/scr/n/e/nekramer/iteratePEER_RNAKitBatch/output/vcf/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_COA6_COA7_hetFilter.vcf.gz'
+
+## Path to normalized RNA counts
+rna: '/pine/scr/n/e/nekramer/CQTL_gitupdates/CQTL/eQTL/output/normquant/ALL_CPMadjTMM_invNorm.bed.gz'
+
+## Path to genotyping PC's
+genoPC: '/pine/scr/n/e/nekramer/iteratePEER_RNAKitBatch/output/covar/genotypes.pca'
+genoPCkneedle: '/pine/scr/n/e/nekramer/iteratePEER_RNAKitBatch/output/covar/genoPCkneedle.txt'
+
+## Covariate parameters
+RNAKitBatch: 'TRUE'
+RNASequencingBatch: 'FALSE'
+genoBatch: 'FALSE'
+DNAKitBatch: 'FALSE'
+PEERfactors: 10
+
+## Multiple testing correction type and threshold
+correction: 'qval' # Which multiple testing method to filter on; 'FDR' is Benjamini-Hochberg and 'qval' is Storey Tibshirani qvalue
+FDRthreshold: 0.05
+
+## Software versions
+Rversion: "4.1.3"
+gatkVersion: "4.2.5.0"

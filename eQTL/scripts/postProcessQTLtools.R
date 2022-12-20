@@ -16,7 +16,7 @@ get_eGene_variants <- function(eGene, permData, nomData){
 }
 
 args <- commandArgs(trailingOnly = TRUE)
-threshold <- args[3]
+threshold <- as.numeric(args[3])
 
 geneInfo <- read_delim(args[4], delim = "\t", 
                        col_select = c("gene_id", "gene_name"))

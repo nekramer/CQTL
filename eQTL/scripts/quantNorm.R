@@ -18,7 +18,8 @@ inverseNormGene <- function(geneRow){
 # READ IN ---------------------------------------------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 samplesheet <- args[1]
-sampleQuants <- args[2:length(args)]
+condition <- args[2]
+sampleQuants <- args[3:length(args)]
 samples <- basename(dirname(sampleQuants))
 
 coldata <- read_csv(samplesheet) %>%
@@ -52,46 +53,68 @@ gse_quant <- calcNormFactors(gse_filtered, method = "TMM")
 # Grab CPM counts -----------------------------------------------------------
 CQTL_CPMadjTMM <- as.data.frame(cpm(gse_quant))
 
-# Inverse normal transformation -----------------------------------------------
-# Split based on condition
-CTL_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("CTL"))  %>%
-  rename_with(.fn = ~ unlist(lapply(str_split(.x, "_"), `[[`, 2))) 
-
-FNF_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("FNF")) %>%
-  rename_with(.fn = ~ unlist(lapply(str_split(.x, "_"), `[[`, 2)))
-
-# Inverse normalize across genes in each condition
-CTL_CPMadjTMM_invNorm <- as.data.frame(t(apply(CTL_CPMadjTMM, 1, inverseNormGene))) %>%
-  rownames_to_column("gene_id")
-colnames(CTL_CPMadjTMM_invNorm) <- c("gene_id", colnames(CTL_CPMadjTMM))
-FNF_CPMadjTMM_invNorm <- as.data.frame(t(apply(FNF_CPMadjTMM, 1, inverseNormGene))) %>%
-  rownames_to_column("gene_id")
-colnames(FNF_CPMadjTMM_invNorm) <- c("gene_id", colnames(FNF_CPMadjTMM))
-
-# Also inverse normalize across genes in combined conditions
-CPMadjTMM_invNorm <- as.data.frame(t(apply(CQTL_CPMadjTMM, 1, inverseNormGene))) %>%
-  rownames_to_column("gene_id")
-colnames(CPMadjTMM_invNorm) <- c("gene_id", colnames(CQTL_CPMadjTMM))
-
-# Join with gene info, sort, and reorder into BED format --------
+# Gene info -----------------------------------------------------------------
 gene_info <- as.data.frame(rowRanges(gse_filtered)) %>% 
   dplyr::select(seqnames, start, end, strand, gene_id, gene_name) %>%
   mutate(seqnames = paste0("chr", seqnames))
 
-CTL_CPMadjTMM_invNorm <- CTL_CPMadjTMM_invNorm %>% left_join(gene_info) %>%
-  relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
-  rename("seqnames" = "#chr") %>%
-  arrange(`#chr`, start)
-FNF_CPMadjTMM_invNorm <- FNF_CPMadjTMM_invNorm %>% left_join(gene_info) %>%
-  relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
-  rename("seqnames" = "#chr") %>%
-  arrange(`#chr`, start)
-CPMadjTMM_invNorm <- CPMadjTMM_invNorm %>% left_join(gene_info) %>%
-  relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
-  rename("seqnames" = "#chr") %>%
-  arrange(`#chr`, start)
+# Inverse normal transformation -----------------------------------------------
 
-write_delim(CTL_CPMadjTMM_invNorm, file = "output/normquant/CTL_CPMadjTMM_invNorm.bed", delim = "\t")
-write_delim(FNF_CPMadjTMM_invNorm, file = "output/normquant/FNF_CPMadjTMM_invNorm.bed", delim = "\t")
-write_delim(CPMadjTMM_invNorm, file = "output/normquant/ALL_CPMadjTMM_invNorm.bed", delim = "\t")
-
+if (condition == "CTL"){
+  
+  # Grab CTL
+  CTL_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("CTL"))  %>%
+    rename_with(.fn = ~ unlist(lapply(str_split(.x, "_"), `[[`, 2)))
+  
+  # Inverse normalize
+  CTL_CPMadjTMM_invNorm <- as.data.frame(t(apply(CTL_CPMadjTMM, 1, inverseNormGene))) %>%
+    rownames_to_column("gene_id")
+  colnames(CTL_CPMadjTMM_invNorm) <- c("gene_id", colnames(CTL_CPMadjTMM))
+  
+  # Join with gene info
+  CTL_CPMadjTMM_invNorm <- CTL_CPMadjTMM_invNorm %>% left_join(gene_info) %>%
+    relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
+    rename("seqnames" = "#chr") %>%
+    arrange(`#chr`, start)
+  
+  write_delim(CTL_CPMadjTMM_invNorm, 
+              file = "output/normquant/CTL_CPMadjTMM_invNorm.bed", 
+              delim = "\t")
+  
+} else if (condition == "FNF"){
+  # Grab FNF
+  FNF_CPMadjTMM <- dplyr::select(CQTL_CPMadjTMM, contains("FNF")) %>%
+    rename_with(.fn = ~ unlist(lapply(str_split(.x, "_"), `[[`, 2)))
+  
+  # Inverse normalize
+  FNF_CPMadjTMM_invNorm <- as.data.frame(t(apply(FNF_CPMadjTMM, 1, inverseNormGene))) %>%
+    rownames_to_column("gene_id")
+  colnames(FNF_CPMadjTMM_invNorm) <- c("gene_id", colnames(FNF_CPMadjTMM))
+  
+  # Join with gene info
+  FNF_CPMadjTMM_invNorm <- FNF_CPMadjTMM_invNorm %>% left_join(gene_info) %>%
+    relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
+    rename("seqnames" = "#chr") %>%
+    arrange(`#chr`, start)
+  
+  write_delim(FNF_CPMadjTMM_invNorm, 
+              file = "output/normquant/FNF_CPMadjTMM_invNorm.bed", 
+              delim = "\t")
+  
+} else if (condition == "ALL"){
+  
+  # Inverse normalize
+  CPMadjTMM_invNorm <- as.data.frame(t(apply(CQTL_CPMadjTMM, 1, inverseNormGene))) %>%
+    rownames_to_column("gene_id")
+  colnames(CPMadjTMM_invNorm) <- c("gene_id", colnames(CQTL_CPMadjTMM))
+  
+  # Join with gene info
+  CPMadjTMM_invNorm <- CPMadjTMM_invNorm %>% left_join(gene_info) %>%
+    relocate(seqnames, start, end, gene_id, gene_name, strand) %>%
+    rename("seqnames" = "#chr") %>%
+    arrange(`#chr`, start)
+  
+  write_delim(CPMadjTMM_invNorm, 
+              file = "output/normquant/ALL_CPMadjTMM_invNorm.bed", 
+              delim = "\t")
+}

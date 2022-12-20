@@ -10,7 +10,7 @@ geneInfo <- read_delim(args[2], delim = "\t",
 outputFile <- args[3]
 
 # Filter for non-NA and add column with q-values and column with FDR values
-qtlData <- qtlData[!is.na(qtlData$adj_beta_val),] %>% 
+qtlData <- qtlData[!is.na(qtlData$adj_beta_pval),] %>% 
   mutate("qval" = qvalue(adj_beta_pval)$qvalue) %>%
   mutate("FDR" = p.adjust(adj_beta_pval, method = "BH")) %>%
   # Join with geneInfo to get gene_name

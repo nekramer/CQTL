@@ -56,3 +56,32 @@ readQTLtools_nom <- function(filePath){
                          "best_hit")
   return(qtlData)
 }
+
+#' A function to convert ENSEMBL gene_ids to SYMBOL with a Bioconductor orgDb 
+getGeneSymbol <- function(gene_id, org_db){
+  geneSymbols <- AnnotationDbi::select(org_db, keys = gene_id, columns = "SYMBOL", keytype = "ENSEMBL")
+  return(geneSymbols)
+}
+
+#' A function to calculate the percent overlap of dataset a in dataset b
+percentOverlap <- function(a, b){
+  intersection <- length(intersect(a,b))
+  percentOverlap <- intersection/length(a)
+  return(percentOverlap)
+}
+
+#' A function to calculate the Jaccard index between dataset a and dataset b
+jaccard <- function(a, b) {
+  intersection <- length(intersect(a, b))
+  union <- length(a) + length(b) - intersection
+  jaccard <- intersection/union
+  
+  return(jaccard)
+}
+
+#' Loads an RData file, and returns it
+loadRData <- function(fileName){
+  
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}

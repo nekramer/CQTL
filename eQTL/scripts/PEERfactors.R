@@ -49,7 +49,7 @@ expressionData <- read_delim(args[1]) %>%
 iteratePEER <- as.logical(args[4])  
 
 if (iteratePEER == TRUE){
-  lapply(seq(5, as.numeric(args[3]), 5), runPEER, data = expressionData, prefix = args[2])
+  lapply(seq(5, as.numeric(args[3]), as.numeric(args[5])), runPEER, data = expressionData, prefix = args[2])
 } else {
   runPEER(Nk = as.numeric(args[3]), data = expressionData, prefix = args[2])
 }

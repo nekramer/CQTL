@@ -1,24 +1,5 @@
 library(tidyverse)
 
-# FUNCTIONS ---------------------------------------------------------------
-
-# Calculate Jaccard index
-jaccard <- function(a, b) {
-  intersection <- length(intersect(a, b))
-  union <- length(a) + length(b) - intersection
-  jaccard <- intersection/union
-  
-  return(jaccard)
-}
-
-
-# Calculate total percent overlap of our data
-percentOverlap <- function(a, b){
-  intersection <- length(intersect(a,b))
-  percentOverlap <- intersection/length(a)
-  return(percentOverlap)
-}
-
 
 # CTL and FNF data covariate options --------------------------------------
 

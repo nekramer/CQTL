@@ -22,7 +22,7 @@ chromSizes: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/STAR_idx/
 sequence: '/proj/phanstiel_lab/References/genomes/GENCODE.GRCh38.p13/Sequence/GRCh38.p13.genome.fa.gz'
 salmon: '/proj/seq/data/salmon_RNAseq_genomes/hg38_cdna/salmon_index/default' # Path to salmon index.
 
-## Software versions and paths
+## Software versions
 QTLToolsVersion: "1.3.1"
 salmonVersion: "1.4.0"
 gatkVersion: "4.2.5.0"
@@ -36,8 +36,10 @@ RNAKitBatch: 'TRUE'
 RNASequencingBatch: 'TRUE'
 genoBatch: 'TRUE'
 DNAKitBatch: 'TRUE'
-PEERfactors: 20
-iteratePEER: 'TRUE'
+PEERfactors: 20 # Maximum number of PEER factors
+iteratePEER: 'TRUE' # If TRUE, will try different numbers of PEER factors until maximum, in iterations of iterateBy. If FALSE, will use kneedle to determine number of PEER factors to include from max.
+iterateBy: 1 # If iteratePEER is TRUE, will try different numbers of PEER factors until maximum, in this number of iterations.
+
 
 ## Signficance threshold
 FDRthreshold: 0.05

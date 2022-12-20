@@ -19,20 +19,23 @@ qc:
 trim:
   name: "trim.{wildcards}"
   memPerCpu: 5G
-align:
-  name: "align.{wildcards}"
-  memPerCpu: 5G
 
 
 genoPCA:
   memPerCpu: 16G
 getPEER:
   constraint: rhel7
-PC_eQTL:
-  memPerCpu: 8G
+getPEER_ALL:
+  constraint: rhel7
 PEER_eQTL:
   memPerCpu: 8G
 PEER_nominal_eQTL:
   memPerCpu: 8G
-PC_nominal_eQTL:
-  memPerCpu: 8G
+PEER_qtlPostProcessing:
+  memPerCpu: 16G
+
+generate_verifybamid_resourceFiles:
+  memPerCpu: 32G
+
+verifybamid:
+  memPerCpu: 32G
