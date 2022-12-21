@@ -33,6 +33,8 @@ rule all:
         [expand("output/mbv/{group}.bamstat.txt", group = key) for key in read1], 
         [expand('output/mbv/{group}_concordance.txt', group = key) for key in read1],
         'output/mbv/mbvSummary.txt',
+        [expand('output/verifybamid/{group}.Ancestry', group = key) for key in read1],
+        [expand('output/verifybamid/{group}.selfSM', group = key) for key in read1],
         [expand("output/pca/{condition}_PCs.csv", condition = ['ALL', 'CTL', 'FNF'])],
         [expand("output/pca/{condition}_PC_varExplained.csv", condition = ['ALL', 'CTL', 'FNF'])],
         [expand("output/pca/{condition}_PCs_RNAextractionKitBatch_corrected.csv", condition = ['ALL', 'CTL', 'FNF'])],
@@ -131,15 +133,15 @@ rule normalizeIndels:
     input:
         config['vcf']
     output:
-        vcf = 'output/supp/normalized_indels.vcf.gz',
-        vcfi = 'output/supp/normalized_indelx.vcf.gz.tbi'
+        vcf = 'output/verifybamid/normalized_indels.vcf.gz',
+        vcfi = 'output/verifybamid/normalized_indelx.vcf.gz.tbi'
     params:
         version = config['samtoolsVersion']
     shell:
         """
         module load samtools/{params.version}
-        bcftools norm -d all {input} -o output/supp/normalized_indels.vcf.gz
-        tabix -p vcf output/supp/normalized_indels.vcf.gz
+        bcftools norm -d all {input} -o output/verifybamid/normalized_indels.vcf.gz
+        tabix -p vcf output/verifybamid/normalized_indels.vcf.gz
         """
 
 rule generate_verifybamid_resourceFiles:
@@ -147,9 +149,9 @@ rule generate_verifybamid_resourceFiles:
         vcf = rules.normalizeIndels.output.vcf,
         vcfi = rules.normalizeIndels.output.vcfi
     output:
-        UD = 'output/supp/normalized_indels.vcf.gz.UD',
-        mu = 'output/supp/normalized_indels.vcf.gz.mu',
-        bed = 'output/supp/normalized_indels.vcf.gz.bed'
+        UD = 'output/verifybamid/normalized_indels.vcf.gz.UD',
+        mu = 'output/verifybamid/normalized_indels.vcf.gz.mu',
+        bed = 'output/verifybamid/normalized_indels.vcf.gz.bed'
     params:
         version = config['pythonVersion'],
         sequence = config['sequence']
@@ -162,15 +164,41 @@ rule generate_verifybamid_resourceFiles:
         verifybamid2 --RefVCF {input.vcf} --Reference {params.sequence} 1> {log.out} 2> {log.err}
         """
 
-rule verifybamid:
+rule updateReadGroups:
     input:
         bam = lambda wildcards: [config['data'] + '/{group}/align/{group}.Aligned.sortedByCoord.out.bam'.format(group = wildcards.group)],
-        index = lambda wildcards: [config['data'] + '/{group}/align/{group}.Aligned.sortedByCoord.out.bam.bai'.format(group = wildcards.group)],
+        index = lambda wildcards: [config['data'] + '/{group}/align/{group}.Aligned.sortedByCoord.out.bam.bai'.format(group = wildcards.group)]
+    output:
+        bam = 'output/verifybamid/{group}.Aligned.sortedByCoord.out.Donor.bam',
+        bai = 'output/verifybamid/{group}.Aligned.sortedByCoord.out.Donor.bam.bai'
+    params:
+        picardVersion = config['picardVersion'],
+        samtoolsVersion = config['samtoolsVersion']
+    log:
+        out = 'output/logs/{group}_updateReadGroups.out',
+        err = 'output/logs/{group}_updateReadGroups.err',
+        out2 = 'output/logs/{group}_indexReadGroups.out',
+        err2 = 'output/logs/{group}_indexReadGroups.err'
+    shell:
+        """
+        module load picard/{params.picardVersion}
+        module load samtools/{params.samtoolsVersion}
+        # Extract donor from group name
+        donor=`echo {wildcards.group} | grep -P "AM[0-9]{4}" -o`
+        picard AddOrReplaceReadGroups -I {input.bam} -O {output.bam} --RGLB lib1 --RGPL ILLUMINA --RGPU unit1 --RGSM ${{donor}} 1> {log.out} 2> {log.err}
+        samtools index {output.bam} 1> {log.out2} 2> {log.err2}
+        """
+
+rule verifybamid:
+    input:
+        bam = rules.updateReadGroups.output.bam,
+        index = rules.updateReadGroups.output.bai,
         UD = rules.generate_verifybamid_resourceFiles.output.UD,
         mu = rules.generate_verifybamid_resourceFiles.output.mu,
         bed = rules.generate_verifybamid_resourceFiles.output.bed
     output:
-
+        'output/verifybamid/{group}.Ancestry',
+        'output/verifybamid/{group}.selfSM'
     params:
         version = config['pythonVersion'],
         sequence = config['sequence']
@@ -180,7 +208,7 @@ rule verifybamid:
     shell:
         """
         module load python/{params.version}
-        verifybamid2 --BamFile {input.bam} --SVDPrefix output/supp/normalized_indels.vcf.gz --Reference {params.sequence} --DisableSanityCheck 1> {log.out} 2> {log.err}
+        verifybamid2 --BamFile {input.bam} --SVDPrefix output/verifybamid/normalized_indels.vcf.gz --Reference {params.sequence} --Output output/verifybamid/{wildcards.group} --DisableSanityCheck 1> {log.out} 2> {log.err}
         """
 
 rule getPCs:
