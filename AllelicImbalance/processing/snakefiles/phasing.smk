@@ -46,7 +46,7 @@ rule phaseData:
         out = 'output/vcf/logs/phaseData_chr{chrom}.out'
     shell:
         """
-        module load shapeit
+        module load shapeit/2.837
         shapeit --input-vcf {input} --input-map {params.geneticMapDir}/{params.geneticMapPrefix}{params.chrom}_sorted.txt --thread {threads} --output-max {output.haps} {output.samples} --output-log {log.out}
         """
 
