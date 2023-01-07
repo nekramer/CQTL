@@ -17,7 +17,7 @@ rule splitVCF:
     input: 
         'output/vcf/' + vcf_prefix + '_nodups_biallelic.vcf.gz'
     output:
-        expand('output/vcf/' + vcf_prefix  + '_nodups_biallelic_chr{chrom}', chrom = range(1, 23))
+        expand('output/vcf/' + vcf_prefix  + '_nodups_biallelic_chr{chrom}.vcf.gz', chrom = range(1, 23))
     params: 
         prefix = "output/vcf/" + vcf_prefix + "_nodups_biallelic_chr"
     log:
@@ -25,9 +25,9 @@ rule splitVCF:
     shell:
         """
         module load samtools
-        for chr in {1..22}
+        for chr in {{1..22}}
         do
-            bcftools view {input} --regions chr${chr} -o {params.prefix}${chr} -Oz 1> {log.out}
+            bcftools view {input} --regions chr${{chr}} -o {params.prefix}${{chr}} -Oz 1> {log.out}
         done
         """
 
