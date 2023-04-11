@@ -1,0 +1,4 @@
+output/*
+env/*
+.snakemake/*
+RNAproc-*.out

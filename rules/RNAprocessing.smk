@@ -31,16 +31,18 @@ rule qc:
         R1 = lambda wildcards: ['output/{group}/fastq/{group}_R1.fastq.gz'.format(group=wildcards.group)],
         R2 = lambda wildcards: ['output/{group}/fastq/{group}_R2.fastq.gz'.format(group=wildcards.group)]
     output:
-        zip = expand('output/{{group}}/qc/{{group}}_{R}_fastqc.zip', R=['R1', 'R2']),
-        html = expand('output/{{group}}/qc/{{group}}_{R}_fastqc.html',R=['R1', 'R2'])
+        zips = expand('output/qc/{{group}}_{R}_fastqc.zip', R=['R1', 'R2']),
+        html = expand('output/qc/{{group}}_{R}_fastqc.html',R=['R1', 'R2'])
     threads: 2
+    params:
+        version = config['fastqcVersion']
     log:
         err = "output/{group}/logs/{group}_qc.err"
     shell:
         """
-        module load fastqc/0.11.8
-        mkdir -p output/{wildcards.group}/qc
-        fastqc -t {threads} -o output/{wildcards.group}/qc {input.R1} {input.R2} 2> {log.err}
+        module load fastqc/{params.version}
+        mkdir -p output/qc
+        fastqc -t {threads} -o output/qc/{wildcards.group} {input.R1} {input.R2} 2> {log.err}
         """
 
 rule trim:
@@ -49,13 +51,17 @@ rule trim:
         R2 = lambda wildcards: ['output/{group}/fastq/{group}_R2.fastq.gz'.format(group=wildcards.group)]
     output:
         trim1 = temp("output/{group}/trim/{group}_R1_val_1.fq.gz"),
-        trim2 = temp("output/{group}/trim/{group}_R2_val_2.fq.gz")
+        trim2 = temp("output/{group}/trim/{group}_R2_val_2.fq.gz"),
+        report1 = temp("output/{group}/trim/{group}_R1_trimming_report.txt"),
+        report2 = temp("output/{group}/trim/{group}_R2_trimming_report.txt")
     threads: 4
+    params:
+        version = config['trimgaloreVersion']
     log:
         err = "output/{group}/logs/{group}_trim.err"
     shell:
         """
-        module load trim_galore/0.6.2
+        module load trim_galore/{params.version}
         module load python/3.6.6
         module load pigz
         mkdir -p output/{wildcards.group}/trim

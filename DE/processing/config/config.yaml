@@ -1,0 +1,13 @@
+
+## Path to RNA-seq sample samplesheet
+samplesheet: 'samplesheet.csv'
+
+## Software versions
+fastqcVersion: '0.11.8'
+trimgaloreVersion: '0.6.2'
+salmonVersion: '2.0.1'
+multiqcVersion: '1.11'
+rVersion: '4.1.3'
+
+## Salmon index
+salmon: '/proj/seq/data/salmon_RNAseq_genomes/hg38_cdna/salmon_index/default' # Path to salmon index. 
