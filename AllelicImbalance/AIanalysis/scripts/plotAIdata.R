@@ -61,3 +61,21 @@ plotDonorAltFraction <- function(snp, gene, dds, rsid){
   return(plot)
   
 }
+
+
+get_meanAltFraction <- function(snp, dds){
+  
+  snpData <- plotCounts(dds = dds, gene = snp,
+                        intgroup = c("condition", "donor", "allele"),
+                        returnData = TRUE) %>%
+    group_by(donor, condition) %>% mutate(total = sum(count)) %>% 
+    filter(total >= 10) %>%
+    filter(all(count >= 2)) %>%
+    ungroup() %>%
+    filter(condition == "FNF") %>%
+    filter(allele == "alt") %>%
+    mutate(alt_fraction = count/total)
+  
+  mean_altAllele <- mean(snpData$alt_fraction)
+  return(mean_altAllele)
+}

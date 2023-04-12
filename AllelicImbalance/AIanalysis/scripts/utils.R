@@ -10,10 +10,14 @@ varID_to_GRanges <- function(varIDs, GRanges = TRUE){
   
   chr <- varIDs %>% str_split(":") %>% map(1) %>% unlist()
   pos <- varIDs %>% str_split(":") %>% map(2) %>% unlist()
+  ref <- varIDs %>% str_split(":") %>% map(3) %>% unlist()
+  alt <- varIDs %>% str_split(":") %>% map(4) %>% unlist()
   
   ranges <- GRanges(seqnames = chr, 
                     ranges = IRanges(start = as.numeric(pos), 
-                                     end = as.numeric(pos)))
+                                     end = as.numeric(pos)),
+                    ref = ref,
+                    alt = alt)
   if (GRanges == FALSE){
     ranges <- as.data.frame(ranges)
   }
@@ -61,8 +65,12 @@ GRanges_to_Genes <- function(ranges, txdb, orgdb, singleStrandOnly = TRUE){
   snp_genes <- unique(snp_genes)
   
   # Filter and reorganize 
-  snp_genes <- snp_genes[,c(2, 3, 12, 8, 9, 11, 1)]
-  colnames(snp_genes) <- c("chr", "pos", "gene_symbol", "gene_start", "gene_end", "gene_strand", gene_keytype)
+  snp_genes <- snp_genes[,c(2, 3, 7, 8, 14, 10, 11, 13, 1)]
+  colnames(snp_genes) <- c("chr", "pos", "ref", "alt" , "gene_symbol", "gene_start", "gene_end", "gene_strand", gene_keytype)
+  snp_genes$variantID <- paste(snp_genes$chr, snp_genes$pos, snp_genes$ref, snp_genes$alt, sep = ":")
+  
+  # Remove any variants that fall in genes on different strands?
+  
   
   return(snp_genes)
 
@@ -90,3 +98,5 @@ reformatDESeqdata <- function(data, geneData){
     filter(!is.na(rsid))
   return(data)
 }
+
+
