@@ -3,9 +3,9 @@
 samplesheet: 'samplesheet.csv'
 
 ## Software versions
-fastqcVersion: '0.11.8'
+fastqcVersion: '0.11.9'
 trimgaloreVersion: '0.6.2'
-salmonVersion: '2.0.1'
+salmonVersion: '1.10.0'
 multiqcVersion: '1.11'
 rVersion: '4.1.3'
 

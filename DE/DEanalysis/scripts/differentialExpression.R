@@ -9,6 +9,10 @@ library(DESeq2)
 
 # DIFFERENTIAL EXPRESSION ANALYSIS ---------------------------------------------
 
+pval <- 0.01
+log2FC <- 2
+
+
 #load('output/')
 
 

@@ -53,7 +53,7 @@ rule quant:
 rule multiqc:
     input:
         [expand('output/qc/{group}_{R}_fastqc.zip', group = key, R = ['R1', 'R2']) for key in read1],
-        [expand('output/{group}/trim/{group}_{R}_trimming_report.txt', group = key, R =['R1', 'R2']) for key in read1],
+        [expand('output/{group}/trim/{group}_{R}.fastq.gz_trimming_report.txt', group = key, R =['R1', 'R2']) for key in read1],
         [expand('output/quant/{group}/quant.sf', group = key) for key in read1]
     output:
         'output/qc/multiqc_report.html'
