@@ -4,10 +4,12 @@ samplesheet: 'samplesheet.csv'
 
 ## Software versions
 fastqcVersion: '0.11.9'
-trimgaloreVersion: '0.6.2'
+cutadaptVersion: '4.1'
 salmonVersion: '1.10.0'
 multiqcVersion: '1.11'
-rVersion: '4.1.3'
+rVersion: '4.2.2'
 
-## Salmon index
+## Salmon options
 salmon: '/proj/seq/data/salmon_RNAseq_genomes/hg38_cdna/salmon_index/default' # Path to salmon index. 
+gcBias: 'TRUE'
+seqBias: 'TRUE'

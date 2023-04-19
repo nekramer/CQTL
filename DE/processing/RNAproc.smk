@@ -40,14 +40,23 @@ rule quant:
         "output/quant/{group}/quant.sf"
     params:
         version = config['salmonVersion'],
-        index = config['salmon']
+        index = config['salmon'],
+        gcFlag = config['gcBias'],
+        seqFlag = config['seqBias']
     log:
         out = 'output/logs/quant_{group}.out',
         err = 'output/logs/quant_{group}.err'
     shell:
         """
         module load salmon/{params.version}
-        salmon quant --writeUnmappedNames -l A -1 {input.trim1} -2 {input.trim2} -i {params.index} -o output/quant/{wildcards.group} --threads 1 1> {log.out} 2> {log.err}
+
+        if [ {params.gcFlag} == "TRUE" ] && [ {params.seqFlag} == "TRUE" ]; then
+            salmon quant --writeUnmappedNames -l A -1 {input.trim1} -2 {input.trim2} -i {params.index} -o output/quant/{wildcards.group} --threads 1 --seqBias --gcBias 1> {log.out} 2> {log.err}
+        elif [ {params.gcFlag} == "TRUE" ] && [ {params.seqFlag} != "TRUE" ]; then
+            salmon quant --writeUnmappedNames -l A -1 {input.trim1} -2 {input.trim2} -i {params.index} -o output/quant/{wildcards.group} --threads 1 --gcBias 1> {log.out} 2> {log.err}
+        else
+            salmon quant --writeUnmappedNames -l A -1 {input.trim1} -2 {input.trim2} -i {params.index} -o output/quant/{wildcards.group} --threads 1 --seqBias 1> {log.out} 2> {log.err}
+        fi
         """
 
 rule multiqc:
@@ -66,7 +75,7 @@ rule multiqc:
     shell:
         """
         module load multiqc/{params.version}
-        multiqc -f -o output/qc 1> {log.out} 2> {log.err}
+        multiqc -f -o output/qc . 1> {log.out} 2> {log.err}
         """
 
 rule tximport:
@@ -76,7 +85,7 @@ rule tximport:
         'output/' + str(date.today()) + '_gse.rda'
     params:
         version = config['rVersion'],
-        samplesheet = samples
+        samplesheet = config['samplesheet']
     log:
         out = 'output/logs/tximport.out',
         err = 'output/logs/tximport.err'

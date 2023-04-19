@@ -18,3 +18,5 @@ qc:
 trim:
   name: "trim.{wildcards}"
   memPerCpu: 5G
+multiqc:
+  memPerCpu: 8G

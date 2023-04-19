@@ -14,6 +14,7 @@ coldata <- read_csv(args[1]) %>%
   ## Rename columns
   dplyr::rename(names = Sample)
 
+
 # Add sample quants
 coldata$files <- file.path("output", "quant", coldata$names, "quant.sf")
 
