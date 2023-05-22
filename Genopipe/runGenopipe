@@ -20,4 +20,4 @@ python3 -m venv env && source env/bin/activate && pip3 install -r config/require
 mkdir -p output/logs_slurm
 
 ## Execute workflow
-snakemake -j 1 -s snakefiles/genoProc --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --constraint={cluster.constraint} --parsable" --cluster-status ./scripts/status.py
+snakemake -j 1 --latency-wait 500 -s snakefiles/genoProc --cluster-config "config/cluster.yaml" --cluster "sbatch -J {cluster.name} -p {cluster.partition} -t {cluster.time} -c {cluster.cpusPerTask} --mem-per-cpu={cluster.memPerCpu} -N {cluster.nodes} --output {cluster.output} --error {cluster.error} --constraint={cluster.constraint} --parsable" --cluster-status ./scripts/status.py
