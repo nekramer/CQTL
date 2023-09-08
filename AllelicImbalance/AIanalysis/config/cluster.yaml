@@ -1,9 +1,0 @@
-__default__:
-  name: "{rule}" # -J
-  partition: general # -p
-  time: 4320 # -t
-  cpusPerTask: "{threads}" # -c
-  memPerCpu: 4G # --mem-per-cpu
-  nodes: 1
-  output: "logs/{rule}.{jobid}.out"
-  error: "logs/{rule}.{jobid}.err"

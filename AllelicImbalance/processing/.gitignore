@@ -1,8 +1,0 @@
-output/*
-env/*
-.snakemake/*
-RNAprocessing-*.out
-VCFProcessing-*.out
-AIprocessing-*.out
-filterVariants-*.out
-Phasing-*.out
