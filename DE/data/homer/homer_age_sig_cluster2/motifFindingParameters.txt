@@ -1,0 +1,1 @@
+cmd = homer_age_sig_cluster2/gene_ids.txt human homer_age_sig_cluster2

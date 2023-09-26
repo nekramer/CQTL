@@ -1,0 +1,16 @@
+Sex-differential gene expression (sex-biased gene expression) statistics for 44 tissue sources, corresponding to all GTEx v8 tissues - present in both sexes - with at least 70 samples. Statistics are derived from across-tissue meta-analysis with MASH ( Urbut et al. 2019 ), based on per-tissue sex effect size and corresponding standard error values calculated with voom-limma ( Law et al. 2014 ). NA values correspond to lowly expressed gene-tissue pairs.
+
+### effect_size.tsv ###
+Gene x Tissue matrix of MASH posterior effect size values.
+
+### effect_size_se.tsv ###
+Gene x Tissue matrix of MASH posterior effect size standard error values.
+
+### LFSR.tsv ###
+Gene x Tissue matrix of MASH Local False Sign Rate (LFSR) values.
+
+### extract.signif.sbgenes.R ###
+Significant sex-biased genes in at least on tissue can be extracted with the R script extract.signif.sbgenes.R.
+
+### signif.sbgenes.txt ###
+Significant sex-biased genes. Significance is defined at LFSR ≤ 0.05, excluding genes whose effects overlap 0 at a 95% confidence interval.

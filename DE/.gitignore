@@ -1,7 +1,4 @@
-processing/output/*
-processing/env/*
-processing/.snakemake/*
-processing/logs/*
-processing/RNAproc-*.out
-DEanalysis/data/*
-DEanalysis/plots/*
+data/processed/*
+data/*_de/*.rda
+plots/.tiff
+plots/*.log
