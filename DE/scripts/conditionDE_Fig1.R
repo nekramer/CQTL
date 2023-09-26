@@ -39,8 +39,8 @@ get_sample_l2fc <- function(gene, countMatrix){
 
 # HEATMAP -----------------------------------------------------------------
 
-load("data/differential_expression_dds.rda")
-sig_degenes <- read_csv("data/sig_deGenes_pval01_l2fc2.csv") %>%
+load("data/condition_de/differential_expression_dds.rda")
+sig_degenes <- read_csv("data/condition_de/sig_deGenes_pval01_l2fc2.csv") %>%
   mutate(log2FC_dir = ifelse(log2FoldChange < 0, "-", "+")) %>%
   arrange(log2FC_dir)
 donorSamplesheet <- read_csv("data/donorSamplesheet.csv")
@@ -168,7 +168,6 @@ heatmapLegend <- Legend(at = c(-3, 3),
                         direction = "horizontal"
 )
 
-
 heatmapGrob <- grid.grabExpr(draw(h1,
                                   show_annotation_legend = FALSE,
                                   show_heatmap_legend = FALSE,
@@ -177,7 +176,7 @@ heatmapLegendGrob <- grid.grabExpr(draw(heatmapLegend))
 
 
 # Plot in plotgardener layout
-pdf(file = "plots/DE_heatmap.pdf", width = 6.5, height = 5.25)
+pdf(file = "plots/conditionDE_Fig1/DE_heatmap.pdf", width = 6.5, height = 5.25)
 pageCreate(width = 6.5, height = 5.25, showGuides = FALSE)
 plotGG(plot = heatmapGrob, x = 0, y = 0, height = 5, width = 6)
 
@@ -317,7 +316,7 @@ dev.off()
 
 # Get reduced, significant GO terms for each category
 upsig_go_data <- 
-  read_delim("data/homer_upsig_deGenes_pval01_l2fc2/biological_process.txt") %>%
+  read_delim("data/homer/homer_upsig_deGenes_pval01_l2fc2/biological_process.txt") %>%
   mutate(pval = exp(1)^logP) %>%
   filter(pval < 0.01)
 upsig_go <- reduceGO(upsig_go_data,
@@ -325,7 +324,7 @@ upsig_go <- reduceGO(upsig_go_data,
 
 
 downsig_go_data <- 
-  read_delim("data/homer_downsig_deGenes_pval01_l2fc2/biological_process.txt") %>%
+  read_delim("data/homer/homer_downsig_deGenes_pval01_l2fc2/biological_process.txt") %>%
   mutate(pval = exp(1)^logP) %>%
   filter(pval < 0.01)
 downsig_go <- reduceGO(downsig_go_data,
@@ -380,19 +379,19 @@ ggplot(go_plotting, aes(x = `-log10pval`, y = parentTerm, fill = category)) +
         plot.title = element_text(hjust = 0.5, face = "bold", size = 14)) +
   ggtitle("GO Terms")
 
-ggsave(filename = "plots/GO_barplots.pdf", width = 5, height = 8, units = "in")
+ggsave(filename = "plots/conditionDE_Fig1/GO_barplots.pdf", width = 5, height = 8, units = "in")
 
 
 #### KEGG
 
 # Plot top 20 significant for each category
-upsig_kegg_data <- read_delim("data/homer_upsig_deGenes_pval01_l2fc2/kegg.txt") %>%
+upsig_kegg_data <- read_delim("data/homer/homer_upsig_deGenes_pval01_l2fc2/kegg.txt") %>%
   mutate(pval = exp(1)^logP) %>%
   filter(pval < 0.01) %>%
   distinct(Term, .keep_all = TRUE) %>%
   mutate(`-log10pval` = -log10(pval)) %>%
   mutate(category = "Upregulated")
-downsig_kegg_data <- read_delim("data/homer_downsig_deGenes_pval01_l2fc2/kegg.txt") %>%
+downsig_kegg_data <- read_delim("data/homer/homer_downsig_deGenes_pval01_l2fc2/kegg.txt") %>%
   mutate(pval = exp(1)^logP) %>%
   filter(pval < 0.01) %>%
   distinct(Term, .keep_all = TRUE) %>%
@@ -443,19 +442,19 @@ ggplot(kegg_plotting, aes(x = `-log10pval`, y = Term, fill = category)) +
         plot.title = element_text(hjust = 0.5, face = "bold", size = 14)) +
   ggtitle("KEGG Pathways")
 
-ggsave(filename = "plots/KEGG_barplots.pdf", width = 5, height = 8, units = "in")
+ggsave(filename = "plots/conditionDE_Fig1/KEGG_barplots.pdf", width = 5, height = 8, units = "in")
 
 # TF MOTIFS AND TF GENE EXPRESSION ----------------------------------------
 
-de_genes_results <- read_csv("data/de_genes_results.csv",
+de_genes_results <- read_csv("data/condition_de/de_genes_results.csv",
                              col_select = c("symbol", "log2FoldChange"))
-load("data/differential_expression_dds.rda")
+load("data/condition_de/differential_expression_dds.rda")
 normCounts <- counts(dds, normalized = TRUE)
 
 ### Upregulated motifs
 
 # Read in and subset
-upsig_knownmotifs <- read_delim("data/homer_upsig_deGenes_pval01_l2fc2/knownResults.txt") %>%
+upsig_knownmotifs <- read_delim("data/homer/homer_upsig_deGenes_pval01_l2fc2/knownResults.txt") %>%
   # Convert percentages to numbers
   mutate(across(c(`% of Target Sequences with Motif`, 
                   `% of Background Sequences with Motif`),
@@ -467,7 +466,7 @@ upsig_knownmotifs <- read_delim("data/homer_upsig_deGenes_pval01_l2fc2/knownResu
   # Calculate -log10pval
   mutate(log10pval = -log10(exp(`Log P-value`))) %>%
   slice_max(order_by = log10pval, n = 4) %>%
-  mutate(motifLogo = paste0("data/homer_upsig_deGenes_pval01_l2fc2/knownResults/known", row_number(), ".logo.svg"))
+  mutate(motifLogo = paste0("data/homer/homer_upsig_deGenes_pval01_l2fc2/knownResults/known", row_number(), ".logo.svg"))
 
 
 # Pull out first part of motif name
@@ -513,7 +512,7 @@ upsig_knownmotifs_l2fc  <- left_join(upsig_knownmotifs,
 ### Downregulated motifs
 
 # Read in and subset for top 3
-downsig_knownmotifs <- read_delim("data/homer_downsig_deGenes_pval01_l2fc2/knownResults.txt") %>%
+downsig_knownmotifs <- read_delim("data/homer/homer_downsig_deGenes_pval01_l2fc2/knownResults.txt") %>%
   # Convert percentages to numbers
   mutate(across(c(`% of Target Sequences with Motif`, 
                   `% of Background Sequences with Motif`),
@@ -525,7 +524,7 @@ downsig_knownmotifs <- read_delim("data/homer_downsig_deGenes_pval01_l2fc2/known
   # Calculate -log10pval
   mutate(log10pval = -log10(exp(`Log P-value`))) %>%
   slice_max(order_by = log10pval, n = 3) %>%
-  mutate(motifLogo = paste0("data/homer_downsig_deGenes_pval01_l2fc2/knownResults/known", row_number(), ".logo.svg"))
+  mutate(motifLogo = paste0("data/homer/homer_downsig_deGenes_pval01_l2fc2/knownResults/known", row_number(), ".logo.svg"))
 
 # Pull out first part of motif name
 downsig_knownmotifs$Name <- unlist(lapply(str_split(downsig_knownmotifs$`Motif Name`, 
@@ -642,7 +641,7 @@ for (motif in unique(sig_knownmotifs_l2fc$Name)){
   
 }
 
-grDevices::cairo_pdf(paste0("plots/tfmotif_expression.pdf"), 
+grDevices::cairo_pdf(paste0("plots/conditionDE_Fig1/tfmotif_expression.pdf"), 
                      width = 6, height = 6)
 pageCreate(width = 6, height = 6, showGuides = FALSE)
 plotGG(tf_gene_plot_table, x = 2, y = 0, width = 4, height = 6)
@@ -701,11 +700,11 @@ plotText(paste0("pval = ", sig_knownmotifs_l2fc %>%
 dev.off()
 
 # COMPARISON WITH OA FROM RAAK STUDY --------------------------------------
-raak_genes <- read_csv("data/RAAK_genes.csv",
+raak_genes <- read_csv("data/RAAK/RAAK_genes.csv",
                        col_select = c("ENSEMBL", "HGNC", "RAAK_PVAL",
                                       "RAAK_FC", "RAAK_LFC"))
 
-fnf_genes <- read_csv("data/de_genes_results.csv")
+fnf_genes <- read_csv("data/condition_de/de_genes_results.csv")
 
 raak_up <- raak_genes %>%
   filter(RAAK_LFC > 0)
@@ -770,4 +769,4 @@ ggplot(fnf_genes_raak_subset, aes(x = group, y = log2FoldChange,
         axis.ticks.y = element_line(color = "black"),
         axis.ticks.length.y = unit(-0.1, "cm"))
 
-ggsave(file = "plots/RAAKOA_FNF_boxplots.pdf", width = 6, height = 6, units = "in")
+ggsave(file = "plots/conditionDE_Fig1/RAAKOA_FNF_boxplots.pdf", width = 6, height = 6, units = "in")
