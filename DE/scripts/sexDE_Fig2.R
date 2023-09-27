@@ -58,18 +58,18 @@ gene_enrichment_permTest <- function(group, nPerm = 1000){
 
 # HEATMAP -----------------------------------------------------------------
 
-ctl_sig_genes <- read_csv("data/ctl_sexDE_pval01.csv")
-fnf_sig_genes <- read_csv("data/fnf_sexDE_pval01.csv")
+ctl_sig_genes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv")
+fnf_sig_genes <- read_csv("data/sex_de/fnf_sexDE_pval01.csv")
 
 union_sig_genes <- union(ctl_sig_genes$gene_id, fnf_sig_genes$gene_id)
 
-load("data/dds_sex_ctl.rda")
+load("data/sex_de/dds_sex_ctl.rda")
 
 # Normalized counts
 dds_sex_ctl_norm <- vst(dds_sex_ctl)
 
 ## Read in data from ctl selecting union sig genes and order by log2FC
-untreated_sex_degenes <- read_csv("data/ctl_sex_shrink.csv") %>%
+untreated_sex_degenes <- read_csv("data/sex_de/ctl_sex_shrink.csv") %>%
   filter(gene_id %in% union_sig_genes) %>%
   mutate(log2FC_dir = ifelse(log2FoldChange < 0, "-", "+")) %>%
   mutate(log2FC_dir = factor(log2FC_dir, levels = c("-", "+"))) %>%
@@ -106,12 +106,12 @@ annotationObjects <- ComplexHeatmap::HeatmapAnnotation(
                       "C" = raceColors[4],
                       "HISP" = raceColors[5],
                       "Unknown" = "grey"),
-             Age_group = c("30-39" = ageColors[1],
-                           "40-49" = ageColors[2],
-                           "50-59" = ageColors[3],
-                           "60-69" = ageColors[4],
-                           "70-79" = ageColors[5],
-                           "80-89" = ageColors[6]),
+             Age_group = c("31-40" = ageColors[1],
+                           "41-50" = ageColors[2],
+                           "51-60" = ageColors[3],
+                           "61-70" = ageColors[4],
+                           "71-80" = ageColors[5],
+                           "81-90" = ageColors[6]),
              Sex = sexColors),
   annotation_name_gp = gpar(fontfamily = "Helvetica",
                             fontsize = 8),
@@ -168,7 +168,7 @@ sex_heatmap_controlGrob <- grid.grabExpr(draw(sex_heatmap_control,
 sex_heatmapLegendGrob <- grid.grabExpr(draw(sex_heatmapLegend))
 
 
-pdf(file = "plots/DE_heatmap_sex.pdf", width = 5.75, height = 5.25)
+pdf(file = "plots/sexDE_Fig2/DE_heatmap_sex.pdf", width = 5.75, height = 5.25)
 pageCreate(width = 5.75, height = 5.25, showGuides = FALSE)
 
 plotGG(plot = sex_heatmap_controlGrob, x = 0, y = 0, 
@@ -202,27 +202,27 @@ plotRect(x = unit(5, "in") + unit(3*4, "mm"), y = 0.15, width = unit(3, "mm"),
 plotRect(x = unit(5, "in") + unit(3*5, "mm"), y = 0.15, width = unit(3, "mm"), 
          height = unit(1, "mm"), linecolor = NA, fill = ageColors[1],
          just = "left")
-plotText(label = "30", 
+plotText(label = "31", 
          x = 5,
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "40", 
+plotText(label = "41", 
          x = unit(5, "in") + unit(3, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "50", 
+plotText(label = "51", 
          x = unit(5, "in") + unit(3*2, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "60", 
+plotText(label = "61", 
          x = unit(5, "in") + unit(3*3, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "70", 
+plotText(label = "71", 
          x = unit(5, "in") + unit(3*4, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "80", 
+plotText(label = "81", 
          x = unit(5, "in") + unit(3*5, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
@@ -285,10 +285,10 @@ dev.off()
 
 # CHROMOSOME BARPLOTS -----------------------------------------------------
 
-ctl_sig_genes <- read_csv("data/ctl_sexDE_pval01.csv") %>%
+ctl_sig_genes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv") %>%
   mutate(condition = "PBS") %>%
   mutate(sex = ifelse(log2FoldChange < 0, "Female", "Male"))
-fnf_sig_genes <- read_csv("data/fnf_sexDE_pval01.csv") %>%
+fnf_sig_genes <- read_csv("data/sex_de/fnf_sexDE_pval01.csv") %>%
   mutate(condition = "FN-f") %>%
   mutate(sex = ifelse(log2FoldChange < 0, "Female", "Male"))
 
@@ -328,14 +328,14 @@ ggplot(all_sig_sex_genes, aes(x = seqnames, fill = sex)) +
         strip.text = element_text(size = 10, vjust = 0, face = "bold"))
 
 
-ggsave(filename = "plots/sex_fnfpbs_numGenes_barplot.pdf",
+ggsave(filename = "plots/sexDE_Fig2/sex_fnfpbs_numGenes_barplot.pdf",
        width = 4, height = 3.5, units = "in")
 
 
 
 # VENN DIAGRAM OF PBS AND FNF SEX GENES -----------------------------------
-ctl_sig_genes <- read_csv("data/ctl_sexDE_pval01.csv")
-fnf_sig_genes <- read_csv("data/fnf_sexDE_pval01.csv")
+ctl_sig_genes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv")
+fnf_sig_genes <- read_csv("data/sex_de/fnf_sexDE_pval01.csv")
 
 
 pbs_fnf_sex_genes <- tibble(values = unique(c(ctl_sig_genes$gene_id, fnf_sig_genes$gene_id))) %>%
@@ -354,7 +354,7 @@ venn_diagram <- ggplot(pbs_fnf_sex_genes, aes(A = PBS, B = FNF)) +
         axis.ticks = element_blank(),
         axis.text = element_blank())
 venn_font(venn_diagram, font = "Helvetica")
-ggsave(filename = "plots/sex_pbs_fnf_venndiagram.pdf", width = 4, height = 4, units = "in")
+ggsave(filename = "plots/sexDE_Fig2/sex_pbs_fnf_venndiagram.pdf", width = 4, height = 4, units = "in")
 
 #### Checking directions of effect for each set
 
@@ -385,7 +385,7 @@ ctl_ctl_unique <- ctl_sig_genes %>%
   dplyr::select(gene_id, symbol, log2FoldChange) %>%
   dplyr::rename(ctl_l2fc = log2FoldChange)
 
-fnf_ctl_unique <- read_csv("data/fnf_sex_shrink.csv",
+fnf_ctl_unique <- read_csv("data/sex_de/fnf_sex_shrink.csv",
          col_select = c("gene_id", "symbol", "log2FoldChange")) %>%
   filter(gene_id %in% ctl_unique$gene_id) %>%
   dplyr::rename(fnf_l2fc = log2FoldChange)
@@ -405,7 +405,7 @@ fnf_fnf_unique <- fnf_sig_genes %>%
   dplyr::select(gene_id, symbol, log2FoldChange) %>%
   dplyr::rename(fnf_l2fc = log2FoldChange)
 
-ctl_fnf_unique <- read_csv("data/ctl_sex_shrink.csv",
+ctl_fnf_unique <- read_csv("data/sex_de/ctl_sex_shrink.csv",
                            col_select = c("gene_id", "symbol", "log2FoldChange")) %>%
   filter(gene_id %in% fnf_unique$gene_id) %>%
   dplyr::rename(ctl_l2fc = log2FoldChange)
@@ -419,8 +419,8 @@ fnf_unique_percent_concordant <- length(which(fnf_unique_directions$concordant_d
 # OVERLAP WITH FNF AND OA DIFF GENES --------------------------------------
 
 # Union of sex degenes significant in control and FN-f
-ctl_sex_degenes <- read_csv("data/ctl_sexDE_pval01.csv")
-fnf_sex_degenes <- read_csv("data/fnf_sexDE_pval01.csv")
+ctl_sex_degenes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv")
+fnf_sex_degenes <- read_csv("data/sex_de/fnf_sexDE_pval01.csv")
 
 sex_degenes_union <- full_join(ctl_sex_degenes %>%
                                  dplyr::select("symbol", "gene_id", "log2FoldChange") %>%
@@ -433,8 +433,8 @@ sex_degenes_union <- full_join(ctl_sex_degenes %>%
 
 
 # Differential FN-f, OA, and overlapping FN-f/OA genes
-fnf_de_genes <- read_csv("data/sig_deGenes_pval01_l2fc1.csv")
-oa_de_genes <- read_csv("data/RAAK_genes.csv",
+fnf_de_genes <- read_csv("data/condition_de/sig_deGenes_pval01_l2fc1.csv")
+oa_de_genes <- read_csv("data/RAAK/RAAK_genes.csv",
                         col_select = c("ENSEMBL", "HGNC", "RAAK_PVAL",
                                        "RAAK_FC", "RAAK_LFC")) %>%
   dplyr::rename(symbol = HGNC) %>%
@@ -467,15 +467,15 @@ sex_fnfoa_degenes <- sex_degenes_union %>%
   filter(symbol %in% fnf_de_genes$symbol & symbol %in% oa_de_genes$symbol) 
 
 ## Permutation tests for enrichment
-de_genes_results <- read_csv("data/de_genes_results.csv")
+de_genes_results <- read_csv("data/condition_de/de_genes_results.csv")
 
 fnf_pval <- gene_enrichment_permTest(group = "fnf")
 oa_pval <- gene_enrichment_permTest(group = "oa")
 fnf_oa_pval <- gene_enrichment_permTest(group = "fnf_oa")
 
 ###### Sex-specific OA gene count boxplots in PBS and FNF
-load("data/dds_sex_ctl.rda")
-load("data/dds_sex_fnf.rda")
+load("data/sex_de/dds_sex_ctl.rda")
+load("data/sex_de/dds_sex_fnf.rda")
 
 all_gene_sex_counts <- list()
 for (geneRow in 1:nrow(sex_oa_degenes_all)){
@@ -504,13 +504,13 @@ gene_maxCounts <- all_sex_oa_counts %>%
   group_by(symbol) %>%
   summarise(maxCount = max(log2(count)))
 
-ctl_sex_OAgenes <- read_csv("data/ctl_sexDE_pval01.csv", 
+ctl_sex_OAgenes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv", 
                             col_select = c("gene_id", "symbol", "padj", "log2FoldChange")) %>%
   filter(gene_id %in% sex_oa_degenes_all$gene_id) %>%
   mutate(effect_dir = ifelse(log2FoldChange < 0, "F", "M")) %>%
   dplyr::select(-log2FoldChange) %>%
   dplyr::rename(PBS = padj)
-fnf_sex_OAgenes <- read_csv("data/fnf_sexDE_pval01.csv", 
+fnf_sex_OAgenes <- read_csv("data/sex_de/fnf_sexDE_pval01.csv", 
                             col_select = c("gene_id", "symbol", "padj", "log2FoldChange")) %>%
   filter(gene_id %in% sex_oa_degenes_all$gene_id) %>%
   mutate(effect_dir = ifelse(log2FoldChange < 0, "F", "M")) %>%
@@ -605,16 +605,18 @@ down_boxplots <- ggplot(all_sex_oa_counts %>%
 up_boxplots + down_boxplots
 
 
-ggsave(filename = "plots/oa_sex_genes_boxplots.pdf", width = 9, height = 5, units= "in")
+ggsave(filename = "plots/sexDE_Fig2/oa_sex_genes_boxplots.pdf", width = 9, height = 5, units= "in")
 
 
 # Overlap with sex-biased genes from GTEx ---------------------------------
 
 # Significant from PBS and FNF
-ctl_sig_genes <- read_csv("data/ctl_sexDE_pval01.csv", 
-                          col_select = c("gene_id", "symbol", "log2FoldChange"))
-fnf_sig_genes <- read_csv("data/fnf_sexDE_pval01.csv",
-                          col_select = c("gene_id", "symbol", "log2FoldChange"))
+ctl_sig_genes <- read_csv("data/de_sex/ctl_sexDE_pval01.csv", 
+                          col_select = c("gene_id", "symbol", 
+                                         "log2FoldChange", "lfcSE"))
+fnf_sig_genes <- read_csv("data/de_sex/fnf_sexDE_pval01.csv",
+                          col_select = c("gene_id", "symbol", 
+                                         "log2FoldChange", "lfcSE"))
 union_sig_genes <- union(ctl_sig_genes$gene_id, fnf_sig_genes$gene_id)
 
 sex_genes <- bind_rows(ctl_sig_genes %>%
@@ -622,16 +624,18 @@ sex_genes <- bind_rows(ctl_sig_genes %>%
                        fnf_sig_genes %>%
                          filter(gene_id %in% union_sig_genes)) %>%
   distinct(gene_id, .keep_all = TRUE) %>%
-  mutate(sex = ifelse(log2FoldChange < 0, "female", "male")) %>%
-  dplyr::select(-log2FoldChange)
+  mutate(sex = ifelse(log2FoldChange < 0, "female", "male"))
 
 # Pull union list of our data
 chond_sbgenes <- sex_genes %>%
-  mutate(tissue = "Chondrocytes")
+  mutate(sex = ifelse(log2FoldChange < 0, "female", "male")) %>%
+  mutate(tissue = "Chondrocytes") %>%
+  dplyr::rename(effsize = log2FoldChange) %>%
+  dplyr::rename(effsize_se = lfcSE)
 
 # Read in gtex sex-biased genes
 gtex_signif_sbgenes <- 
-  read_delim("data/GTEx_Analysis_v8_sbgenes/signif.sbgenes.txt") %>%
+  read_delim("data/GTEx/GTEx_Analysis_v8_sbgenes/signif.sbgenes.txt") %>%
   # convert IDs to ones compatible with ours
   mutate(gene_id = gsub("\\..*", "", gene)) %>%
   # Flip sign of effsize to match ours (gtex positive is female and negative is male)
@@ -643,8 +647,10 @@ gtex_signif_sbgenes <-
 
 
 # Join with our data
-all_data_sbgenes <- bind_rows(chond_sbgenes %>% dplyr::select(-symbol),
-                              gtex_signif_sbgenes %>% dplyr::select(gene_id, tissue, sex)) %>%
+all_data_sbgenes <- bind_rows(chond_sbgenes %>% 
+                                dplyr::select(gene_id, tissue, sex, effsize, effsize_se),
+                              gtex_signif_sbgenes %>% 
+                                dplyr::select(gene_id, tissue, sex, effsize, effsize_se)) %>%
   complete(gene_id, tissue) %>% 
   left_join(chond_sbgenes %>% dplyr::select(gene_id, symbol), by = "gene_id")
 
@@ -683,7 +689,7 @@ fontFaces <- all_data_sbgenes %>%
 
 
 # Get log2FC for all sig sex genes in PBS and FNF
-ctl_sex_results <- read_csv("data/ctl_sex_shrink.csv", 
+ctl_sex_results <- read_csv("data/de_sex/ctl_sex_shrink.csv", 
                             col_select = c("gene_id", "symbol", "log2FoldChange", "lfcSE")) %>%
   filter(gene_id %in% sex_genes$gene_id) %>%
   mutate(condition = "PBS") %>%
@@ -833,5 +839,5 @@ sex_cell_heatmap  + cellOverlap_gtex_l2fc + cellOverlap_chond_l2fc +
 
 
 
-ggsave(filename = "plots/sex_celltypeOverlap_heatmap_gtexl2fc_chondl2fc.pdf",
+ggsave(filename = "plots/sexDE_Fig2/sex_celltypeOverlap_heatmap_gtexl2fc_chondl2fc.pdf",
        width = 15, height = 15, units = "in", bg = "transparent")
