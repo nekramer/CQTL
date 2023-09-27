@@ -40,7 +40,8 @@ get_sample_l2fc <- function(gene, countMatrix){
 # HEATMAP -----------------------------------------------------------------
 
 load("data/condition_de/differential_expression_dds.rda")
-sig_degenes <- read_csv("data/condition_de/sig_deGenes_pval01_l2fc2.csv") %>%
+sig_degenes <- 
+  read_csv("data/condition_de/sig_deGenes_pval01_l2fc2.csv") %>%
   mutate(log2FC_dir = ifelse(log2FoldChange < 0, "-", "+")) %>%
   arrange(log2FC_dir)
 donorSamplesheet <- read_csv("data/donorSamplesheet.csv")
@@ -71,8 +72,8 @@ annotations <- as.data.frame(colData(dds)[,c("Condition", "Donor")]) %>%
 colnames(annotations) <- c("Condition", "Donor")
 annotations <- left_join(annotations, donorSamplesheet[,c("Donor", "Sex", "Race", "Age")]) %>% 
   dplyr::select(-Donor)
-annotations$Age <- cut(annotations$Age, breaks = seq(29, 91, 10),
-                       labels = c("30-39", "40-49", "50-59", "60-69", "70-79", "80-89"))
+annotations$Age <- cut(annotations$Age, breaks = seq(30, 90, 10),
+                       labels = c("31-40", "41-50", "51-60", "61-70", "71-80", "81-90"))
 annotations <- annotations %>% dplyr::select(Age, Race, Sex, Condition)
 
 # Significant genes to highlight
@@ -93,12 +94,12 @@ upGenes <- sig_degenes %>%
 
 annotationObjects <- HeatmapAnnotation(
   df = annotations,
-  col = list(Age = c("30-39" = ageColors[6],
-                     "40-49" = ageColors[5],
-                     "50-59" = ageColors[4],
-                     "60-69" = ageColors[3],
-                     "70-79" = ageColors[2],
-                     "80-89" = ageColors[1]),
+  col = list(Age = c("31-40" = ageColors[6],
+                     "41-50" = ageColors[5],
+                     "51-60" = ageColors[4],
+                     "61-70" = ageColors[3],
+                     "71-80" = ageColors[2],
+                     "81-90" = ageColors[1]),
              Condition = conditionColors,
              Sex = sexColors,
              Race = c("ARAB" = raceColors[1],
@@ -206,27 +207,27 @@ plotRect(x = unit(5.75, "in") + unit(3*4, "mm"), y = 0.15, width = unit(3, "mm")
 plotRect(x = unit(5.75, "in") + unit(3*5, "mm"), y = 0.15, width = unit(3, "mm"), 
          height = unit(1, "mm"), linecolor = NA, fill = ageColors[1],
          just = "left")
-plotText(label = "30", 
+plotText(label = "31", 
          x = 5.75,
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "40", 
+plotText(label = "41", 
          x = unit(5.75, "in") + unit(3, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "50", 
+plotText(label = "51", 
          x = unit(5.75, "in") + unit(3*2, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "60", 
+plotText(label = "61", 
          x = unit(5.75, "in") + unit(3*3, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "70", 
+plotText(label = "71", 
          x = unit(5.75, "in") + unit(3*4, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
-plotText(label = "80", 
+plotText(label = "81", 
          x = unit(5.75, "in") + unit(3*5, "mm"),
          y = 0.18,
          fontfamily = "Helvetica", fontsize = 4, just = c("left", "top"))
@@ -301,11 +302,11 @@ plotText(label = "CTL", x = unit(5.75, "in") + unit(3*4.5, "mm"),
          fontsize = 4, fontfamily = "Helvetica")
 
 # Add labels of top downregulated and upregulated genes 
-plotText(label = upGenes$symbol, x = 5.6, y = seq(0.95, 3.175, length.out = 20),
+plotText(label = upGenes$symbol, x = 5.6, y = seq(0.95, 3.35, length.out = 20),
          fontcolor = "#6B5E27", fontface = "bold",
          fontsize = 6, fontfamily = "Helvetica", just = c("left", "top"))
 
-plotText(label = downGenes$symbol, x = 5.6, y = seq(3.285, 4.8, length.out = 15),
+plotText(label = downGenes$symbol, x = 5.6, y = seq(3.45, 4.8, length.out = 15),
          fontcolor = "#2F4864", fontface = "bold",
          fontsize = 6, fontfamily = "Helvetica", just = c("left", "top"))
 
@@ -704,7 +705,8 @@ raak_genes <- read_csv("data/RAAK/RAAK_genes.csv",
                        col_select = c("ENSEMBL", "HGNC", "RAAK_PVAL",
                                       "RAAK_FC", "RAAK_LFC"))
 
-fnf_genes <- read_csv("data/condition_de/de_genes_results.csv")
+#fnf_genes <- read_csv("data/condition_de/de_genes_results.csv")
+fnf_genes <- read_csv("data/de_genes_results.csv")
 
 raak_up <- raak_genes %>%
   filter(RAAK_LFC > 0)
