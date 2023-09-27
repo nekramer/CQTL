@@ -21,7 +21,7 @@ sex_de_analysis <- function(gse, condition){
   dds_sex <- DESeqDataSet(gse_analysis, design = ~Race + Age_group + Sex)
   
   # Filter out lowly expressed genes
-  keep <- rowSums(counts(dds_sex) >= 10) >= ceiling(nrow(colData(gse_analysis))*0.10)
+  keep <- rowSums(counts(dds_sex) >= 10) >= ceiling(nrow(colData(gse_analysis))*0.5)
   dds_sex <- dds_sex[keep,]
   
   # Fit model
@@ -29,7 +29,7 @@ sex_de_analysis <- function(gse, condition){
   
   # Rename and save dds
   assign(dds_name, dds_sex)
-  save(get(dds_name), file = paste0("data/sex_de/", dds_name, ".rda"))
+  save(list = dds_name, file = paste0("data/sex_de/", dds_name, ".rda"))
  
   # Shrink l2fc
   sex_shrink <- lfcShrink(dds_sex,
@@ -90,4 +90,43 @@ sex_de_analysis(gse, condition = "FNF")
 
 # RESPONSE TO TREATMENT ---------------------------------------------------
 
+# Create ind.n in colData to number within each group
+colData(gse) <- as(colData(gse) |>
+                     as.data.frame() |> 
+                     group_by(Sex) |> 
+                     mutate(ind.n = as.factor(dense_rank(Donor))), "DataFrame")
+
+
+# Create design matrix and remove columns for unbalanced M/F interactions
+designMatrix <- model.matrix(~Sex + Sex:ind.n + Sex:Condition, colData(gse))
+designMatrix <- designMatrix[,-(which(colSums(designMatrix) == 0))]
+
+# Build DESeq object
+dds_sex_treatment_response <- DESeqDataSet(gse, 
+                                           design = designMatrix)
+
+# Filter out lowly expressed genes
+keep <- rowSums(counts(dds_sex_treatment_response) >= 10) >= ceiling(nrow(colData(gse))*0.5)
+dds_sex_treatment_response <- dds_sex_treatment_response[keep,]
+
+# Fit model
+dds_sex_treatment_response <- DESeq(dds_sex_treatment_response)
+## Save object
+save(dds_sex_treatment_response, file = "data/sex_de/dds_sex_treatment_response.rda")
+
+# Get results and write to file
+sexDE_treatmenteffect_pval01 <- results(dds_sex_treatment_response,
+                                        contrast = list("SexF.ConditionFNF",
+                                                        "SexM.ConditionFNF"), 
+                                        format = "GRanges") |> 
+  plyranges::names_to_column("gene_id") |>
+  as.data.frame() |> 
+  inner_join(y = as.data.frame(rowData(gse)) |> 
+               dplyr::select(c("gene_id", "symbol", "tx_ids")),
+             by = "gene_id") |> 
+  makeGRangesFromDataFrame(keep.extra.columns = TRUE) |> 
+  keepStandardChromosomes(pruning.mode = "coarse") |> 
+  as.data.frame() |> 
+  filter(padj < 0.01) |> 
+  write_csv(file = "data/sex_de/sexDE_treatmenteffect_pval01.csv")
 
