@@ -21,7 +21,7 @@ dds <- DESeqDataSet(gse, design = ~Donor + Condition)
 colnames(dds) <- colData(gse)[,"names"]
 
 # Filter out lowly expressed genes
-keep <- rowSums(counts(dds) >= 10) >= ceiling(nrow(colData(gse))*0.05)
+keep <- rowSums(counts(dds) >= 10) >= ceiling(nrow(colData(gse))*0.5)
 dds <- dds[keep,]
 
 # Fit model
@@ -62,4 +62,10 @@ downsig_deGenes_pval01_l2fc2 <- sig_deGenes_pval01_l2fc2 |>
   write_csv("data/condition_de/downsig_deGenes_pval01_l2fc2.csv")
 
 
+# Run Homer for GO terms, KEGG pathways, and TF binding motifs ------------
 
+# Upregulated genes
+system("scripts/run_homer.sh data/condition_de/upsig_deGenes_pval01_l2fc2.csv data/homer/homer_upsig_deGenes_pval01_l2fc2")
+
+# Downregulated genes
+system("scripts/run_homer.sh data/condition_de/downsig_deGenes_pval01_l2fc2.csv data/homer/homer_downsig_deGenes_pval01_l2fc2")
