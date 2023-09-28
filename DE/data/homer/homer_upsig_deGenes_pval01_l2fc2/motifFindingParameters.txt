@@ -1,1 +1,1 @@
-cmd = data/homer_upsig_deGenes_pval01_l2fc2/gene_ids.txt human data/homer_upsig_deGenes_pval01_l2fc2
+cmd = data/homer/homer_upsig_deGenes_pval01_l2fc2/gene_ids.txt human data/homer/homer_upsig_deGenes_pval01_l2fc2

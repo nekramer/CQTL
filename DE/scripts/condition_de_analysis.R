@@ -3,7 +3,7 @@ library(tidyverse)
 library(plyranges)
 
 # Load gse object
-load("data/2023-04-19_gse.rda")
+load("data/2023-09-27_gse.rda")
 
 # Read in donorSamplesheet for additional donor info
 donorSamplesheet <- read_csv("data/donorSamplesheet.csv") |> 
@@ -21,7 +21,7 @@ dds <- DESeqDataSet(gse, design = ~Donor + Condition)
 colnames(dds) <- colData(gse)[,"names"]
 
 # Filter out lowly expressed genes
-keep <- rowSums(counts(dds) >= 10) >= ceiling(nrow(colData(gse))*0.5)
+keep <- rowSums(counts(dds) >= 10) >= ceiling(nrow(colData(gse))*0.10)
 dds <- dds[keep,]
 
 # Fit model

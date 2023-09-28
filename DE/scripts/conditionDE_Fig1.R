@@ -141,7 +141,7 @@ h1 <- draw(Heatmap(mat_scaled,
                    show_column_dend = FALSE))
 # Get column order of clusters and swap CTL and FNF clusters
 col_order <- column_order(h1)
-new_col_order <- c(col_order[104:206], col_order[1:103])
+new_col_order <- c(col_order[102:202], col_order[1:101])
 
 # Plot heatmap with column order defined from clustering and CTL and FNF order above
 h1 <- Heatmap(mat_scaled,
@@ -302,11 +302,11 @@ plotText(label = "CTL", x = unit(5.75, "in") + unit(3*4.5, "mm"),
          fontsize = 4, fontfamily = "Helvetica")
 
 # Add labels of top downregulated and upregulated genes 
-plotText(label = upGenes$symbol, x = 5.6, y = seq(0.95, 3.35, length.out = 20),
+plotText(label = upGenes$symbol, x = 5.6, y = seq(0.95, 3.175, length.out = 20),
          fontcolor = "#6B5E27", fontface = "bold",
          fontsize = 6, fontfamily = "Helvetica", just = c("left", "top"))
 
-plotText(label = downGenes$symbol, x = 5.6, y = seq(3.45, 4.8, length.out = 15),
+plotText(label = downGenes$symbol, x = 5.6, y = seq(3.285, 4.8, length.out = 15),
          fontcolor = "#2F4864", fontface = "bold",
          fontsize = 6, fontfamily = "Helvetica", just = c("left", "top"))
 
@@ -334,9 +334,7 @@ downsig_go <- reduceGO(downsig_go_data,
 
 # Select 5 each for plotting
 upsig_go_plotting <- upsig_go %>%
-  filter(parentTerm %in% c("response to cytokine", "cell surface receptor signaling pathway",
-                           "collagen catabolic process", "regulation of cell-cell adhesion",
-                           "acute inflammatory response")) %>%
+  filter(parentTerm %in% c("response to cytokine", "cell surface receptor signaling pathway", "collagen catabolic process", "regulation of cell-cell adhesion", "aging")) |> 
   arrange(`-log10pval`)
 
 downsig_go_plotting <- downsig_go %>%
@@ -705,8 +703,7 @@ raak_genes <- read_csv("data/RAAK/RAAK_genes.csv",
                        col_select = c("ENSEMBL", "HGNC", "RAAK_PVAL",
                                       "RAAK_FC", "RAAK_LFC"))
 
-#fnf_genes <- read_csv("data/condition_de/de_genes_results.csv")
-fnf_genes <- read_csv("data/de_genes_results.csv")
+fnf_genes <- read_csv("data/condition_de/de_genes_results.csv")
 
 raak_up <- raak_genes %>%
   filter(RAAK_LFC > 0)
