@@ -2,7 +2,6 @@ library(DESeq2)
 library(tidyverse)
 library(plyranges)
 
-
 # Functions ---------------------------------------------------------------
 
 sex_de_analysis <- function(gse, condition){
@@ -59,7 +58,8 @@ sex_de_analysis <- function(gse, condition){
 # gse wrangling -----------------------------------------------------------
 
 # Load gse object
-load("data/2023-04-19_gse.rda")
+#load("data/2023-04-19_gse.rda")
+load("data/2023-09-27_gse.rda")
 
 # Read in donorSamplesheet for additional donor info
 donorSamplesheet <- read_csv("data/donorSamplesheet.csv") |> 

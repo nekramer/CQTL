@@ -1,7 +1,6 @@
 library(tidyverse)
 source("scripts/plotting_utils.R")
 
-
 # Plotting function -------------------------------------------------------
 
 plotSexResponseGene <- function(geneRow, dds){
@@ -76,12 +75,10 @@ plotSexResponseGene <- function(geneRow, dds){
   
 } 
 
-
 # Load and plot genes -----------------------------------------------------
 load("data/sex_de/dds_sex_treatment_response.rda")
 sexDE_treatmenteffect_pval01 <- 
   read_csv("data/sex_de/sexDE_treatmenteffect_pval01.csv")
-
 
 apply(sexDE_treatmenteffect_pval01, 
       1, plotSexResponseGene, dds = dds_sex_treatment_response)

@@ -9,7 +9,6 @@ library(plotgardener)
 library(ggvenn)
 source("scripts/plotting_utils.R")
 
-
 # Functions ---------------------------------------------------------------
 
 get_gene_sex_Counts <- function(gene, dds){
@@ -23,7 +22,6 @@ get_gene_sex_Counts <- function(gene, dds){
   
   return(geneCounts)
 }
-
 
 gene_enrichment_permTest <- function(group, nPerm = 1000){
   
@@ -147,8 +145,6 @@ sex_heatmap_control <- ComplexHeatmap::pheatmap(untreated_sexmat_scaled,
                                 show_row_dend = FALSE,
                                 show_column_dend = FALSE)
 
-
-
 sex_heatmapLegend <- ComplexHeatmap::Legend(at = c(-3, 3),
                             col_fun = colorRamp2(breaks = seq(-3, 3),
                                                  colors = heatmapColors),
@@ -173,7 +169,6 @@ pageCreate(width = 5.75, height = 5.25, showGuides = FALSE)
 
 plotGG(plot = sex_heatmap_controlGrob, x = 0, y = 0, 
        height = 5, width = 5)
-
 
 # Colorbar
 plotGG(plot = sex_heatmapLegendGrob,  x = 0.075, y = 5,
@@ -433,7 +428,7 @@ sex_degenes_union <- full_join(ctl_sex_degenes %>%
 
 
 # Differential FN-f, OA, and overlapping FN-f/OA genes
-fnf_de_genes <- read_csv("data/condition_de/sig_deGenes_pval01_l2fc1.csv")
+fnf_de_genes <- read_csv("data/condition_de/sig_deGenes_pval01_l2fc2.csv")
 oa_de_genes <- read_csv("data/RAAK/RAAK_genes.csv",
                         col_select = c("ENSEMBL", "HGNC", "RAAK_PVAL",
                                        "RAAK_FC", "RAAK_LFC")) %>%
@@ -611,10 +606,10 @@ ggsave(filename = "plots/sexDE_Fig2/oa_sex_genes_boxplots.pdf", width = 9, heigh
 # Overlap with sex-biased genes from GTEx ---------------------------------
 
 # Significant from PBS and FNF
-ctl_sig_genes <- read_csv("data/de_sex/ctl_sexDE_pval01.csv", 
+ctl_sig_genes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv", 
                           col_select = c("gene_id", "symbol", 
                                          "log2FoldChange", "lfcSE"))
-fnf_sig_genes <- read_csv("data/de_sex/fnf_sexDE_pval01.csv",
+fnf_sig_genes <- read_csv("data/sex_de/fnf_sexDE_pval01.csv",
                           col_select = c("gene_id", "symbol", 
                                          "log2FoldChange", "lfcSE"))
 union_sig_genes <- union(ctl_sig_genes$gene_id, fnf_sig_genes$gene_id)
@@ -658,7 +653,7 @@ all_data_sbgenes <- bind_rows(chond_sbgenes %>%
 geneOverlaps <- all_data_sbgenes %>%
   group_by(symbol) %>%
   filter(!is.na(effsize)) %>%
-  summarize(nOverlap = n()) %>%
+  summarize(nOverlap = dplyr::n()) %>%
   arrange(nOverlap)
 
 all_data_sbgenes <- left_join(all_data_sbgenes, geneOverlaps, by = "symbol") %>%
@@ -689,12 +684,12 @@ fontFaces <- all_data_sbgenes %>%
 
 
 # Get log2FC for all sig sex genes in PBS and FNF
-ctl_sex_results <- read_csv("data/de_sex/ctl_sex_shrink.csv", 
+ctl_sex_results <- read_csv("data/sex_de/ctl_sex_shrink.csv", 
                             col_select = c("gene_id", "symbol", "log2FoldChange", "lfcSE")) %>%
   filter(gene_id %in% sex_genes$gene_id) %>%
   mutate(condition = "PBS") %>%
   mutate(sex = ifelse(log2FoldChange < 0, "female", "male"))
-fnf_sex_results <- read_csv("data/fnf_sex_shrink.csv",
+fnf_sex_results <- read_csv("data/sex_de/fnf_sex_shrink.csv",
                             col_select = c("gene_id", "symbol", "log2FoldChange", "lfcSE")) %>%
   filter(gene_id %in% sex_genes$gene_id) %>%
   mutate(condition = "FN-f") %>%
@@ -836,8 +831,6 @@ cellOverlap_gtex_l2fc <- ggplot(gtex_median_l2fc, aes(x = median_l2fc, y = y_pos
 
 sex_cell_heatmap  + cellOverlap_gtex_l2fc + cellOverlap_chond_l2fc +
   plot_layout(ncol = 3, widths = c(4, 0.55, 1.28))
-
-
 
 ggsave(filename = "plots/sexDE_Fig2/sex_celltypeOverlap_heatmap_gtexl2fc_chondl2fc.pdf",
        width = 15, height = 15, units = "in", bg = "transparent")
