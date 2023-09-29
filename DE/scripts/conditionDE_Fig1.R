@@ -77,7 +77,6 @@ annotations$Age <- cut(annotations$Age, breaks = seq(30, 90, 10),
 annotations <- annotations %>% dplyr::select(Age, Race, Sex, Condition)
 
 # Significant genes to highlight
-
 downGenes <- sig_degenes %>% 
   filter(symbol %in% c("GREM1", "DKK1", "GDF5", "GDF10", "DLX5",
                        "GPX3", "COL21A1", "FZD8", "WWP2", "ALDH1A1",
@@ -90,7 +89,6 @@ upGenes <- sig_degenes %>%
                        "IL17C", "CXCR4", "WNT5A", "BMP6", "COL13A1",
                        "IL11", "CRTAC1", "COL7A1", "MMP10", "CXCL1")) %>%
   arrange(desc(log2FoldChange))
-
 
 annotationObjects <- HeatmapAnnotation(
   df = annotations,
@@ -116,7 +114,6 @@ cluster_annotations <- sig_degenes %>%
   dplyr::select(gene_id, log2FC_dir) %>%
   column_to_rownames(var = "gene_id")
 
-
 clusters <- HeatmapAnnotation(
   df = cluster_annotations,
   col = list(log2FC_dir = log2fcColors),
@@ -141,7 +138,7 @@ h1 <- draw(Heatmap(mat_scaled,
                    show_column_dend = FALSE))
 # Get column order of clusters and swap CTL and FNF clusters
 col_order <- column_order(h1)
-new_col_order <- c(col_order[102:202], col_order[1:101])
+new_col_order <- c(col_order[104:206], col_order[1:103])
 
 # Plot heatmap with column order defined from clustering and CTL and FNF order above
 h1 <- Heatmap(mat_scaled,
@@ -334,7 +331,7 @@ downsig_go <- reduceGO(downsig_go_data,
 
 # Select 5 each for plotting
 upsig_go_plotting <- upsig_go %>%
-  filter(parentTerm %in% c("response to cytokine", "cell surface receptor signaling pathway", "collagen catabolic process", "regulation of cell-cell adhesion", "aging")) |> 
+  filter(parentTerm %in% c("response to cytokine", "cell surface receptor signaling pathway", "collagen catabolic process", "regulation of cell-cell adhesion", "immune effector process")) |> 
   arrange(`-log10pval`)
 
 downsig_go_plotting <- downsig_go %>%

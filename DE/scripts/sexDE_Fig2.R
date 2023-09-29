@@ -22,38 +22,6 @@ get_gene_sex_Counts <- function(gene, dds){
   
   return(geneCounts)
 }
-
-gene_enrichment_permTest <- function(group, nPerm = 1000){
-  
-  gene_dataset <- switch(group,
-                    fnf = fnf_de_genes,
-                    oa = oa_de_genes,
-                    fnf_oa = fnf_oa_de_genes)
-  
-  sex_dataset <- switch(group,
-                         fnf = sex_fnf_degenes,
-                         oa = sex_oa_degenes,
-                         fnf_oa = sex_fnfoa_degenes)
-  
-  randomOverlaps <- c() 
-  for (i in 1:nPerm){
-    # Randomly select number of sex_degenes_union from all genes
-    random_genes <- de_genes_results[sample(nrow(de_genes_results),
-                                            nrow(sex_degenes_union)),]
-    
-    # Check how many overlap with group
-    groupOverlap <- length(which(random_genes$symbol %in% gene_dataset$symbol))
-    
-    # Append
-    randomOverlaps[i] <- groupOverlap
-  }
- 
-  # Calculate p-val
-  pval <- length(which(randomOverlaps >= nrow(sex_dataset)))/nPerm
-  return(pval)
-  
-}
-
 # HEATMAP -----------------------------------------------------------------
 
 ctl_sig_genes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv")
@@ -426,29 +394,13 @@ sex_degenes_union <- full_join(ctl_sex_degenes %>%
   distinct(gene_id, .keep_all = TRUE) %>%
   dplyr::rename(sex_log2FoldChange = log2FoldChange)
 
-
-# Differential FN-f, OA, and overlapping FN-f/OA genes
-fnf_de_genes <- read_csv("data/condition_de/sig_deGenes_pval01_l2fc2.csv")
+# OA genes from RAAK
 oa_de_genes <- read_csv("data/RAAK/RAAK_genes.csv",
                         col_select = c("ENSEMBL", "HGNC", "RAAK_PVAL",
                                        "RAAK_FC", "RAAK_LFC")) %>%
   dplyr::rename(symbol = HGNC) %>%
   dplyr::rename(log2FoldChange = RAAK_LFC)
-fnf_oa_de_genes <- fnf_de_genes %>%
-  filter(symbol %in% oa_de_genes$symbol)
 
-
-# Get sex de genes only differential in FN-f
-sex_fnf_degenes <- sex_degenes_union %>%
-  filter(symbol %in% fnf_de_genes$symbol & !symbol %in% oa_de_genes$symbol) 
-
-# All sex de genes differential in FN-f
-sex_fnf_degenes_all <- sex_degenes_union %>%
-  filter(symbol %in% fnf_de_genes$symbol) 
-
-# Get sex de genes only differential in OA
-sex_oa_degenes <- sex_degenes_union %>%
-  filter(!symbol %in% fnf_de_genes$symbol & symbol %in% oa_de_genes$symbol) 
 
 # All sex de genes differential in OA
 sex_oa_degenes_all <- sex_degenes_union %>%
@@ -457,21 +409,10 @@ sex_oa_degenes_all <- sex_degenes_union %>%
   dplyr::rename(oa_log2FoldChange = log2FoldChange) %>%
   mutate(oa_group = ifelse(oa_log2FoldChange < 0, "down", "up"))
 
-# Get sex de genes differential in FN-f and OA
-sex_fnfoa_degenes <- sex_degenes_union %>%
-  filter(symbol %in% fnf_de_genes$symbol & symbol %in% oa_de_genes$symbol) 
-
-## Permutation tests for enrichment
-de_genes_results <- read_csv("data/condition_de/de_genes_results.csv")
-
-fnf_pval <- gene_enrichment_permTest(group = "fnf")
-oa_pval <- gene_enrichment_permTest(group = "oa")
-fnf_oa_pval <- gene_enrichment_permTest(group = "fnf_oa")
-
-###### Sex-specific OA gene count boxplots in PBS and FNF
 load("data/sex_de/dds_sex_ctl.rda")
 load("data/sex_de/dds_sex_fnf.rda")
 
+# Gene counts for sex-specific/OA genes 
 all_gene_sex_counts <- list()
 for (geneRow in 1:nrow(sex_oa_degenes_all)){
   gene <- sex_oa_degenes_all[geneRow, ]

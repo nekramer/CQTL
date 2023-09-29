@@ -15,7 +15,7 @@ heatmapColors <- colorRampPalette(c("#4FAFE1", "black", "#F5D348"))(7)
 log2fcColors <- c("+" = "#FBBE67", "-" = "#78A1Cd")
 
 
-ageClusterColors <- c("1" = "#009E8E", "2" = "#AC7F21")
+ageClusterColors <- c("-" = "#009E8E", "+" = "#AC7F21")
 
 
 plotConditionExpression <- function(gene, dds){
