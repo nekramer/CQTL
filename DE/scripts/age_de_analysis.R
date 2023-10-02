@@ -3,7 +3,6 @@ library(tidyverse)
 library(plyranges)
 library(splines)
 
-
 # Functions ---------------------------------------------------------------
 
 # Function to extract vector of spline fit values for a gene
@@ -23,13 +22,15 @@ get_gene_ageCounts <- function(gene, dds){
   # Get coef matrix and design matrix for fitted spline
   coef_mat <- coef(dds)
   design_mat <- model.matrix(design(dds), colData(dds))
+  gene_logmu <- design_mat %*% coef_mat[gene,]
+  
   geneCounts <- plotCounts(dds, gene = gene,
                            intgroup = "Age",
                            normalized = TRUE,
                            returnData = TRUE) %>%
     rownames_to_column(var = "sample") |> 
     mutate(gene_id = gene,
-           logmu = design_mat %*% coef_mat[gene,])
+           logmu = gene_logmu[,1])
   return(geneCounts)
 }
 
@@ -84,18 +85,46 @@ age_de_analysis <- function(gse, condition){
     spline_curve_matrix - rowMeans(spline_curve_matrix)
   
   # Perform clustering
-  gene_clusters <- kmeans(spline_curve_matrix, 2)[["cluster"]]
+  gene_clusters <- kmeans(spline_curve_matrix_centered, 2)[["cluster"]]
   
-  # Join clusters with gene data
-  sig_age_genes$cluster <- gene_clusters 
+  # Join assigned clusters with gene data
+  sig_age_genes$cluster <- gene_clusters
   
-  # Get counts and spline fit for genes, split by sample, and join with gene 
-  # cluster information
-  lapply(sig_age_genes$gene_id,
-         get_gene_age_Counts, dds_age_lrt) |> 
+  # Get counts and spline fit for genes, split by sample, join with cluster
+  sample_gene_countFits <- lapply(sig_age_genes$gene_id,
+                                  get_gene_ageCounts, dds_age_lrt) |> 
     bind_rows() |> 
-    left_join(sig_age_genes, by = "gene_id") |> 
+    left_join(sig_age_genes, by = "gene_id") 
+  
+  
+  # Calculate lm per cluster to get general trend (increasing vs decreasing)
+  sample_gene_countFits_1 <- sample_gene_countFits |> 
+    filter(cluster == 1)
+  sample_gene_countFits_2 <- sample_gene_countFits |> 
+    filter(cluster == 2)
+  cluster_slopes <- data.frame(cluster = c(1, 2),
+                               slope = c(coef(lm(count ~ Age, sample_gene_countFits_1))[2],
+                                         coef(lm(count ~ Age , sample_gene_countFits_2))[2]))
+  # Designate more increasing cluster
+  increasingCluster <- cluster_slopes |> 
+    filter(slope == max(slope)) |> 
+    pull(cluster)
+  
+  decreasingCluster <- cluster_slopes |> 
+    filter(slope == min(slope)) |> 
+    pull(cluster)
+  
+  clusterLabels <- data.frame("cluster" = c(increasingCluster, decreasingCluster),
+                              "clusterSign" = c("+", "-"))
+  
+  # Join with sample gene data
+  pval01clusters <- sample_gene_countFits |> 
+    left_join(clusterLabels, by = "cluster") |> 
+    dplyr::select(-cluster) |> 
+    dplyr::rename(cluster = clusterSign) |> 
     write_csv(file = paste0("data/age_de/", filePrefix, "_pval01clusters.csv"))
+  
+  return(pval01clusters)
   
 }
 
@@ -103,7 +132,6 @@ age_de_analysis <- function(gse, condition){
 
 # Load gse object
 load("data/2023-04-19_gse.rda")
-#load("data/2023-09-27_gse.rda")
 
 # Read in donorSamplesheet for additional donor info
 donorSamplesheet <- read_csv("data/donorSamplesheet.csv") |> 
@@ -119,11 +147,37 @@ colnames(gse) <- paste0(colData(gse)[,"names"], "_", colData(gse)[,"Age"])
 
 # CTL ---------------------------------------------------------------------
 
-age_de_analysis(gse, condition = "CTL")
+ctl_age_pval01clusters <- age_de_analysis(gse, condition = "CTL")
 
 # FNF ---------------------------------------------------------------------
 
-age_de_analysis(gse, condition = "FNF")
+fnf_age_pval01clusters <- age_de_analysis(gse, condition = "FNF")
+
+# Run Homer for GO terms, KEGG pathways, and TF binding motifs ------------
+
+# Compile gene lists for cluster + and cluster -, getting unique genes and
+# making sure gene_id is column 6 for run_homer.sh
+all_cluster_up <- bind_rows(ctl_age_pval01clusters |> 
+                            filter(cluster == "+"),
+                          fnf_age_pval01clusters |> 
+                            filter(cluster == "+")) |> 
+  relocate(gene_id, .after = seqnames) |> 
+  distinct(gene_id, .keep_all = TRUE) |> 
+  write_csv("data/age_de/pval01_cluster_up.csv")
+
+all_cluster_down <- bind_rows(ctl_age_pval01clusters |> 
+                            filter(cluster == "-"),
+                          fnf_age_pval01clusters |> 
+                            filter(cluster == "-")) |> 
+  relocate(gene_id, .after = seqnames) |> 
+  distinct(gene_id, .keep_all = TRUE) |> 
+  write_csv("data/age_de/pval01_cluster_down.csv")
+
+# Cluster +
+system("scripts/run_homer.sh data/age_de/pval01_cluster_up.csv data/homer/homer_age_sig_cluster_up")
+
+# Cluster -
+system("scripts/run_homer.sh data/age_de/pval01_cluster_down.csv data/homer/homer_age_sig_cluster_down")
 
 
 
