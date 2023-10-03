@@ -1,5 +1,5 @@
 library(tidyverse)
-source("scripts/plotting_utils.R")
+source("../plotting_utils.R")
 
 # Plotting function -------------------------------------------------------
 

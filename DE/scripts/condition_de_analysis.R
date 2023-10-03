@@ -3,7 +3,7 @@ library(tidyverse)
 library(plyranges)
 
 # Load gse object
-load("data/2023-04-19_gse.rda")
+load("data/2023-10-03_gse.rda")
 
 # Read in donorSamplesheet for additional donor info
 donorSamplesheet <- read_csv("data/donorSamplesheet.csv") |> 

@@ -47,8 +47,8 @@
   
   <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,226,49)">T</text>
   <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.039,225,48.95)">G</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.142,225,47)">C</text>
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.818,227,39.9)">A</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.143,225,47)">C</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.817,227,39.85)">A</text>
   
   <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,252,49)">A</text>
   <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,251,48.95)">T</text>

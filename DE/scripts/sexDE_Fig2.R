@@ -7,7 +7,7 @@ library(ggtext)
 library(ggstar)
 library(plotgardener)
 library(ggvenn)
-source("scripts/plotting_utils.R")
+source("../plotting_utils.R")
 
 # Functions ---------------------------------------------------------------
 

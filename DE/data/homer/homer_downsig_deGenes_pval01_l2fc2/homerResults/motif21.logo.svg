@@ -1,64 +1,64 @@
 <svg width="305" height="50">
  <g font-family="Arial" font-weight="bold" font-size="66.5">
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.019,1,49)">T</text>
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.141,2,48.05)">A</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.245,0,41)">G</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.595,0,28.75)">C</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,2,49)">A</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.001,0,48.95)">C</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.001,0,48.9)">G</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.997,1,48.85)">T</text>
   
   <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,27,49)">A</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.017,25,48.95)">G</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.045,26,48.1)">T</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.937,25,45.85)">C</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.001,25,48.95)">C</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,26,48.9)">T</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.997,25,48.85)">G</text>
   
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.081,50,49)">C</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.091,51,44.95)">T</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.099,50,40.4)">G</text>
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.729,52,35.45)">A</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,52,49)">A</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.001,50,48.95)">G</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,51,48.9)">T</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.997,50,48.85)">C</text>
   
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,77,49)">A</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.011,76,48.95)">T</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.072,75,48.4)">C</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.916,75,44.8)">G</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.001,75,49)">C</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.001,75,48.95)">G</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.118,76,48.9)">T</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.880,77,43)">A</text>
   
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.010,102,49)">A</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.115,101,48.5)">T</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.145,100,42.75)">G</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.730,100,35.5)">C</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,102,49)">A</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.001,100,48.95)">C</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,101,48.9)">T</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.997,100,48.85)">G</text>
   
   <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,127,49)">A</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.005,126,48.95)">T</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.070,125,48.7)">G</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.924,125,45.2)">C</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.001,125,48.95)">C</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,126,48.9)">T</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.997,125,48.85)">G</text>
   
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.008,152,49)">A</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.016,151,48.6)">T</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.196,150,47.8)">G</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.780,150,38)">C</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,152,49)">A</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.001,150,48.95)">G</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.205,151,48.9)">T</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.793,150,38.65)">C</text>
   
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.005,177,49)">A</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.141,176,48.75)">T</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.148,175,41.7)">G</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.706,175,34.3)">C</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,177,49)">A</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.001,175,48.95)">C</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,176,48.9)">T</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.997,175,48.85)">G</text>
   
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.130,200,49)">C</text>
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.231,202,42.5)">A</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.272,200,30.95)">G</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.367,201,17.35)">T</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,202,49)">A</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.001,200,48.95)">G</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,201,48.9)">T</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.997,200,48.85)">C</text>
   
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.017,227,49)">A</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.018,225,48.15)">C</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.132,226,47.25)">T</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.833,225,40.65)">G</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,227,49)">A</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.001,225,48.95)">C</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,226,48.9)">T</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.997,225,48.85)">G</text>
   
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.012,250,49)">C</text>
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.076,251,48.4)">T</text>
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.086,252,44.6)">A</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.826,250,40.3)">G</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,252,49)">A</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.001,250,48.95)">G</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,251,48.9)">T</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.997,250,48.85)">C</text>
   
-  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.006,276,49)">T</text>
-  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.062,277,48.7)">A</text>
-  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.167,275,45.6)">G</text>
-  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.765,275,37.25)">C</text>
+  <text fill="#00BB00" x="0" y="0"  transform="matrix(0.53,0,0,0.001,277,49)">A</text>
+  <text fill="#DD0000" x="0" y="0"  transform="matrix(0.65,0,0,0.001,276,48.95)">T</text>
+  <text fill="#0000EE" x="0" y="0"  transform="matrix(0.59,0,0,0.174,275,48.9)">C</text>
+  <text fill="#F9A500" x="0" y="0"  transform="matrix(0.55,0,0,0.824,275,40.2)">G</text>
   
  </g>
 </svg>

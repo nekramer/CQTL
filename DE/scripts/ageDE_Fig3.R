@@ -7,7 +7,7 @@ library(RColorBrewer)
 library(splines)
 library(rrvgo)
 library(ggvenn)
-source("scripts/plotting_utils.R")
+source("../plotting_utils.R")
 
 # Functions ---------------------------------------------------------------
 

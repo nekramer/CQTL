@@ -11,7 +11,7 @@ library(patchwork)
 library(rsvg)
 library(grImport2)
 library(org.Hs.eg.db)
-source("scripts/plotting_utils.R")
+source("../plotting_utils.R")
 
 
 # Functions ---------------------------------------------------------------
@@ -138,7 +138,7 @@ h1 <- draw(Heatmap(mat_scaled,
                    show_column_dend = FALSE))
 # Get column order of clusters and swap CTL and FNF clusters
 col_order <- column_order(h1)
-new_col_order <- c(col_order[104:206], col_order[1:103])
+new_col_order <- c(col_order[103:204], col_order[1:102])
 
 # Plot heatmap with column order defined from clustering and CTL and FNF order above
 h1 <- Heatmap(mat_scaled,
