@@ -17,7 +17,7 @@ sex_de_analysis <- function(gse, condition){
   }
   
   # Build DESeq object
-  dds_sex <- DESeqDataSet(gse_analysis, design = ~Race + Age_group + Sex)
+  dds_sex <- DESeqDataSet(gse_analysis, design = ~Ancestry + Age_group + Sex)
   
   # Filter out lowly expressed genes
   keep <- rowSums(counts(dds_sex) >= 10) >= ceiling(nrow(colData(gse_analysis))*0.5)
@@ -59,14 +59,20 @@ sex_de_analysis <- function(gse, condition){
 
 # Load gse object
 load("data/2023-10-03_gse.rda")
+# Remove geno contaminated donor
+gse <- gse[, gse$Donor != "AM7352"]
 
-# Read in donorSamplesheet for additional donor info
-donorSamplesheet <- read_csv("data/donorSamplesheet.csv") |> 
-  mutate(Race = replace_na(Race, "Unknown"))
+donorSamplesheet <- read_csv("data/donorSamplesheet.csv") |>
+  dplyr::select(Donor, Sex, Age) |>
+  # Read in and join ancestries determined through genotyping pca
+  left_join(read_csv("data/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_COA6_COA7_predictedAncestry.csv") |>
+              separate_wider_delim(cols = "Donor", delim = "_",
+                                   names = c(NA, "Donor", NA), too_many = "drop"), by = "Donor") |>
+  dplyr::rename(Ancestry = Predicted_Ancestry)
 
 # Join gse colData with donorSamplesheet
 colData(gse) <- as(left_join(as.data.frame(colData(gse)),
-                             donorSamplesheet[,c("Donor", "Sex", "Age", "Race")],
+                             donorSamplesheet[,c("Donor", "Sex", "Age", "Ancestry")],
                              by = "Donor"), "DataFrame")
 
 ## Put Age into categories

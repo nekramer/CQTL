@@ -24,7 +24,7 @@ get_gene_ageCounts <- function(gene, dds){
   design_mat <- model.matrix(design(dds), colData(dds))
   gene_logmu <- design_mat %*% coef_mat[gene,]
   
-  geneCounts <- plotCounts(dds, gene = gene,
+  geneCounts <- DESeq2::plotCounts(dds, gene = gene,
                            intgroup = "Age",
                            normalized = TRUE,
                            returnData = TRUE) %>%
@@ -49,14 +49,14 @@ age_de_analysis <- function(gse, condition){
   
   # Build DESeq object
   dds_age <- DESeqDataSet(gse_analysis, 
-                          design = ~Sex + Race + ns(Age, df = 5))
+                          design = ~Sex + Ancestry + ns(Age, df = 5))
   
   # Filter out lowly expressed genes
   keep <- rowSums(counts(dds_age) >= 10) >= ceiling(nrow(colData(gse_analysis))*0.5)
   dds_age <- dds_age[keep,]
   
   # Perform LRT with reduced model without Age
-  dds_age_lrt <- DESeq(dds_age, test = "LRT", reduced = ~Sex + Race)
+  dds_age_lrt <- DESeq(dds_age, test = "LRT", reduced = ~Sex + Ancestry)
   
   # Rename and save dds
   assign(dds_name, dds_age_lrt)
@@ -64,7 +64,7 @@ age_de_analysis <- function(gse, condition){
   
   # Get significant genes and format
   sig_age_genes <- results(dds_age_lrt, format = "GRanges") |> 
-    filter(padj < 0.01) |> 
+    filter(padj < 0.05) |> 
     plyranges::names_to_column("gene_id") |> 
     as.data.frame() |> 
     inner_join(as.data.frame(rowData(gse_analysis)) |> 
@@ -118,13 +118,13 @@ age_de_analysis <- function(gse, condition){
                               "clusterSign" = c("+", "-"))
   
   # Join with sample gene data
-  pval01clusters <- sample_gene_countFits |> 
+  pval05clusters <- sample_gene_countFits |> 
     left_join(clusterLabels, by = "cluster") |> 
     dplyr::select(-cluster) |> 
     dplyr::rename(cluster = clusterSign) |> 
-    write_csv(file = paste0("data/age_de/", filePrefix, "_pval01clusters.csv"))
+    write_csv(file = paste0("data/age_de/", filePrefix, "_pval05clusters.csv"))
   
-  return(pval01clusters)
+  return(pval05clusters)
   
 }
 
@@ -132,15 +132,20 @@ age_de_analysis <- function(gse, condition){
 
 # Load gse object
 load("data/2023-10-03_gse.rda")
+# Remove geno-contaminated donor
+gse <- gse[, gse$Donor != "AM7352"]
 
-
-# Read in donorSamplesheet for additional donor info
-donorSamplesheet <- read_csv("data/donorSamplesheet.csv") |> 
-  mutate(Race = replace_na(Race, "Unknown"))
+donorSamplesheet <- read_csv("data/donorSamplesheet.csv") |>
+  dplyr::select(Donor, Sex, Age) |>
+  # Read in and join ancestries determined through genotyping pca
+  left_join(read_csv("data/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_COA6_COA7_predictedAncestry.csv") |>
+              separate_wider_delim(cols = "Donor", delim = "_",
+                                   names = c(NA, "Donor", NA), too_many = "drop"), by = "Donor") |>
+  dplyr::rename(Ancestry = Predicted_Ancestry)
 
 # Join gse colData with donorSamplesheet
 colData(gse) <- as(left_join(as.data.frame(colData(gse)),
-                             donorSamplesheet[,c("Donor", "Sex", "Age", "Race")],
+                             donorSamplesheet,
                              by = "Donor"), "DataFrame")
 
 # Add colnames based on sample name/Age
@@ -148,37 +153,34 @@ colnames(gse) <- paste0(colData(gse)[,"names"], "_", colData(gse)[,"Age"])
 
 # CTL ---------------------------------------------------------------------
 
-ctl_age_pval01clusters <- age_de_analysis(gse, condition = "CTL")
+ctl_age_pval05clusters <- age_de_analysis(gse, condition = "CTL")
 
 # FNF ---------------------------------------------------------------------
 
-fnf_age_pval01clusters <- age_de_analysis(gse, condition = "FNF")
+fnf_age_pval05clusters <- age_de_analysis(gse, condition = "FNF")
 
 # Run Homer for GO terms, KEGG pathways, and TF binding motifs ------------
 
 # Compile gene lists for cluster + and cluster -, getting unique genes and
 # making sure gene_id is column 6 for run_homer.sh
-all_cluster_up <- bind_rows(ctl_age_pval01clusters |> 
+all_cluster_up <- bind_rows(ctl_age_pval05clusters |> 
                             filter(cluster == "+"),
-                          fnf_age_pval01clusters |> 
+                          fnf_age_pval05clusters |> 
                             filter(cluster == "+")) |> 
   relocate(gene_id, .after = seqnames) |> 
   distinct(gene_id, .keep_all = TRUE) |> 
-  write_csv("data/age_de/pval01_cluster_up.csv")
+  write_csv("data/age_de/pval05_cluster_up.csv")
 
-all_cluster_down <- bind_rows(ctl_age_pval01clusters |> 
+all_cluster_down <- bind_rows(ctl_age_pval05clusters |> 
                             filter(cluster == "-"),
-                          fnf_age_pval01clusters |> 
+                          fnf_age_pval05clusters |> 
                             filter(cluster == "-")) |> 
   relocate(gene_id, .after = seqnames) |> 
   distinct(gene_id, .keep_all = TRUE) |> 
-  write_csv("data/age_de/pval01_cluster_down.csv")
+  write_csv("data/age_de/pval05_cluster_down.csv")
 
 # Cluster +
-system("scripts/run_homer.sh data/age_de/pval01_cluster_up.csv data/homer/homer_age_sig_cluster_up")
+system("scripts/run_homer.sh data/age_de/pval05_cluster_up.csv data/homer/homer_age_sig_cluster_up")
 
 # Cluster -
-system("scripts/run_homer.sh data/age_de/pval01_cluster_down.csv data/homer/homer_age_sig_cluster_down")
-
-
-
+system("scripts/run_homer.sh data/age_de/pval05_cluster_down.csv data/homer/homer_age_sig_cluster_down")

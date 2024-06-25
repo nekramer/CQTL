@@ -1,17 +1,25 @@
 library(DESeq2)
 library(tidyverse)
 library(plyranges)
+library(googledrive)
+library(googlesheets4)
 
 # Load gse object
 load("data/2023-10-03_gse.rda")
-
+# Remove geno-contaminated donor
+gse <- gse[, gse$Donor != "AM7352"]
 # Read in donorSamplesheet for additional donor info
 donorSamplesheet <- read_csv("data/donorSamplesheet.csv") |> 
-  mutate(Race = replace_na(Race, "Unknown"))
+  mutate(Race = replace_na(Race, "Unknown")) |> 
+  dplyr::select(Donor, Sex, Age) |> 
+  # Read in and join ancestries determined through genotyping pca
+  left_join(read_csv("data/CQTL_COA_01_GDA8_COA2_01_COA3_01_GDA8_COA4_COA5_COA6_COA7_predictedAncestry.csv") |> 
+              separate_wider_delim(cols = "Donor", delim = "_", 
+                                   names = c(NA, "Donor", NA), too_many = "drop"), by = "Donor")
 
 # Join gse colData with donorSamplesheet
 colData(gse) <- as(left_join(as.data.frame(colData(gse)),
-                             donorSamplesheet[,c("Donor", "Sex", "Age", "Race")],
+                             donorSamplesheet,
                              by = "Donor"), "DataFrame")
 # Convert colData to factors
 colData(gse)[] <- lapply(colData(gse), factor)
@@ -48,7 +56,43 @@ de_genes_shrink <-
 ## Save l2fc-shrunken results
 write_csv(de_genes_shrink, file = "data/condition_de/de_genes_results.csv")
 
-# Get significant genes
+
+## Reformat and write to supplementary table
+sup_table_de <- de_genes_shrink |> 
+  dplyr::select(symbol, gene_id, padj, log2FoldChange) |> 
+  mutate(`FNF response` = case_when(padj < 0.01 &
+                                      abs(log2FoldChange) > 2 &
+                                      log2FoldChange < 0 ~ "---",
+                                    padj < 0.01 &
+                                      abs(log2FoldChange) > 2 &
+                                      log2FoldChange > 0 ~ "+++", 
+                                    padj < 0.05 &
+                                      abs(log2FoldChange) > 1 &
+                                      log2FoldChange < 0 ~ "-",
+                                    padj < 0.05 & 
+                                      abs(log2FoldChange) > 1 &
+                                      log2FoldChange > 0 ~ "+")) |> 
+  filter(!is.na(`FNF response`)) |> 
+  arrange(symbol)
+
+write_csv(sup_table_de, file = "tables/SupTable1.csv")
+
+# Write to google drive
+ss <- gs4_create(name = "SupTable1")
+write_sheet(sup_table_de,
+            ss, sheet = "Sheet1")
+drive_mv(file = "SupTable1", path = as_dribble("CQTL paper/Figures and Tables"))
+
+ # Significant genes at various thresholds ---------------------------------
+
+sig_deGenes_pval05_l2fc1 <- de_genes_shrink |> 
+  filter(padj < 0.05 & abs(log2FoldChange) > 1) |> 
+  write_csv("data/condition_de/sig_deGenes_pval05_l2fc1.csv")
+
+sig_deGenes_pval01_l2fc1 <- de_genes_shrink |> 
+  filter(padj < 0.01 & abs(log2FoldChange) > 1) |> 
+  write_csv("data/condition_de/sig_deGenes_pval01_l2fc1.csv")
+
 sig_deGenes_pval01_l2fc2 <- de_genes_shrink |> 
   filter(padj < 0.01 & abs(log2FoldChange) > 2) |> 
   write_csv("data/condition_de/sig_deGenes_pval01_l2fc2.csv")
@@ -60,7 +104,6 @@ upsig_deGenes_pval01_l2fc2 <- sig_deGenes_pval01_l2fc2 |>
 downsig_deGenes_pval01_l2fc2 <- sig_deGenes_pval01_l2fc2 |> 
   filter(log2FoldChange < 0) |> 
   write_csv("data/condition_de/downsig_deGenes_pval01_l2fc2.csv")
-
 
 # Run Homer for GO terms, KEGG pathways, and TF binding motifs ------------
 
