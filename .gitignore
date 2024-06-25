@@ -3,11 +3,9 @@
 .RData
 .Ruserdata
 *.out
-Genopipe/Genopipe-*.out
-Genopipe/.snakemake/*
-Genopipe/env/*
-Genopipe/output/*
-eQTL/.snakemake/*
-eQTL/*.out
-eQTL/env/*
-eQTL/output/*
+DE/data/*
+DE/plots/*
+DE/tables/*
+qtl/data/*
+qtl/plots/*
+qtl/tables/*

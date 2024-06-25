@@ -1,5 +1,0 @@
-data/processed/*
-data/*_gse.rda
-data/*_de/*.rda
-plots/.tiff
-plots/*.log
