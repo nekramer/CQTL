@@ -927,27 +927,36 @@ save(motifImages, file = "plots/conditionDE_Fig1/motifImages.rda")
 
 # COMPARISON WITH OA EXPRESSION FROM OTHER STUDIES  ----------------------------
 
-raak_de_genes <- read_csv("data/RAAK/RAAK_TableS3.csv", skip = 1) |> 
+
+
+raak_de_genes <- read_csv("/proj/phanstiel_lab/External/public/RAAK_2014/RAAK_TableS3.csv", skip = 1) |> 
   dplyr::rename(symbol = GeneSYMBOL) |> 
   mutate(log2FoldChange = log2(FC),
          dir = ifelse(log2FoldChange > 0, "up", "down")) |> 
   filter(Pval < 0.05) |> 
-  dplyr::select(-Pval)
+  dplyr::rename(pval = Pval)
+  #dplyr::select(-Pval)
 
-fisch2018_de_genes <- read_csv("data/GSE114007/1-s2.0-S1063458418313876-mmc1.csv",
+
+
+fisch2018_de_genes <- read_csv("/proj/phanstiel_lab/External/public/Fisch_2018/1-s2.0-S1063458418313876-mmc1.csv",
                                col_names = c("symbol", "log2FoldChange", "padj"),
                                col_select = c(1,2, 3), n_max = 12475) |> 
   filter(padj < 0.05) |> 
   mutate(dir = ifelse(log2FoldChange > 0, "up", "down")) |> 
-  dplyr::select(-padj)
+  #dplyr::select(-padj)
+  dplyr::rename(pval = padj)
 
-fu2021_de_genes <- read_csv("../DE/data/GSE168505/GSE168505_deseq_res.csv",
+
+
+fu2021_de_genes <- read_csv("/proj/phanstiel_lab/External/public/Fu_2022/GSE168505_deseq_res.csv",
                             col_select = c("symbol", "log2FoldChange", "padj")) |> 
   filter(padj < 0.05) |> 
   mutate(dir = ifelse(log2FoldChange > 0, "up", "down")) |> 
   dplyr::rename(log2FoldChange_Fu = log2FoldChange,
                 dir_Fu = dir) |> 
-  dplyr::select(-padj)
+  dplyr::rename(pval_Fu = padj)
+  #dplyr::select(-padj)
 
 intersection_raak_fisch_fu <- full_join(raak_de_genes, fisch2018_de_genes, by = "symbol", 
                                         suffix = c("_RAAK", "_Fisch")) |> 
@@ -959,6 +968,17 @@ intersection_raak_fisch_fu <- full_join(raak_de_genes, fisch2018_de_genes, by = 
                           dir_RAAK == dir_Fu, "yes", "no")) |> 
   ungroup() |> 
   filter(agree == "yes")
+
+
+## Write intersection gene to table
+intersection_raak_fisch_fu |> 
+  dplyr::select(symbol, pval_RAAK, log2FoldChange_RAAK,
+                pval_Fisch, log2FoldChange_Fisch,
+                pval_Fu, log2FoldChange_Fu, dir_Fu) |> 
+  dplyr::rename(gene = symbol,
+                `up/down` = dir_Fu) |> 
+  write_csv("tables/oa_consensus_table.csv")
+
 
 up_intersection_raak_fisch_fu <- intersection_raak_fisch_fu |> 
   filter(dir_RAAK == "up")

@@ -198,6 +198,49 @@ make_lead_eGene_gi <- function(eSNP_eGene, promoters_mapped_genes){
   
 }
 
+
+# Function to create a GInteractions object between a signal's
+# lead variant/ldbuddies and it's eGene's promoters 
+make_lead_ld_eGene_gi <- function(eSNP_eGene, promoters_mapped_genes){
+  eGene_id <- eSNP_eGene[["gene_id"]]
+  chrom <- eSNP_eGene[["gene_chr"]]
+  #lead_var_pos <- as.numeric(eSNP_eGene[["variant_start"]])
+  #variantID <- eSNP_eGene[["variantID"]]
+  #print(variantID)
+  ld_variant_pos <- as.numeric(unlist(str_split(eSNP_eGene[["ld_variantID"]], ":"))[2])
+  ld_variantID <- eSNP_eGene[["ld_variantID"]]
+  print(ld_variantID)
+  
+  # Make GRanges for lead variant
+  ld_var_gr <- GRanges(seqnames = chrom,
+                         ranges = IRanges(start = ld_variant_pos,
+                                          end = ld_variant_pos))
+  
+  
+  # Grab eGene_id promoter ranges
+  eGene_promoters <- promoters_mapped_genes |> 
+    filter(GENEID == eGene_id)
+  
+  if (length(eGene_promoters) > 0){
+    # Create GInteractions between the lead/ld variants and these promoters
+    ld_eGene_gr <- GInteractions(anchor1 = rep(ld_var_gr, length(eGene_promoters)), 
+                                   anchor2 = eGene_promoters,
+                                   ld_variantID = ld_variantID)
+    # Rename anchor2.GENEID column and anchor2.TXID column
+    ld_eGene_gr$gene_id <- ld_eGene_gr$anchor2.GENEID
+    ld_eGene_gr$anchor2.GENEID <- NULL
+    ld_eGene_gr$tx_id <- ld_eGene_gr$anchor2.TXID
+    ld_eGene_gr$anchor2.TXID <- NULL
+  } else {
+    # If no gene info, create empty GInteractions
+    ld_eGene_gr <- GInteractions(ld_variantID = ld_variantID, 
+                                   gene_id = eGene_id, tx_id = eGene_id)
+  }
+  
+  return(ld_eGene_gr)
+  
+}
+
 # Function to create a GInteractions object between a signal's
 # lead variant and other genes that aren't its eGene and are +- 1Mb away
 make_lead_gene_gi <- function(eSNP_eGene, promoters_mapped_genes){
@@ -228,6 +271,43 @@ make_lead_gene_gi <- function(eSNP_eGene, promoters_mapped_genes){
   lead_gene_gr$anchor2.TXID <- NULL
   
   return(lead_gene_gr)
+  
+}
+
+# Function to create a GInteractions object between a signal's
+# lead variant/ld buddies and other genes that aren't its eGene and are +- 1Mb away
+make_lead_ld_gene_gi <- function(eSNP_eGene, promoters_mapped_genes){
+  eGene_id <- eSNP_eGene[["gene_id"]]
+  chrom <- eSNP_eGene[["gene_chr"]]
+  #lead_var_pos <- as.numeric(eSNP_eGene[["variant_start"]])
+  #variantID <- eSNP_eGene[["variantID"]]
+  #print(variantID)
+  ld_variant_pos <- as.numeric(unlist(str_split(eSNP_eGene[["ld_variantID"]], ":"))[2])
+  ld_variantID <- eSNP_eGene[["ld_variantID"]]
+  print(ld_variantID)
+  
+  # Make GRanges for lead variant
+  ld_var_gr <- GRanges(seqnames = chrom,
+                         ranges = IRanges(start = ld_variant_pos,
+                                          end = ld_variant_pos))
+  
+  
+  # Grab gene promoter ranges for every gene except the eGene
+  gene_promoters <- promoters_mapped_genes |> 
+    filter(seqnames == chrom & start > ld_variant_pos - 1000000 & end < ld_variant_pos + 1000000) |> 
+    filter(GENEID != eGene_id)
+  
+  # Create GInteractions between the lead and these promoters
+  ld_gene_gr <- GInteractions(anchor1 = rep(ld_var_gr, length(gene_promoters)), 
+                                anchor2 = gene_promoters,
+                                ld_variantID = ld_variantID)
+  # Rename anchor2.GENEID column and anchor2.TXID column
+  ld_gene_gr$gene_id <- ld_gene_gr$anchor2.GENEID
+  ld_gene_gr$anchor2.GENEID <- NULL
+  ld_gene_gr$tx_id <- ld_gene_gr$anchor2.TXID
+  ld_gene_gr$anchor2.TXID <- NULL
+  
+  return(ld_gene_gr)
   
 }
 
@@ -422,89 +502,116 @@ ensembl_promoter_genes$GENEID <- as.character(ensembl_promoter_genes$GENEID)
 #### CREATE GINTERACTIONS OBJECTS BETWEEN DISTAL LEAD SNPS AND GENE PROMOTERS
 #### FOR PIXEL EXTRACTION
 
-# Create GInteractions between distal lead snps and eGene promoters
+# Grab distal lead snps
 distal_all_signals_signalRanges <- read_csv("tables/eGenes_signals_distal_looping.csv")
-lead_eGene_promoters <- apply(distal_all_signals_signalRanges, 1, make_lead_eGene_gi, ensembl_promoter_genes)
-lead_eGene_promoters <- do.call(c, lead_eGene_promoters)
+
+# Get LD buddies > 0.8 for these distal leads
+pbs_ld08 <- fread("/proj/phanstiel_lab/Data/processed/CQTL/eqtl/CTL_PEER_k20_genoPC_cond1Mb_topSignals_rsID_LD.csv",
+                  data.table = FALSE) |> 
+  filter(R2 >= 0.8) |> 
+  dplyr::select(rsID, gene_id, signal, ld_variantID) |> 
+  mutate(Condition = "PBS")
+
+fnf_ld08 <- fread("/proj/phanstiel_lab/Data/processed/CQTL/eqtl/FNF_PEER_k22_genoPC_cond1Mb_topSignals_rsID_LD.csv",
+                  data.table = FALSE) |> 
+  filter(R2 >= 0.8) |> 
+  dplyr::select(rsID, gene_id, signal, ld_variantID) |> 
+  mutate(Condition = "FN-f")
+
+
+distal_all_signals_signalRanges_ld08 <- distal_all_signals_signalRanges |> 
+  left_join(bind_rows(pbs_ld08, fnf_ld08), by = c("rsID",
+                                                  "gene_id",
+                                                  "signal",
+                                                  "Condition"))
+
+
+# Create GInteractions between distal lead snps and eGene promoters
+lead_ld_eGene_promoters <- apply(distal_all_signals_signalRanges_ld08, 1, 
+                                 make_lead_ld_eGene_gi, ensembl_promoter_genes)
+lead_ld_eGene_promoters <- do.call(c, lead_ld_eGene_promoters)
 
 # Create GInteractions between distal lead snps and other genes within 2Mb window
 # that aren't the eGene
-lead_othergene_promoters <- apply(distal_all_signals_signalRanges, 1, make_lead_gene_gi, ensembl_promoter_genes)
-lead_othergene_promoters <- do.call(c, lead_othergene_promoters)
+lead_ld_othergene_promoters <- apply(distal_all_signals_signalRanges_ld08, 1, 
+                                  make_lead_ld_gene_gi, ensembl_promoter_genes)
+lead_ld_othergene_promoters <- do.call(c, lead_ld_othergene_promoters)
 
 # Make interactions 5kb
-lead_eGene_promoters_5kb <- snapToBins(lead_eGene_promoters, binSize = 5000)
-lead_othergene_promoters_5kb <- snapToBins(lead_othergene_promoters, binSize = 5000)
+#lead_ld_eGene_promoters_5kb <- snapToBins(lead_ld_eGene_promoters, binSize = 5000)
+lead_ld_eGene_promoters_5kb <- binPairs(lead_ld_eGene_promoters_5kb, binSize = 5000)
+#lead_ld_othergene_promoters_5kb <- snapToBins(lead_ld_othergene_promoters, binSize = 5000)
+lead_ld_othergene_promoters_5kb <- binPairs(lead_ld_othergene_promoters_5kb, binSize = 5000)
 
 # Save objects
-save(lead_eGene_promoters_5kb, file = "data/hic/lead_eGene_promoters_5kb.rda")
-save(lead_othergene_promoters_5kb, file = "data/hic/lead_othergene_promoters_5kb.rda")
+save(lead_ld_eGene_promoters_5kb, file = "data/hic/lead_ld_eGene_promoters_5kb.rda")
+save(lead_ld_othergene_promoters_5kb, file = "data/hic/lead_ld_othergene_promoters_5kb.rda")
 
 #### PULL PIXELS
-lead_eGene_promoters_5kb_pixels <- pullHicPixels(lead_eGene_promoters_10kb, 
-                                                 files = c("data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_PBS_inter_30.hic",
-                                                           "data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_FNF_inter_30.hic"),
+lead_ld_eGene_promoters_5kb_pixels <- pullHicPixels(lead_ld_eGene_promoters_5kb, 
+                                                 files = c("/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/PBS_inter_30.hic",
+                                                           "/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/FNF_inter_30.hic"),
                                                  binSize = 5000, norm = "SCALE",
-                                                 h5File = "data/hic/lead_eGene_promoter_5kb_pixels.h5")
-save(lead_eGene_promoters_5kb_pixels, file = "data/hic/lead_eGene_promoter_5kb_pixels.rda")
+                                                 h5File = "data/hic/lead_ld_eGene_promoter_5kb_pixels.h5")
+save(lead_ld_eGene_promoters_5kb_pixels, file = "data/hic/lead_ld_eGene_promoter_5kb_pixels.rda")
 
-lead_othergene_promoters_5kb_pixels <- pullHicPixels(lead_othergene_promoters_5kb, 
-                                                     files = c("data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_PBS_inter_30.hic",
-                                                               "data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_FNF_inter_30.hic"),
+lead_ld_othergene_promoters_5kb_pixels <- pullHicPixels(lead_ld_othergene_promoters_5kb, 
+                                                     files = c("/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/PBS_inter_30.hic",
+                                                               "/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/FNF_inter_30.hic"),
                                                      binSize = 5000, norm = "SCALE",
-                                                     h5File = "data/hic/lead_othergene_promoter_5kb_pixels.h5")
-save(lead_othergene_promoters_5kb_pixels, file = "data/hic/lead_othergene_promoter_5kb_pixels.rda")
+                                                     h5File = "data/hic/lead_ld_othergene_promoter_5kb_pixels.h5")
+save(lead_ld_othergene_promoters_5kb_pixels, file = "data/hic/lead_ld_othergene_promoter_5kb_pixels.rda")
 
 #### COMBINE INTERACTIONS AND COUNT INFO
 
-lead_eGene_promoters_5kb_pixels_counts <- interactions(lead_eGene_promoters_5kb_pixels) |> 
+lead_ld_eGene_promoters_5kb_pixels_counts <- interactions(lead_ld_eGene_promoters_5kb_pixels) |> 
   as.data.frame() |> 
-  bind_cols(counts(lead_eGene_promoters_5kb_pixels) |> as.data.frame()) |> 
+  bind_cols(counts(lead_ld_eGene_promoters_5kb_pixels) |> as.data.frame()) |> 
   # Mark as being an eGene pixel
   mutate(gene_category = "eGene") |> 
   as_ginteractions() 
 
 
-lead_othergene_promoters_5kb_pixels_counts <- interactions(lead_othergene_promoters_5kb_pixels) |> 
+lead_ld_othergene_promoters_5kb_pixels_counts <- interactions(lead_ld_othergene_promoters_5kb_pixels) |> 
   as.data.frame() |> 
-  bind_cols(counts(lead_othergene_promoters_5kb_pixels) |> as.data.frame()) |> 
+  bind_cols(counts(lead_ld_othergene_promoters_5kb_pixels) |> as.data.frame()) |> 
   # Mark as being a pixel for another gene
   mutate(gene_category = "other") |> 
   as_ginteractions()
 
 # Join both together
-distal_leadVar_gene_pixel_counts <- c(lead_eGene_promoters_5kb_pixels_counts,
-                                      lead_othergene_promoters_5kb_pixels_counts) 
+distal_leadVar_ld_gene_pixel_counts <- c(lead_ld_eGene_promoters_5kb_pixels_counts,
+                                      lead_ld_othergene_promoters_5kb_pixels_counts) 
 
 # Calculate distances between variant range and gene promoter range 
-distal_leadVar_gene_pixel_counts$ranges_distance <- calculateDistances(distal_leadVar_gene_pixel_counts)
+distal_leadVar_ld_gene_pixel_counts$ranges_distance <- calculateDistances(distal_leadVar_ld_gene_pixel_counts)
 
 # Calculate total contact frequency by summing counts across Hi-C files
-distal_leadVar_gene_pixel_counts$contact_freq <- apply(mcols(distal_leadVar_gene_pixel_counts)[grep("*inter_30.hic",
-                                                                                                    colnames(mcols(distal_leadVar_gene_pixel_counts)))], 1, sum)
+distal_leadVar_ld_gene_pixel_counts$contact_freq <- apply(mcols(distal_leadVar_ld_gene_pixel_counts)[grep("*inter_30.hic",
+                                                                                                    colnames(mcols(distal_leadVar_ld_gene_pixel_counts)))], 1, sum)
 
 # Condense to one gene
-distal_leadVar_gene_pixel_counts <- distal_leadVar_gene_pixel_counts |> 
+distal_leadVar_ld_gene_pixel_counts <- distal_leadVar_ld_gene_pixel_counts |> 
   as_tibble() |> 
   # Average contact frequency and range distance across variant/gene
-  group_by(gene_id, variantID) |> 
+  group_by(gene_id, ld_variantID) |> 
   mutate(mean_contact_freq = mean(contact_freq),
          mean_range_distance = mean(ranges_distance)) |> 
   ungroup() |> 
   # Keep first instance of gene
-  distinct(variantID, gene_id, .keep_all = TRUE) |> 
+  distinct(ld_variantID, gene_id, .keep_all = TRUE) |> 
   as.data.frame() |> 
   as_ginteractions()
 
 #### NULLRANGES FOR DISTANCE-MATCHING
 # Generate pixel matches based on the ranges_distance between variant and gene
 # Focal is eGene pixels and pool is other gene pixels
-distal_leadVar_pixel_matches <- matchRanges(focal = distal_leadVar_gene_pixel_counts[distal_leadVar_gene_pixel_counts$gene_category == "eGene"],
-                                            pool = distal_leadVar_gene_pixel_counts[distal_leadVar_gene_pixel_counts$gene_category == "other"],
+distal_leadVar_ld_pixel_matches <- matchRanges(focal = distal_leadVar_ld_gene_pixel_counts[distal_leadVar_ld_gene_pixel_counts$gene_category == "eGene"],
+                                            pool = distal_leadVar_ld_gene_pixel_counts[distal_leadVar_ld_gene_pixel_counts$gene_category == "other"],
                                             covar = ~mean_range_distance, replace = FALSE, method = "rejection")
 
-save(distal_leadVar_pixel_matches, 
-     file = "data/hic/distal_leadVar_pixel_matches.rda")
+save(distal_leadVar_ld_pixel_matches, 
+     file = "data/hic/distal_leadVar_ld_pixel_matches.rda")
 
 # CONTACT FREQUENCY OF DISTAL PBS-SPECIFIC, SHARED, AND FNF-SPECIFIC EQTLS -----
 
@@ -523,16 +630,16 @@ ensembl_promoter_genes <- promoters(ensembl_txdb, columns = c("GENEID", "TXID"))
 ensembl_promoter_genes$GENEID <- as.character(ensembl_promoter_genes$GENEID)
 
 #### Distal high-confidence PBS and FN-f-specific eGenes
-pbs_distal_highconf_regenes <- read_csv("data/reqtl/CTL_sig01_beta_donor_reQTLs_PEER_k20_genoPC.csv") |> 
+pbs_distal_highconf_regenes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/reqtl/CTL_sig01_beta_donor_reQTLs_PEER_k20_genoPC.csv") |> 
   filter(gene_id %in% distal_all_signals_signalRanges$gene_id)
-fnf_distal_highconf_regenes <- read_csv("data/reqtl/FNF_sig01_beta_donor_reQTLs_PEER_k22_genoPC.csv") |> 
+fnf_distal_highconf_regenes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/reqtl/FNF_sig01_beta_donor_reQTLs_PEER_k22_genoPC.csv") |> 
   filter(gene_id %in% distal_all_signals_signalRanges$gene_id)
 
 # Distal shared eGenes
-pbs_distal_egenes <- read_csv("data/eqtl/CTL_PEER_k20_genoPC_perm1Mb_sig_rsID.csv") |> 
+pbs_distal_egenes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/eqtl/CTL_PEER_k20_genoPC_perm1Mb_sig_rsID.csv") |> 
   filter(gene_id %in% distal_all_signals_signalRanges$gene_id) |> 
   pull(gene_id)
-fnf_distal_egenes <- read_csv("data/eqtl/FNF_PEER_k22_genoPC_perm1Mb_sig_rsID.csv") |> 
+fnf_distal_egenes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/eqtl/FNF_PEER_k22_genoPC_perm1Mb_sig_rsID.csv") |> 
   filter(gene_id %in% distal_all_signals_signalRanges$gene_id) |> 
   pull(gene_id)
 

@@ -1,6 +1,7 @@
 library(DESeq2)
 library(tidyverse)
 library(plyranges)
+source("../utils.R")
 
 # Functions ---------------------------------------------------------------
 
@@ -93,6 +94,94 @@ sex_de_analysis(gse, condition = "CTL")
 
 sex_de_analysis(gse, condition = "FNF")
 
+# GO/KEGG on autosomal genes ----------------------------------------------
+
+ctl_sig_genes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/ctl_sexDE_pval01.csv") |> 
+  dplyr::select(seqnames, gene_id)
+fnf_sig_genes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/fnf_sexDE_pval01.csv") |> 
+  dplyr::select(seqnames, gene_id)
+# Get union list
+
+bind_rows(ctl_sig_genes, fnf_sig_genes) |> 
+  distinct() |> 
+  # Filter for autososmes
+  filter(!seqnames %in% c("X", "Y")) |> 
+  dplyr::select(-seqnames) |> 
+  write_delim(file = "data/sex/autosome_sex_de_genes.txt",
+              col_names = FALSE)
+
+## GO
+sex_autosome_go <- 
+  read_delim("data/sex/autosome_sex_homer/biological_process.txt") |> 
+  mutate(pval = exp(1)^logP) |> 
+  filter(pval < 0.01)
+sex_autosome_go_red <- reduceGO(sex_autosome_go,
+                               category = "sex_autosome")
+
+sex_autosome_go_red |> 
+  dplyr::select(-`Entrez Gene IDs`, -pval, -logP, -size, -termUniqueness, -termUniquenessWithinCluster,
+                -termDispensability, -category) |> 
+  relocate(`-log10pval`, .after = Enrichment) |> 
+  arrange(desc(`-log10pval`)) |> 
+  write_csv(file = "sex_autosome_GO_sigres.csv")
+## KEGG
+
+sex_autosome_kegg <- read_delim("data/sex/autosome_sex_homer/kegg.txt") |> 
+  mutate(pval = exp(1)^logP) |> 
+  filter(pval < 0.01) |> 
+  distinct(Term, .keep_all = TRUE) |> 
+  mutate(`-log10pval` = -log10(pval))
+
+
+
+# variability across sex de genes -----------------------------------------
+
+ctl_sig_genes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/ctl_sexDE_pval01.csv")
+fnf_sig_genes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/fnf_sexDE_pval01.csv")
+
+union_sig_genes <- union(ctl_sig_genes$gene_id, fnf_sig_genes$gene_id)
+
+load("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/dds_sex_ctl.rda")
+load("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/dds_sex_fnf.rda")
+
+sex_gene_counts <- list()
+for (geneid in union_sig_genes){
+  
+  ctl_gene_counts <- get_gene_sex_Counts(gene = geneid, dds = dds_sex_ctl) |> 
+    mutate(condition = "PBS")
+  fnf_gene_counts <- get_gene_sex_Counts(gene = geneid, dds = dds_sex_fnf) |> 
+    mutate(condition = "FN-f")
+  all_gene_counts <- bind_rows(ctl_gene_counts, fnf_gene_counts)
+  sex_gene_counts[[geneid]] <- all_gene_counts
+}
+
+sex_gene_counts <- bind_rows(sex_gene_counts)
+
+
+
+sex_intersect <- intersect(ctl_sig_genes$gene_id,
+                           fnf_sig_genes$gene_id)
+
+ctl_only <- ctl_sig_genes$gene_id[!ctl_sig_genes$gene_id %in% sex_intersect]
+fnf_only <- fnf_sig_genes$gene_id[!fnf_sig_genes$gene_id %in% sex_intersect]
+
+
+sex_gene_counts |> 
+  mutate(gene_category = case_when(gene_id %in% sex_intersect ~ "PBS and FN-f",
+                                   gene_id %in% ctl_only ~ "PBS only",
+                                   gene_id %in% fnf_only ~ "FN-f only"),
+         condition = factor(condition, levels = c("PBS", "FN-f"))) |> 
+  filter(!is.na(gene_category)) |> 
+  ggplot(aes(x = gene_id, y = log2(count),
+                            color = condition)) +
+  geom_point(position = position_dodge(width = 0.7), size = 0.25) +
+  geom_boxplot(fill = NA, outlier.shape = NA) +
+  facet_wrap(vars(gene_category), nrow = 3, ncol = 1, drop = TRUE, scales = "free") +
+  scale_color_manual(values = c(log2fcColors[["-"]], log2fcColors[["+"]])) +
+  theme_minimal() +
+  theme(axis.text.x = element_blank())
+
+
 # RESPONSE TO TREATMENT ---------------------------------------------------
 
 # Create ind.n in colData to number within each group
@@ -134,4 +223,6 @@ sexDE_treatmenteffect_pval01 <- results(dds_sex_treatment_response,
   as.data.frame() |> 
   filter(padj < 0.01) |> 
   write_csv(file = "data/sex_de/sexDE_treatmenteffect_pval01.csv")
+
+
 

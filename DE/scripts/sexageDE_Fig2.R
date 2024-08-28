@@ -13,8 +13,8 @@ source("../plotting_utils.R")
 
 # SEX DE HEATMAP -----------------------------------------------------------------
 
-ctl_sig_genes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv")
-fnf_sig_genes <- read_csv("data/sex_de/fnf_sexDE_pval01.csv")
+ctl_sig_genes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/ctl_sexDE_pval01.csv")
+fnf_sig_genes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/ctl_sexDE_pval01.csv")
 
 union_sig_genes <- union(ctl_sig_genes$gene_id, fnf_sig_genes$gene_id)
 
@@ -268,20 +268,29 @@ pbs_fnf_sex_l2fc <- bind_rows(ctl_sex_results,
 ## PBS/FNF chond effect sizes
 chond_sb_l2fc <- ggplot(pbs_fnf_sex_l2fc, aes(x = group, y = log2FoldChange, fill = sex)) +
   geom_hline(yintercept = 0, lty = 2, linewidth = 0.2) +
+  geom_text(data = tibble(group = c("shared", "shared", "shared", "shared",
+                                    "chondrocyte-<br>specific", "chondrocyte-<br>specific",
+                                    "chondrocyte-<br>specific", "chondrocyte-<br>specific"),
+                          log2FoldChange = 12,
+                          sex = c("male", "female", "male", "female", "male",
+                                  "female", "male", "female"),
+                          sex_label = c("M", "F", "M", "F", "M", "F", "M", "F")),
+            aes(label = sex_label), position=position_dodge(width=0.75),
+            family = "Helvetica", size= 3) +
   facet_wrap(vars(condition), scales = "free", nrow = 2, strip.position = "left") +
   geom_boxplot(outlier.shape = NA, color = "grey20", linewidth = 0.1) +
   scale_fill_manual(values = c(sexColors[["F"]], sexColors[["M"]])) +
   scale_y_continuous(name = "log~2~Fold Change",
                      limits = c(-2, 12), breaks = c(-2, seq(0, 12, 4)),
                      expand = c(0,0)) +
-  theme(axis.title.y = element_markdown(family = "Helvetica", size = 5,
+  theme(axis.title.y = element_markdown(family = "Helvetica", size = 8,
                                         margin = margin(r = -1)),
         axis.title.x = element_blank(),
         legend.position = "none",
         panel.background = element_rect(fill = "transparent", color = "transparent"),
         plot.background = element_rect(fill = "transparent", color = "transparent"),
         strip.background = element_blank(),
-        strip.text.y.left = element_text(family = "Helvetica", size = 5, margin = margin(r=0)),
+        strip.text.y.left = element_text(family = "Helvetica", size = 8, margin = margin(r=0)),
         strip.placement = "outside",
         axis.ticks.x = element_blank(),
         axis.line.y = element_line(color = "black", 
@@ -289,11 +298,12 @@ chond_sb_l2fc <- ggplot(pbs_fnf_sex_l2fc, aes(x = group, y = log2FoldChange, fil
         axis.ticks.length.y = unit(-0.1, "cm"),
         axis.ticks.y = element_line(color = "black",
                                     linewidth = 0.2),
-        axis.text.y = element_markdown(family = "Helvetica", size = 5, color = "black"),
-        axis.text.x = element_markdown(family = "Helvetica", size = 4.75, color = "black"),
+        axis.text.y = element_markdown(family = "Helvetica", size = 7, color = "black"),
+        axis.text.x = element_markdown(family = "Helvetica", size = 8, color = "black"),
         axis.line.x = element_line(color = "grey25", linewidth = 0.25),
         axis.ticks = element_blank(),
-        text = element_text(family = "Helvetica"))
+        text = element_text(family = "Helvetica")) +
+  coord_cartesian(clip = "off")
 
 save(chond_sb_l2fc, file = "plots/sexageDE_Fig2/chond_sb_l2fc.rda")
 
@@ -436,8 +446,8 @@ save(age_heatmapLegendGrob, file = "plots/sexageDE_Fig2/age_heatmapLegendGrob.rd
 ## SEX
 
 # Union of sex degenes significant in control and FN-f
-ctl_sex_degenes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv")
-fnf_sex_degenes <- read_csv("data/sex_de/fnf_sexDE_pval01.csv")
+ctl_sex_degenes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/ctl_sexDE_pval01.csv")
+fnf_sex_degenes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/fnf_sexDE_pval01.csv")
 
 sex_degenes_union <- full_join(ctl_sex_degenes |> 
                                  dplyr::select("symbol", "gene_id", "log2FoldChange") |> 
@@ -449,7 +459,7 @@ sex_degenes_union <- full_join(ctl_sex_degenes |>
   dplyr::rename(sex_log2FoldChange = log2FoldChange)
 
 # OA genes from RAAK
-raak_de_genes <- read_csv("data/RAAK/RAAK_TableS3.csv", skip = 1) |> 
+raak_de_genes <- read_csv("/proj/phanstiel_lab/External/public/RAAK_2014/RAAK_TableS3.csv", skip = 1) |> 
   dplyr::rename(symbol = GeneSYMBOL) |> 
   filter(Pval < 0.05) |> 
   mutate(log2FoldChange = log2(FC),
@@ -458,7 +468,7 @@ raak_de_genes <- read_csv("data/RAAK/RAAK_TableS3.csv", skip = 1) |>
   dplyr::select(-FC, -log2FoldChange,-Pval)
 
 # OA genes from Fisch et al 2018
-fisch2018_de_genes <- read_csv("data/GSE114007/1-s2.0-S1063458418313876-mmc1.csv",
+fisch2018_de_genes <- read_csv("/proj/phanstiel_lab/External/public/Fisch_2018/1-s2.0-S1063458418313876-mmc1.csv",
                                col_names = c("symbol", "log2FoldChange", "padj"),
                                col_select = c(1, 2, 3), n_max = 12475)  |>
   filter(padj < 0.05) |> 
@@ -467,7 +477,7 @@ fisch2018_de_genes <- read_csv("data/GSE114007/1-s2.0-S1063458418313876-mmc1.csv
   dplyr::select(-log2FoldChange, -padj)
 
 # OA genes from Fu et al 2021
-fu2021_de_genes <- read_csv("data/GSE168505/GSE168505_deseq_res.csv", 
+fu2021_de_genes <- read_csv("/proj/phanstiel_lab/External/public/Fu_2022/GSE168505_deseq_res.csv", 
                             col_select = c("symbol", "log2FoldChange", "padj")) |> 
   filter(padj < 0.05) |> 
   mutate(fu_dir = ifelse(log2FoldChange < 0, "down", "up"),
@@ -490,8 +500,8 @@ sex_oa_degenes_all <- sex_degenes_union |>
 write_csv(sex_oa_degenes_all, file = "data/sex_de/sex_oa_degenes_all.csv")
 
 
-load("data/sex_de/dds_sex_ctl.rda")
-load("data/sex_de/dds_sex_fnf.rda")
+load("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/dds_sex_ctl.rda")
+load("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/dds_sex_fnf.rda")
 
 # Gene counts for sex-specific/OA genes 
 all_gene_sex_counts <- list()
@@ -523,13 +533,13 @@ gene_maxCounts <- fig2_sex_oa_counts |>
   group_by(symbol) |> 
   summarise(maxCount = max(log2(count)))
 
-ctl_sex_OAgenes <- read_csv("data/sex_de/ctl_sexDE_pval01.csv", 
+ctl_sex_OAgenes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/ctl_sexDE_pval01.csv", 
                             col_select = c("gene_id", "symbol", "padj", "log2FoldChange")) |> 
   filter(gene_id %in% fig2_sex_oa_counts$gene_id) |> 
   mutate(effect_dir = ifelse(log2FoldChange < 0, "F", "M")) |> 
   dplyr::select(-log2FoldChange) |> 
   dplyr::rename(PBS = padj)
-fnf_sex_OAgenes <- read_csv("data/sex_de/fnf_sexDE_pval01.csv", 
+fnf_sex_OAgenes <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/sex_de/fnf_sexDE_pval01.csv", 
                             col_select = c("gene_id", "symbol", "padj", "log2FoldChange")) |> 
   filter(gene_id %in% fig2_sex_oa_counts$gene_id) |> 
   mutate(effect_dir = ifelse(log2FoldChange < 0, "F", "M")) |> 
@@ -591,15 +601,57 @@ sex_oa_boxplot_examples <- ggplot(fig2_sex_oa_counts,
 
 save(sex_oa_boxplot_examples, file = "plots/sexageDE_Fig2/sex_oa_boxplot_examples.rda")
 
+
+sex_oa_boxplot_examples_samescale <- ggplot(fig2_sex_oa_counts, 
+                                  aes(x = Sex, y = log2(count), fill = Sex)) +
+  geom_boxplot(outlier.shape = NA, linewidth = 0.25) +
+  ggh4x::facet_grid2(symbol + oa_group ~ condition, switch = "y", scales = "free_y",
+                     independent = "none", labeller = as_labeller(c("up" = NA,
+                                                                   "down" = NA,
+                                                                   "SERPINE2" = "**SERPINE2**<br>Up in OA",
+                                                                   "RARRES2" = "**RARRES2**<br>Down in OA",
+                                                                   "PBS" = "PBS",
+                                                                   "FN-f" = "FN-f"))) +
+  geom_line(data = fig2_sex_sigline, 
+            aes(x = Sex, y = maxCount + 0.5, group = symbol), inherit.aes = FALSE,
+            linewidth = 0.25) +
+  geom_star(data = fig2_sex_sigline,
+            aes(x = 1.5, y = maxCount + 1.5, starshape = signif, fill = effect_dir), inherit.aes = FALSE,
+            size = 1.5, starstroke = 0.25) +
+  scale_fill_manual(values = c(sexColors[["F"]], sexColors[["M"]])) +
+  scale_y_continuous(breaks = scales::breaks_pretty(3), 
+                     name = "log~2~(normalized counts)") +
+  coord_cartesian(clip = "off") +
+  theme(strip.placement = "outside",
+        axis.line = element_line(linewidth = 0.25),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_line(color = "black", linewidth = 0.25),
+        axis.ticks.length.y = unit(-0.1, "cm"),
+        axis.title.y = element_markdown(size = 6, family = "Helvetica",
+                                        margin = margin(r = -15)),
+        text = element_text(family = "Helvetica"),
+        axis.text.y = element_text(color = "black", size = 6),
+        axis.text.x = element_text(color = "black", size = 6, margin = margin(b = 0)),
+        strip.background = element_blank(),
+        strip.text.y.left = element_markdown(color = "black", size = 6, angle = 0,
+                                         margin = margin()),
+        strip.text.x.top = element_markdown(size = 8, margin = margin(t = 1)),
+        panel.background = element_rect(fill = "transparent", color = "transparent"),
+        plot.background = element_rect(fill = "transparent", color = "transparent"),
+        panel.grid = element_blank(),
+        legend.position = "none",
+        panel.spacing.y = unit(0.25, "cm"))
+save(sex_oa_boxplot_examples_samescale, file = "plots/sexageDE_Fig2/sex_oa_boxplot_examples_samescale.rda")
 ## AGE
 
 # Get union of significant age genes
-ctl_cluster_pval05 <- read_csv("data/age_de/ctl_age_pval05clusters.csv") |> 
+ctl_cluster_pval05 <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/age_de/ctl_age_pval05clusters.csv") |> 
   distinct(gene_id, .keep_all = TRUE) |> 
   dplyr::select(gene_id, symbol, cluster) |> 
   dplyr::rename(ctl_cluster = cluster)
 
-fnf_cluster_pval05 <- read_csv("data/age_de/fnf_age_pval05clusters.csv") |> 
+fnf_cluster_pval05 <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/age_de/fnf_age_pval05clusters.csv") |> 
   distinct(gene_id, .keep_all = TRUE) |> 
   dplyr::select(gene_id, symbol, cluster) |> 
   dplyr::rename(fnf_cluster = cluster)
@@ -608,7 +660,7 @@ union_sig_genes <- full_join(ctl_cluster_pval05, fnf_cluster_pval05,
                              by = c("gene_id", "symbol"))
 
 # OA genes from RAAK
-raak_de_genes <- read_csv("data/RAAK/RAAK_TableS3.csv", skip = 1) |> 
+raak_de_genes <- read_csv("/proj/phanstiel_lab/External/public/RAAK_2014/RAAK_TableS3.csv", skip = 1) |> 
   dplyr::rename(symbol = GeneSYMBOL) |> 
   filter(Pval < 0.05) |> 
   mutate(log2FoldChange = log2(FC),
@@ -617,7 +669,7 @@ raak_de_genes <- read_csv("data/RAAK/RAAK_TableS3.csv", skip = 1) |>
   dplyr::select(-FC, -log2FoldChange,-Pval)
 
 # OA genes from Fisch et al 2018
-fisch2018_de_genes <- read_csv("data/GSE114007/1-s2.0-S1063458418313876-mmc1.csv",
+fisch2018_de_genes <- read_csv("/proj/phanstiel_lab/External/public/Fisch_2018/1-s2.0-S1063458418313876-mmc1.csv",
                                col_names = c("symbol", "log2FoldChange", "padj"),
                                col_select = c(1, 2, 3), n_max = 12475)  |>
   filter(padj < 0.05) |> 
@@ -626,7 +678,7 @@ fisch2018_de_genes <- read_csv("data/GSE114007/1-s2.0-S1063458418313876-mmc1.csv
   dplyr::select(-log2FoldChange, -padj)
 
 # OA genes from Fu et al 2021
-fu2021_de_genes <- read_csv("data/GSE168505/GSE168505_deseq_res.csv", 
+fu2021_de_genes <- read_csv("/proj/phanstiel_lab/External/public/Fu_2022/GSE168505_deseq_res.csv", 
                             col_select = c("symbol", "log2FoldChange", "padj")) |> 
   filter(padj < 0.05) |> 
   mutate(fu_dir = ifelse(log2FoldChange < 0, "down", "up"),
@@ -648,8 +700,8 @@ age_oa_degenes_all <- union_sig_genes |>
 write_csv(age_oa_degenes_all, file = "data/age_de/age_oa_degenes_all.csv")
 
 # Get counts for age OA de genes in PBS and FN-f
-load("data/age_de/dds_age_ctl_lrt.rda")
-load("data/age_de/dds_age_fnf_lrt.rda")
+load("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/age_de/dds_age_ctl_lrt.rda")
+load("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/age_de/dds_age_fnf_lrt.rda")
 
 all_gene_age_counts <- list()
 for (geneRow in 1:nrow(age_oa_degenes_all)){
@@ -750,6 +802,47 @@ age_oa_boxplot_examples <- ggplot(fig2_age_oa_counts, aes(x = Age_group, y = log
 
 save(age_oa_boxplot_examples, file = "plots/sexageDE_Fig2/age_oa_boxplot_examples.rda")
 
+
+ggplot(fig2_age_oa_counts, aes(x = Age_group, y = log2(count))) +
+  geom_boxplot(outlier.shape = NA, aes(fill = ctl_cluster),
+               linewidth = 0.25)  +
+  ggh4x::facet_grid2(oa_group + symbol ~ condition, switch = "y", scales = "free_y",
+                      labeller = as_labeller(c("EDA2R" = "**EDA2R**<br>Up in OA",
+                                                                   "IRS1" = "**IRS1**<br>Down in OA",
+                                                                   "PBS" = "PBS",
+                                                                   "FN-f" = "FN-f"))) +
+  scale_fill_manual(values = c("-" = ageClusterColors[["-"]], "+" = ageClusterColors[["+"]])) +
+  geom_line(data = fig2_age_sigline, 
+            aes(x = Age_group, y = maxCount + 0.5, group = symbol), inherit.aes = FALSE,
+            linewidth = 0.25) +
+  geom_star(data = fig2_age_sigline,
+            aes(x = 2, y = Inf, fill = cluster), inherit.aes = FALSE,
+            size = 1.5, starstroke = 0.25) +
+  scale_y_continuous(breaks = scales::breaks_pretty(3), 
+                     name = "log~2~(normalized counts)") +
+  coord_cartesian(clip = "off") +
+  theme(strip.placement = "outside",
+        axis.line = element_line(linewidth = 0.25),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_line(color = "black", linewidth = 0.25),
+        axis.ticks.length.y = unit(-0.1, "cm"),
+        axis.title.y = element_markdown(size = 6, family = "Helvetica",
+                                        margin = margin(r = -15)),
+        text = element_text(family = "Helvetica"),
+        axis.text.y = element_text(color = "black", size = 6),
+        axis.text.x = element_text(color = "black", size = 6, margin = margin(b = 0)),
+        strip.background = element_blank(),
+        strip.text.y.left = element_markdown(color = "black", size = 6, angle = 0,
+                                         margin = margin()),
+        strip.text.x.top = element_markdown(size = 8, margin = margin(t = 1)),
+        panel.background = element_rect(fill = "transparent", color = "transparent"),
+        plot.background = element_rect(fill = "transparent", color = "transparent"),
+        panel.grid = element_blank(),
+        legend.position = "none",
+        panel.spacing.y = unit(0.5, "cm"),
+        plot.title = element_text(hjust = 0.5, size = 10, margin = margin(b = -1)))
+ggsave("plots/sexageDE_Fig2/age_oa_boxplot_examples_samescale.pdf", width = 3, height = 3.2)
 
 # AGE GO TERMS ------------------------------------------------------------
 

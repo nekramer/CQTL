@@ -46,12 +46,15 @@ get_gene_condition_Counts <- function(gene, dds){
 # Function to get normalized donor gene counts with sex
 get_gene_sex_Counts <- function(gene, dds){
   
-  geneCounts <- DESeq2::plotCounts(dds, gene = gene, 
+  geneCounts <- tryCatch({DESeq2::plotCounts(dds, gene = gene, 
                                    intgroup = "Sex", 
                                    normalized = TRUE,
                                    returnData = TRUE) |> 
     remove_rownames() |> 
-    mutate(gene_id = gene)
+    mutate(gene_id = gene)}, error = function(cond) {tibble(row_names = rownames(colData(dds)),
+                                                            count = rep(NA, nrow(colData(dds))),
+                                                            Sex = colData(dds)[,"Sex"]) |> 
+        column_to_rownames(var = "row_names")})
   
   return(geneCounts)
 }

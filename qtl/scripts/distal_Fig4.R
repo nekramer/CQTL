@@ -82,7 +82,9 @@ get_signal_eGene_loops <- function(eSNP_eGene, promoters_mapped_genes, loops,
 
 
 # RNA log2FC AT STATIC VS GAINED LOOP ANCHORS -----------------------------
-CQTL_10kb_gained_static_loops_expression <- read_csv("data/hic/CQTL_10kb_gained_static_loops_expression.csv")
+CQTL_10kb_gained_static_loops_expression <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/hic/loops/CQTL_10kb_gained_static_loops_expression.csv")
+
+
 ## Density plot 
 anchor_expression_density <- ggplot(CQTL_10kb_gained_static_loops_expression, 
                                     aes(x = log2FoldChange, group = loopCategory,
@@ -122,7 +124,7 @@ save(anchor_expression_density,
 
 # Get reduced, significant GO terms
 gained_loop_go_data <- 
-  read_delim("data/hic/homer/biological_process.txt") %>%
+  read_delim("/proj/phanstiel_lab/Data/processed/CQTL/hic/homer/biological_process.txt") %>%
   mutate(pval = exp(1)^logP) %>%
   filter(pval < 0.01)
 gained_loop_go <- reduceGO(gained_loop_go_data,
@@ -144,7 +146,7 @@ gained_loop_go_plotting <- gained_loop_go |>
 
 # Set factors for ordering bars
 gained_loop_go_plotting$parentTerm <- factor(gained_loop_go_plotting$parentTerm,
-                                    levels = gained_loop_go_plotting$parentTerm)
+                                    levels = unique(gained_loop_go_plotting$parentTerm))
 
 loop_go_barplot <- ggplot(gained_loop_go_plotting, aes(x = `-log10pval`, y = parentTerm)) +
   geom_bar(stat = "identity", fill = "#267C80", alpha = 0.5) +
@@ -170,33 +172,34 @@ save(loop_go_barplot, file = "plots/distal_Fig4/loop_go_barplot.rda")
 
 # CONTACT FREQUENCY BETWEEN DISTAL LEAD ESNPS AND THEIR EGENE PROMOTER ---------
 
-distal_leadVar_pixel_matches <- load("data/hic/distal_leadVar_pixel_matches.rda")
+#distal_leadVar_pixel_matches <- load("data/hic/distal_leadVar_pixel_matches.rda")
+load("data/hic/distal_leadVar_ld_pixel_matches.rda")
 
 # Format data for boxplots   
-distal_leadVar_pixel_contactfreq <- c(focal(distal_leadVar_pixel_matches), 
-                                      distal_leadVar_pixel_matches) |> 
+distal_leadVar_ld_pixel_contactfreq <- c(focal(distal_leadVar_ld_pixel_matches), 
+                                      distal_leadVar_ld_pixel_matches) |> 
   # Make tibble for tidy manipulation
   as_tibble() |> 
-  # Grab relevant columns (variantID, gene_id, gene_category, log2_contact_freq)
-  dplyr::select(variantID, gene_id, gene_category, mean_contact_freq) |>
+  # Grab relevant columns (ld_variantID, gene_id, gene_category, log2_contact_freq)
+  dplyr::select(ld_variantID, gene_id, gene_category, mean_contact_freq) |>
   # Make group names based on gene_category
-  mutate(gene_category_label = ifelse(gene_category == "eGene", "contact between<br> distal lead SNP<br> and eGene", 
-                                    "contact between<br> lead SNP<br> and distance-matched<br> gene")) |> 
+  mutate(gene_category_label = ifelse(gene_category == "eGene", "contact between<br> distal SNP<br> and eGene", 
+                                    "contact between<br> distal SNP<br> and distance-matched<br> gene")) |> 
   # Change to factor correct plotting order
   mutate(gene_category_label = factor(gene_category_label, 
-                                    levels = c("contact between<br> distal lead SNP<br> and eGene", 
-                                               "contact between<br> lead SNP<br> and distance-matched<br> gene")))
+                                    levels = c("contact between<br> distal SNP<br> and eGene", 
+                                               "contact between<br> distal SNP<br> and distance-matched<br> gene")))
 # Calculate p-value
-wilcox_contact_freq_test <- wilcox.test(x = distal_leadVar_pixel_contactfreq |> 
+wilcox_contact_freq_test <- wilcox.test(x = distal_leadVar_ld_pixel_contactfreq |> 
                                           filter(gene_category == "eGene") |> 
                                           pull(mean_contact_freq),
-                                        y = distal_leadVar_pixel_contactfreq |>  
+                                        y = distal_leadVar_ld_pixel_contactfreq |>  
                                           filter(gene_category == "other") |> 
                                           pull(mean_contact_freq),
                                         alternative = "greater")
 
 # Plot
-distal_pixel_contactfreq_boxplot <- ggplot(distal_leadVar_pixel_contactfreq, 
+distal_ld_pixel_contactfreq_boxplot <- ggplot(distal_leadVar_ld_pixel_contactfreq, 
                                              mapping = aes(x = gene_category_label, 
                                                            y = mean_contact_freq)) +
   geom_boxplot(aes(color = gene_category_label, fill = gene_category_label), outlier.shape = NA) +
@@ -207,7 +210,7 @@ distal_pixel_contactfreq_boxplot <- ggplot(distal_leadVar_pixel_contactfreq,
   scale_color_manual(values = c("#32696C", "grey20")) +
   scale_y_continuous(name = "contact frequency", expand = c(0,0),
                      trans = scales::pseudo_log_trans(base = 2),
-                     breaks = c(0, 5, 10, 20, 40, 80, 160)) +
+                     breaks = c(0, 5, 10, 20, 40, 80, 160, 320)) +
   theme(legend.position = "none",
         axis.title.x = element_blank(),
         panel.grid.major = element_blank(),
@@ -227,12 +230,12 @@ distal_pixel_contactfreq_boxplot <- ggplot(distal_leadVar_pixel_contactfreq,
         axis.title.y = element_markdown(size = 7, margin = margin(r = -2))) +
   coord_cartesian(clip = "off")
 
-save(distal_pixel_contactfreq_boxplot, 
-     file = "plots/distal_Fig4/distal_pixel_contactfreq_boxplot.rda")  
+save(distal_ld_pixel_contactfreq_boxplot, 
+     file = "plots/distal_Fig4/distal_ld_pixel_contactfreq_boxplot.rda")  
 
 # CONTACT FREQUENCY OF DISTAL PBS-SPECIFIC, SHARED, AND FNF-SPECIFIC EQTLS -----
 
-eqtl_categories_distal_egene_pixels_counts <- read_csv("data/hic/eqtl_categories_distal_egene_pixels_counts.csv")
+eqtl_categories_distal_egene_pixels_counts <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/hic/eqtl_categories_distal_egene_pixels_counts.csv")
 
 ## Wilcox testing
 
@@ -300,8 +303,7 @@ save(eqtl_cat_distal_contactfreq_boxplot,
 # Ensembl TxDb
 ensembl_txdb <- makeTxDbFromEnsembl(organism = "Homo sapiens", release = 111)
 seqlevelsStyle(ensembl_txdb) <- "UCSC"
-
-load("data/hic/CQTL_10kb_sig_gained_loops.rda")
+load("/proj/phanstiel_lab/Data/processed/CQTL/hic/loops/CQTL_10kb_sig_gained_loops.rda")
 ensembl_promoters <- promoters(ensembl_txdb)
 
 jun_loops <- get_gene_loops(gene = "JUN", loops = CQTL_10kb_sig_gained_loops, 
@@ -312,20 +314,20 @@ mmp13_loops <- get_gene_loops(gene = "MMP13", loops = CQTL_10kb_sig_gained_loops
                               loop_binsize = 30000, promoters_data = ensembl_promoters)
 # DATA FOR FNF RESPONSE EGENE WTIH LOOP -------------------------------
 
-lpar1_loop_egene <- read_csv("data/eqtl/FNF_PEER_k22_genoPC_cond1Mb_topSignals_rsID_signalRanges.csv") |> 
+lpar1_loop_egene <- read_csv("/proj/phanstiel_lab/Data/processed/CQTL/eqtl/FNF_PEER_k22_genoPC_cond1Mb_topSignals_rsID_signalRanges.csv") |> 
   filter(gene_symbol == "LPAR1")
 
-lpar1_loop_egene_ld <- fread("data/eqtl/FNF_PEER_k22_genoPC_cond1Mb_topSignals_rsID_LD.csv",
+lpar1_loop_egene_ld <- fread("/proj/phanstiel_lab/Data/processed/CQTL/eqtl/FNF_PEER_k22_genoPC_cond1Mb_topSignals_rsID_LD.csv",
                              data.table = FALSE) |>
   filter(gene_symbol == "LPAR1") |>
   dplyr::select(ld_variantID, R2)
 
-lpar1_signals <- bind_rows(fread(paste0("data/eqtl/qtl_nom/CTL_PEER_k20_genoPC_allSignals_nom1Mb_MAFs_",
+lpar1_signals <- bind_rows(fread(paste0("/proj/phanstiel_lab/Data/processed/CQTL/eqtl/CTL_PEER_k20_genoPC_allSignals_nom1Mb_MAFs_",
                                         lpar1_loop_egene[["gene_chr"]], ".csv"),
                                   data.table = FALSE) |>
                               filter(gene_id == lpar1_loop_egene[["gene_id"]]) |>
                               mutate(Condition = "PBS"),
-                            fread(paste0("data/eqtl/qtl_nom/FNF_PEER_k22_genoPC_allSignals_nom1Mb_MAFs_",
+                            fread(paste0("/proj/phanstiel_lab/Data/processed/CQTL/eqtl/FNF_PEER_k22_genoPC_allSignals_nom1Mb_MAFs_",
                                          lpar1_loop_egene[["gene_chr"]], ".csv"),
                                   data.table = FALSE) |>
                               filter(gene_id == lpar1_loop_egene[["gene_id"]]) |>
@@ -345,7 +347,7 @@ lpar1_signals$LDgrp <- addNA(lpar1_signals$LDgrp)
 ensembl_txdb <- makeTxDbFromEnsembl(organism = "Homo sapiens", release = 111)
 seqlevelsStyle(ensembl_txdb) <- "UCSC"
 
-load("data/hic/CQTL_10kb_static_loops.rda")
+load("/proj/phanstiel_lab/Data/processed/CQTL/hic/loops/CQTL_10kb_static_loops.rda")
 ensembl_promoter_genes <- promoters(ensembl_txdb, columns = c("TXID", "TXNAME", "GENEID"))
 # convert GENEID CharacterList just to character
 ensembl_promoter_genes$GENEID <- as.character(ensembl_promoter_genes$GENEID)
@@ -357,7 +359,7 @@ lpar1_loop_10kb <- get_signal_eGene_loops(eSNP_eGene = lpar1_loop_egene,
 lpar1_loop_30kb <- snapToBins(lpar1_loop_10kb, binSize = 30000)
 # plotgardener layout -----------------------------------------------------
 
-pdf("plots/distal_Fig4/Fig4.pdf", width = 11, height = 6.5)
+pdf("plots/distal_Fig4/Fig4_v2.pdf", width = 11, height = 6.5)
 pageCreate(width = 11, height = 6.5, showGuides = FALSE)
 
 ### A - Jun
@@ -370,7 +372,7 @@ jun_loop_region <- pgParams(assembly = "hg38",
                             x = 0.25, width = 2, norm = "SCALE")
 
 # PBS Hi-C
-jun_pbs_hic <- plotHicRectangle(data = "data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_PBS_inter_30.hic", 
+jun_pbs_hic <- plotHicRectangle(data = "/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/PBS_inter_30.hic", 
                                 resolution = 10000, params = jun_loop_region,
                                 y = 0.15, height = 1, zrange = c(0, 100))
 annoPixels(plot = jun_pbs_hic, data = jun_loops, type = "arrow", shift = 6)
@@ -379,7 +381,7 @@ annoHeatmapLegend(plot = jun_pbs_hic, width = 0.065, height = 0.6, fontsize = 5,
 plotText(label = "PBS", fontsize = 7, fontfamily = "Helvetica",
          x = 0.375, y = 0.23)
 # FN-f Hi-C
-jun_fnf_hic <- plotHicRectangle(data = "data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_FNF_inter_30.hic",
+jun_fnf_hic <- plotHicRectangle(data = "/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/FNF_inter_30.hic",
                                 resolution = 10000, params = jun_loop_region,
                                 y = 1.2, height = 1, zrange = c(0, 100))
 annoPixels(plot = jun_fnf_hic, data = jun_loops, type = "arrow", shift = 6)
@@ -389,8 +391,8 @@ plotText(label = "FN-f", fontsize = 7, fontfamily = "Helvetica",
 # ATAC
 plotText(label = "ATAC", rot = 90, fontcolor = yl_gn_bu[4],
          fontsize = 7, x = 0.15, y = 2.5, fontfamily = "Helvetica")
-plotMultiSignal(data = list("data/atac/CQTL_ATAC_AM7754_AM7755_AM7763_PBS.bw",
-                            "data/atac/CQTL_ATAC_AM7754_AM7755_AM7763_FNF.bw"),
+plotMultiSignal(data = list("/proj/phanstiel_lab/Data/processed/CQTL/atac/atac_combined_n3/mergedSignal/CTL_merged.bw",
+                            "/proj/phanstiel_lab/Data/processed/CQTL/atac/atac_combined_n3/mergedSignal/FNF_merged.bw"),
                 params = jun_loop_region, 
                 y = 2.25, height = 0.5, linecolor = yl_gn_bu[4], 
                 fill = yl_gn_bu[4], gapdistance = 0.1)
@@ -402,8 +404,8 @@ plotText(label = "FN-f", fontcolor = yl_gn_bu[4],
 # RNA
 plotText(label = "RNA", rot = 90, fontcolor = yl_gn_bu[8],
          fontsize = 7, x = 0.15, y = 3.05)
-plotMultiSignal(data = list("data/rna/CQTL_CTL.bw",
-                            "data/rna/CQTL_FNF.bw"),
+plotMultiSignal(data = list("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/mergeSignal/CQTL_CTL.bw",
+                            "/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/mergeSignal/CQTL_FNF.bw"),
                 params = jun_loop_region, 
                 y = 2.775, height = 0.5, linecolor = yl_gn_bu[8], 
                 fill = yl_gn_bu[8], gapdistance = 0.05)
@@ -432,7 +434,7 @@ il6_loop_region <- pgParams(assembly = "hg38",
                             x = 2.65, width = 2, norm = "SCALE")
 
 # PBS Hi-C
-il6_pbs_hic <- plotHicRectangle(data = "data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_PBS_inter_30.hic", 
+il6_pbs_hic <- plotHicRectangle(data = "/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/PBS_inter_30.hic", 
                                 resolution = 10000, params = il6_loop_region,
                                 y = 0.15, height = 1, zrange = c(0, 140))
 annoPixels(plot = il6_pbs_hic, data = il6_loops[1], type = "arrow", shift = 4)
@@ -442,7 +444,7 @@ plotText(label = "PBS", fontsize = 7, fontfamily = "Helvetica",
          x = 2.775, y = 0.23)
 
 # FN-f Hi-C
-il6_fnf_hic <- plotHicRectangle(data = "data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_FNF_inter_30.hic",
+il6_fnf_hic <- plotHicRectangle(data = "/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/FNF_inter_30.hic",
                                 resolution = 10000, params = il6_loop_region,
                                 y = 1.2, height = 1, zrange = c(0, 140))
 annoPixels(plot = il6_fnf_hic, data =  il6_loops[1], type = "arrow", shift = 4)
@@ -450,8 +452,8 @@ plotText(label = "FN-f", fontsize = 7, fontfamily = "Helvetica",
          x = 2.775, y = 1.28)
 
 # ATAC
-plotMultiSignal(data = list("data/atac/CQTL_ATAC_AM7754_AM7755_AM7763_PBS.bw",
-                            "data/atac/CQTL_ATAC_AM7754_AM7755_AM7763_FNF.bw"),
+plotMultiSignal(data = list("/proj/phanstiel_lab/Data/processed/CQTL/atac/atac_combined_n3/mergedSignal/CTL_merged.bw",
+                            "/proj/phanstiel_lab/Data/processed/CQTL/atac/atac_combined_n3/mergedSignal/FNF_merged.bw"),
                 params = il6_loop_region, 
                 y = 2.25, height = 0.5, linecolor = yl_gn_bu[4], 
                 fill = yl_gn_bu[4], gapdistance = 0.1)
@@ -461,8 +463,8 @@ plotText(label = "FN-f", fontcolor = yl_gn_bu[4],
          fontsize = 6, x = 2.65, y = 2.5, just = "left", fontfamily = "Helvetica")
 
 # RNA
-plotMultiSignal(data = list("data/rna/CQTL_CTL.bw",
-                            "data/rna/CQTL_FNF.bw"),
+plotMultiSignal(data = list("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/mergeSignal/CQTL_CTL.bw",
+                            "/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/mergeSignal/CQTL_FNF.bw"),
                 params = il6_loop_region, 
                 y = 2.775, height = 0.5, linecolor = yl_gn_bu[8], 
                 fill = yl_gn_bu[8], gapdistance = 0.05)
@@ -490,7 +492,7 @@ mmp13_loop_region <- pgParams(assembly = "hg38",
                             chromend = end2(mmp13_loops) + 110000, 
                             x = 5.1, width = 2, norm = "SCALE")
 # PBS Hi-C
-mmp13_pbs_hic <- plotHicRectangle(data = "data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_PBS_inter_30.hic", 
+mmp13_pbs_hic <- plotHicRectangle(data = "/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/PBS_inter_30.hic", 
                                 resolution = 10000, params = mmp13_loop_region,
                                 y = 0.15, height = 1, zrange = c(0, 150))
 annoPixels(plot = mmp13_pbs_hic, data = mmp13_loops, type = "arrow", shift = 4)
@@ -499,7 +501,7 @@ annoHeatmapLegend(plot = mmp13_pbs_hic, width = 0.065, height = 0.6, fontsize = 
 plotText(label = "PBS", fontsize = 7, fontfamily = "Helvetica",
          x = 5.225, y = 0.23)
 # FN-f Hi-C
-mmp13_fnf_hic <- plotHicRectangle(data = "data/hic/CQTL_AM7682_AM7683_AM7697_AM7698_FNF_inter_30.hic",
+mmp13_fnf_hic <- plotHicRectangle(data = "/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/FNF_inter_30.hic",
                                 resolution = 10000, params = mmp13_loop_region,
                                 y = 1.2, height = 1, zrange = c(0, 150))
 annoPixels(plot = mmp13_fnf_hic, data = mmp13_loops, type = "arrow", shift = 4)
@@ -507,8 +509,8 @@ plotText(label = "FN-f", fontsize = 7, fontfamily = "Helvetica",
          x = 5.225, y = 1.28)
 
 # ATAC
-plotMultiSignal(data = list("data/atac/CQTL_ATAC_AM7754_AM7755_AM7763_PBS.bw",
-                            "data/atac/CQTL_ATAC_AM7754_AM7755_AM7763_FNF.bw"),
+plotMultiSignal(data = list("/proj/phanstiel_lab/Data/processed/CQTL/atac/atac_combined_n3/mergedSignal/CTL_merged.bw",
+                            "/proj/phanstiel_lab/Data/processed/CQTL/atac/atac_combined_n3/mergedSignal/FNF_merged.bw"),
                 params = mmp13_loop_region, 
                 y = 2.25, height = 0.5, linecolor = yl_gn_bu[4], 
                 fill = yl_gn_bu[4], gapdistance = 0.1)
@@ -518,8 +520,8 @@ plotText(label = "FN-f", fontcolor = yl_gn_bu[4],
          fontsize = 6, x = 5.1, y = 2.5, just = "left", fontfamily = "Helvetica")
 
 # RNA
-plotMultiSignal(data = list("data/rna/CQTL_CTL.bw",
-                            "data/rna/CQTL_FNF.bw"),
+plotMultiSignal(data = list("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/mergeSignal/CQTL_CTL.bw",
+                            "/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/mergeSignal/CQTL_FNF.bw"),
                 params = mmp13_loop_region, 
                 y = 2.775, height = 0.5, linecolor = yl_gn_bu[8], 
                 fill = yl_gn_bu[8], gapdistance = 0.05)
@@ -552,7 +554,7 @@ plotGG(plot = loop_go_barplot, x = 0.2, y = 3.95, width = 2.85, height = 2.55)
 ## F - distal/loop barplot 
 plotText("F", x = 3.05, y = 4, just = c("left", "top"), fontfamily = "Helvetica",
          fontsize = 14, fontface = "bold")
-plotGG(plot = distal_pixel_contactfreq_boxplot, 
+plotGG(plot = distal_ld_pixel_contactfreq_boxplot, 
        x = 3.1, y = 4, 
        width = 2.1, height = 2.5)
 
@@ -658,7 +660,8 @@ plotText(label = lpar1_loop_egene[["rsID"]], x = 9.3, y = 3.175,
 
 
 # Hi-C with megamap for static loop
-lpar1_hic <- plotHicRectangle(data = "data/hic/CQTL_inter_30.hic",
+
+lpar1_hic <- plotHicRectangle(data = "/proj/phanstiel_lab/Data/processed/CQTL/hic/mergedAll/CQTL_inter_30.hic",
                               params = lpar1_region,
                               norm = "SCALE", resolution = 10000,
                               y = 4.15, height = 1,
@@ -678,8 +681,8 @@ annoPixels(plot = lpar1_hic, data = lpar1_loop_10kb, type = "arrow",
 # ATAC
 plotText(label = "ATAC", rot = 90, fontcolor = yl_gn_bu[4],
          fontsize = 7, x = 7.6, y = 5.3, fontfamily = "Helvetica")
-plotMultiSignal(data = list("data/atac/CQTL_ATAC_AM7754_AM7755_AM7763_PBS.bw",
-                            "data/atac/CQTL_ATAC_AM7754_AM7755_AM7763_FNF.bw"),
+plotMultiSignal(data = list("/proj/phanstiel_lab/Data/processed/CQTL/atac/atac_combined_n3/mergedSignal/CTL_merged.bw",
+                            "/proj/phanstiel_lab/Data/processed/CQTL/atac/atac_combined_n3/mergedSignal/FNF_merged.bw"),
                 params = lpar1_region, 
                 y = 5.2, height = 0.3, linecolor = yl_gn_bu[4], 
                 fill = yl_gn_bu[4], gapdistance = 0.05)
@@ -691,8 +694,8 @@ plotText(label = "FN-f", fontcolor = yl_gn_bu[4],
 # RNA
 plotText(label = "RNA", rot = 90, fontcolor = yl_gn_bu[8],
          fontsize = 7, x = 7.6, y = 5.7)
-plotMultiSignal(data = list("data/rna/CQTL_CTL.bw",
-                            "data/rna/CQTL_FNF.bw"),
+plotMultiSignal(data = list("/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/mergeSignal/CQTL_CTL.bw",
+                            "/proj/phanstiel_lab/Data/processed/CQTL/rna/CQTL_AM7180_AM7634/mergeSignal/CQTL_FNF.bw"),
                 params = lpar1_region, 
                 y = 5.55, height = 0.3, linecolor = yl_gn_bu[8], 
                 fill = yl_gn_bu[8], gapdistance = 0.05)
